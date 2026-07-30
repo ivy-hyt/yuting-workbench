@@ -1,0 +1,19 @@
+{
+  "name": "雨婷工作台",
+  "short_name": "雨婷工作台",
+  "description": "何雨婷的个人工作台：学习、资讯、健身、穿搭、自媒体一体化",
+  "lang": "zh-CN",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FF8EAD",
+  "theme_color": "#7C6FF0",
+  "icons": [
+    { "src": "icon-96.png", "sizes": "96x96", "type": "image/png", "purpose": "any" },
+    { "src": "icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

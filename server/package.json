@@ -1,0 +1,13 @@
+{
+  "name": "yuting-workbench-server",
+  "version": "1.0.0",
+  "description": "雨婷工作台后端：托管静态前端 + 华为运动健康 OAuth 授权与数据同步",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED"
+}

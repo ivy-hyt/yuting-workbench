@@ -1,0 +1,11 @@
+# ===== 绝不提交：华为密钥 =====
+server/.env
+
+# 依赖 / 系统文件
+node_modules/
+.DS_Store
+*.log
+
+# 本地源码（部署只需 server/ + dist/，无需上传 app 源码与工具目录）
+app/
+.workbuddy/

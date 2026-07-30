@@ -1,0 +1,5 @@
+# 绝不提交密钥
+.env
+node_modules/
+*.log
+.DS_Store
