@@ -1,0 +1,13 @@
+{
+  "name": "yuting-workbench",
+  "version": "1.0.0",
+  "private": true,
+  "description": "雨婷工作台：个人 PWA + 华为运动健康后端",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
