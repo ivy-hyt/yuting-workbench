@@ -252,6 +252,53 @@ const server = http.createServer(async (req, res) => {
   const parsed = new URL(req.url, `http://localhost:${PORT}`);
   const p = parsed.pathname;
 
+  // ===== AI 中转代理（用户自带密钥，按请求传入，后端不存储、不写日志）=====
+  // 该接口以请求体中的用户密钥鉴权，不依赖 Cookie/会话，故可放开跨域到任意来源，
+  // 既绕开浏览器/WebView 对 DeepSeek/豆包 的 CORS 限制，又保证密钥绝不进入代码或仓库。
+  if (p === '/api/ai/chat') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
+    if (req.method !== 'POST') return sendJson(res, 405, { error: 'method not allowed' });
+    let buf = '';
+    req.on('data', c => { buf += c; if (buf.length > 1e6) req.destroy(); });
+    req.on('end', async () => {
+      let reqBody;
+      try { reqBody = JSON.parse(buf); } catch (e) { return sendJson(res, 400, { error: '请求体不是合法 JSON' }); }
+      const { provider, key, endpoint, model, system, user } = reqBody;
+      if (!key) return sendJson(res, 400, { error: '缺少 API Key' });
+      let url, mdl;
+      if (provider === 'doubao') {
+        url = 'https://ark.cn-beijing.volcesec.com/api/v3/chat/completions';
+        mdl = model || endpoint || 'doubao-seed-1-6-250615';
+      } else {
+        url = 'https://api.deepseek.com/chat/completions';
+        mdl = model || 'deepseek-chat';
+      }
+      try {
+        const r = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+          body: JSON.stringify({
+            model: mdl,
+            messages: [
+              ...(system ? [{ role: 'system', content: system }] : []),
+              { role: 'user', content: user }
+            ],
+            stream: false, temperature: 0.7
+          })
+        });
+        const txt = await r.text();
+        res.writeHead(r.status, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(txt);
+      } catch (e) {
+        return sendJson(res, 502, { error: 'AI 网关调用失败: ' + (e.message || e) });
+      }
+    });
+    return;
+  }
+
   // 跨域预检
   if (req.method === 'OPTIONS') {
     applyCors(res, req);

@@ -106,6 +106,21 @@ body {
   position: relative;
 }
 
+.home-gear {
+  position: absolute;
+  top: calc(14px + env(safe-area-inset-top));
+  right: 16px;
+  font-size: 22px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
 .home-header .greeting {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.85);
@@ -3215,6 +3230,138 @@ body {
 
 /* ===== 添加到主屏幕引导（已移除） ===== */
 
+/* ===== 通用底部弹窗 ===== */
+.modal-mask {
+  position: fixed; inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s; z-index: 200;
+}
+.modal-mask.show { opacity: 1; pointer-events: auto; }
+.modal-sheet {
+  position: fixed; left: 50%; bottom: 0;
+  transform: translate(-50%, 100%);
+  width: 100%; max-width: 430px;
+  background: var(--bg-card);
+  border-radius: 22px 22px 0 0;
+  padding: 20px 18px calc(20px + env(safe-area-inset-bottom));
+  z-index: 201;
+  transition: transform .28s cubic-bezier(.22,.61,.36,1);
+  max-height: 80vh; overflow-y: auto;
+  box-shadow: 0 -8px 30px rgba(0,0,0,.15);
+}
+.modal-sheet.show { transform: translate(-50%, 0); }
+.modal-title { font-size: 17px; font-weight: 700; margin-bottom: 12px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+.modal-btn {
+  flex: 1; padding: 12px; border: none; border-radius: 12px;
+  background: var(--accent); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.modal-btn.ghost { background: var(--bg-soft); color: var(--text-secondary); }
+
+/* ===== 长期目标编辑 ===== */
+.goal-edit-link {
+  font-size: 12px; color: var(--accent-dark); cursor: pointer;
+  background: var(--bg-soft); padding: 4px 10px; border-radius: 20px; margin-left: 6px;
+}
+.goal-auto {
+  font-size: 11px; color: var(--highlight); background: rgba(45,212,167,.12);
+  padding: 2px 8px; border-radius: 20px; font-weight: 600;
+}
+.goal-edit-tip { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px; }
+.goal-edit-row { background: var(--bg-soft); border-radius: 12px; padding: 10px; margin-bottom: 10px; }
+.ge-icon { width: 38px; height: 34px; border: none; border-radius: 8px; background: #fff; text-align: center; font-size: 16px; }
+.ge-title { flex: 1; min-width: 0; border: none; border-radius: 8px; background: #fff; padding: 8px; font-size: 13px; }
+.ge-detail { width: 100%; border: none; border-radius: 8px; background: #fff; padding: 8px; font-size: 12px; margin-top: 6px; }
+.ge-del { border: none; background: var(--danger); color: #fff; border-radius: 8px; width: 30px; height: 34px; font-size: 14px; cursor: pointer; }
+.ge-auto { font-size: 12px; color: var(--highlight); margin-top: 6px; }
+.ge-prog { width: 60%; margin-top: 6px; }
+.ge-progval { font-size: 12px; color: var(--text-secondary); margin-left: 6px; }
+
+/* ===== AI 设置 ===== */
+.ai-tip { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px; }
+.ai-field { margin-bottom: 14px; }
+.ai-label { font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block; }
+.ai-input {
+  width: 100%; border: 1px solid var(--border); border-radius: 10px;
+  padding: 11px 12px; font-size: 14px; background: var(--bg-input); color: var(--text-primary);
+}
+.ai-seg { display: flex; gap: 8px; }
+.ai-seg-btn {
+  flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--bg-soft); color: var(--text-secondary); font-size: 14px; cursor: pointer;
+}
+.ai-seg-btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ===== 思考巩固题 AI 问答 ===== */
+.ai-qa { margin-top: 14px; border-top: 1px dashed var(--border); padding-top: 12px; }
+.ai-qa-title { font-size: 13px; font-weight: 600; color: var(--accent-dark); margin-bottom: 8px; }
+.ai-qa-msgs {
+  max-height: 220px; overflow-y: auto; background: var(--bg-soft);
+  border-radius: 12px; padding: 10px; margin-bottom: 8px; font-size: 13px; line-height: 1.6;
+}
+.ai-hint { color: var(--text-light); font-size: 12px; }
+.ai-msg { margin-bottom: 8px; padding: 8px 10px; border-radius: 10px; }
+.ai-user { background: var(--accent); color: #fff; margin-left: 24px; }
+.ai-bot { background: #fff; color: var(--text-primary); border: 1px solid var(--border); margin-right: 24px; white-space: pre-wrap; }
+.ai-bot.ai-loading, .ai-err { color: var(--text-secondary); }
+.ai-err { color: var(--danger) !important; }
+.ai-qa-quick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.ai-chip {
+  font-size: 12px; background: #fff; border: 1px solid var(--accent-light); color: var(--accent-dark);
+  border-radius: 20px; padding: 6px 10px; cursor: pointer; line-height: 1.4;
+}
+.ai-qa-input { display: flex; gap: 8px; }
+.ai-qa-text {
+  flex: 1; border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 12px; font-size: 14px; background: var(--bg-input); color: var(--text-primary);
+}
+.ai-qa-send {
+  border: none; background: var(--accent); color: #fff; border-radius: 10px;
+  width: 44px; font-size: 16px; cursor: pointer;
+}
+
+/* ===== 阅读记录 ===== */
+.reading-card { background: var(--bg-card); border-radius: var(--radius-md); padding: 14px; box-shadow: var(--shadow); }
+.reading-freq { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+.rf-select { border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; background: var(--bg-input); font-size: 13px; color: var(--text-primary); }
+.rf-times-input { width: 44px; border: 1px solid var(--border); border-radius: 8px; padding: 6px; text-align: center; }
+.rf-days { display: flex; gap: 4px; }
+.rf-day {
+  width: 28px; height: 28px; border-radius: 50%; background: var(--bg-soft); color: var(--text-secondary);
+  display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer;
+}
+.rf-day.on { background: var(--accent); color: #fff; }
+.reading-add { display: flex; flex-direction: column; gap: 8px; }
+.rd-input, .rd-page, .rd-thought {
+  border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+  font-size: 14px; background: var(--bg-input); color: var(--text-primary); width: 100%;
+}
+.rd-pages { display: flex; align-items: center; gap: 8px; }
+.rd-page { width: 80px; text-align: center; }
+.rd-thought { min-height: 60px; resize: vertical; font-family: inherit; }
+.reading-list { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.reading-empty { font-size: 12px; color: var(--text-light); text-align: center; padding: 8px; }
+.reading-item { background: var(--bg-soft); border-radius: 10px; padding: 10px; }
+.ri-top { display: flex; justify-content: space-between; font-size: 13px; }
+.ri-book { font-weight: 600; color: var(--accent-dark); }
+.ri-date { color: var(--text-light); font-size: 11px; }
+.ri-pages { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+.ri-thought { font-size: 12px; color: var(--text-primary); margin-top: 4px; line-height: 1.5; }
+.ai-organize-btn {
+  margin-top: 12px; width: 100%; border: none; border-radius: 12px; padding: 11px;
+  background: linear-gradient(135deg, #7C6FF0, #B4A9F7); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.reading-ai-result { margin-top: 10px; }
+.reading-ai-result .ai-msg { margin-bottom: 0; }
+
+/* 阅读统计 */
+.rs-empty { font-size: 13px; color: var(--text-light); text-align: center; padding: 20px 10px; line-height: 1.6; }
+
+/* 待办完成置底 */
+.todo-done-item { opacity: .6; }
+.todo-done-item .todo-text.done { text-decoration: line-through; }
+
 </style>
 </head>
 <body>
@@ -3227,6 +3374,7 @@ body {
       <div class="greeting">下午好 👋</div>
       <div class="username" id="userName">何雨婷</div>
       <div class="date" id="todayDate">2026年7月28日 周二</div>
+      <div class="home-gear" onclick="openAISettings()" title="设置">⚙️</div>
       <div class="quick-stats" id="quickStats"></div>
     </div>
 
@@ -3373,6 +3521,10 @@ body {
     <button class="chat-send" id="sendBtn" onclick="sendMessage()">➤</button>
   </div>
 </div>
+
+<!-- ========== 通用底部弹窗 ========== -->
+<div class="modal-mask" id="modalMask" onclick="closeModal()"></div>
+<div class="modal-sheet" id="modalSheet"></div>
 
 <!-- ========== Toast ========== -->
 <div class="toast" id="toast"></div>
@@ -3979,6 +4131,8 @@ const APP_DATA = {
   }
 };
 
+</script>
+<script>
 // ========================================
 // 何雨婷个人工作台 - 应用逻辑
 // ========================================
@@ -4005,15 +4159,109 @@ let appState = {
   bloggerPoolIdx: 1,
   newStyleIdx: 0,
   // 模块5：脚本分析
-  scriptAnalysisResult: null
+  scriptAnalysisResult: null,
+  // 持久化状态
+  goals: [],
+  reading: [],
+  readingFreq: { mode: 'weekly', times: 4, days: [1, 3, 5, 7] },
+  aiSettings: { provider: 'deepseek', key: '', endpoint: '' },
+  knowledgeManual: false
 };
+
+// ===== 存储与持久化 =====
+function getTodayKey() {
+  const n = new Date();
+  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+}
+function loadJSON(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
+}
+function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+// ---- 待办（按日期持久化，跨天重置）----
+function loadTodos() {
+  const saved = loadJSON('yutingTodos', null);
+  const today = getTodayKey();
+  if (saved && saved.date === today) return saved.items;
+  return JSON.parse(JSON.stringify(APP_DATA.todayTodos));
+}
+function saveTodos() { saveJSON('yutingTodos', { date: getTodayKey(), items: appState.todos }); }
+
+// ---- 训练打卡（记录打卡日期）----
+function loadCheckins() { return loadJSON('yutingCheckins', []); }
+function addCheckin() {
+  const list = loadCheckins();
+  const t = getTodayKey();
+  if (!list.includes(t)) { list.push(t); saveJSON('yutingCheckins', list); }
+}
+function isCheckedInToday() { return loadCheckins().includes(getTodayKey()); }
+function getWeekCheckinCount() {
+  const list = loadCheckins();
+  const now = new Date();
+  const dow = now.getDay();
+  const monday = new Date(now); monday.setDate(now.getDate() - ((dow + 6) % 7));
+  monday.setHours(0, 0, 0, 0);
+  return list.filter(d => { const dt = new Date(d + 'T00:00:00'); return dt >= monday; }).length;
+}
+
+// ---- 长期目标（可编辑，可自动）----
+function loadGoals() {
+  const saved = loadJSON('yutingGoals', null);
+  if (saved) return saved;
+  const seed = APP_DATA.longTermGoals.map((g, i) => ({ id: 'g' + i, icon: g.icon, title: g.title, detail: g.detail, progress: g.progress, auto: null }));
+  seed.push({ id: 'g_train', icon: '🏋️', title: '本周训练打卡', detail: '本周按计划完成训练', progress: 0, auto: 'weekTrain' });
+  seed.push({ id: 'g_read', icon: '📖', title: '本月阅读积累', detail: '本月累计阅读天数', progress: 0, auto: 'monthReading' });
+  saveJSON('yutingGoals', seed);
+  return seed;
+}
+function saveGoals() { saveJSON('yutingGoals', appState.goals); }
+function computeGoalProgress(g) {
+  if (g.auto === 'weekTrain') {
+    const c = getWeekCheckinCount();
+    const planned = APP_DATA.module3.currentWeek.plannedSessions;
+    return { progress: Math.min(100, Math.round(c / planned * 100)), note: `本周 ${c}/${planned} 次` };
+  }
+  if (g.auto === 'monthReading') {
+    const logs = loadJSON('yutingReading', []);
+    const now = new Date();
+    const ym = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    const days = new Set(logs.filter(l => l.date.startsWith(ym)).map(l => l.date));
+    return { progress: Math.min(100, Math.round(days.size / 16 * 100)), note: `本月 ${days.size} 天` };
+  }
+  return { progress: g.progress, note: '' };
+}
+
+// ---- 阅读记录 ----
+function loadReading() { return loadJSON('yutingReading', []); }
+function saveReading(list) { saveJSON('yutingReading', list); }
+function loadReadingFreq() { return loadJSON('yutingReadingFreq', { mode: 'weekly', times: 4, days: [1, 3, 5, 7] }); }
+function saveReadingFreq(f) { saveJSON('yutingReadingFreq', f); }
+
+// ---- AI 设置 ----
+function loadAISettings() { return loadJSON('yutingAI', { provider: 'deepseek', key: '', endpoint: '' }); }
+function saveAISettings(s) { saveJSON('yutingAI', s); }
+
+// 按日期种子的知识点索引（每天不同，跨年不重复）
+function getDailyKnowledgeIdx() {
+  const pool = APP_DATA.module1.knowledgePool;
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((now - start) / 86400000);
+  return dayOfYear % pool.length;
+}
 
 // ===== 初始化 =====
 function init() {
   initDate();
+  // 从本地存储加载持久化状态
+  appState.todos = loadTodos();
+  appState.goals = loadGoals();
+  appState.reading = loadReading();
+  appState.readingFreq = loadReadingFreq();
+  appState.aiSettings = loadAISettings();
+  appState.currentKnowledgeIdx = getDailyKnowledgeIdx();
   renderQuickStats();
   renderModuleGrid();
-  initTodos();
   renderTodos();
   renderStatus();
   renderGoals();
@@ -4061,6 +4309,9 @@ function initDate() {
 // ===== 快捷统计 =====
 function renderQuickStats() {
   const stats = document.getElementById('quickStats');
+  const weekCount = getWeekCheckinCount();
+  const planned = APP_DATA.module3.currentWeek.plannedSessions;
+  const checked = isCheckedInToday();
   stats.innerHTML = `
     <div class="quick-stat">
       <div class="stat-num">23%</div>
@@ -4071,8 +4322,8 @@ function renderQuickStats() {
       <div class="stat-label">体重</div>
     </div>
     <div class="quick-stat">
-      <div class="stat-num" id="statSessions">0/4</div>
-      <div class="stat-label">本周训练</div>
+      <div class="stat-num" id="statSessions">${weekCount}/${planned}</div>
+      <div class="stat-label">本周训练 ${checked ? '✅已打卡' : ''}</div>
     </div>
   `;
 }
@@ -4113,17 +4364,15 @@ function showPage(pageId) {
 }
 
 // ===== 待办清单 =====
-function initTodos() {
-  appState.todos = JSON.parse(JSON.stringify(APP_DATA.todayTodos));
-}
-
 function renderTodos() {
   const list = document.getElementById('todoList');
   const done = appState.todos.filter(t => t.done).length;
   document.getElementById('todoProgress').textContent = `${done}/${appState.todos.length}`;
 
-  list.innerHTML = appState.todos.map(todo => `
-    <div class="todo-item">
+  // 未完成在前，已完成沉到最底部
+  const sorted = [...appState.todos].sort((a, b) => (a.done === b.done) ? 0 : (a.done ? 1 : -1));
+  list.innerHTML = sorted.map(todo => `
+    <div class="todo-item ${todo.done ? 'todo-done-item' : ''}">
       <div class="todo-check ${todo.done ? 'done' : ''}" onclick="toggleTodo('${todo.id}')"></div>
       <span class="todo-text ${todo.done ? 'done' : ''}">${todo.text}</span>
       <span class="todo-tag">${todo.module}</span>
@@ -4136,6 +4385,7 @@ function toggleTodo(id) {
   if (todo) {
     todo.done = !todo.done;
     renderTodos();
+    saveTodos();
     if (todo.done) showToast(`✅ 已完成：${todo.text}`);
   }
 }
@@ -4151,20 +4401,70 @@ function renderStatus() {
   `).join('');
 }
 
-// ===== 长期目标 =====
+// ===== 长期目标（可编辑 + 自动进度）=====
 function renderGoals() {
   const list = document.getElementById('goalList');
-  list.innerHTML = APP_DATA.longTermGoals.map(g => `
+  const html = `
+    <div style="text-align:right;margin-bottom:8px;">
+      <span class="goal-edit-link" onclick="openGoalEditor()">✎ 编辑目标</span>
+      <span class="goal-edit-link" onclick="addGoal()">➕ 添加</span>
+    </div>`;
+  list.innerHTML = html + appState.goals.map(g => {
+    const cp = computeGoalProgress(g);
+    const pct = cp.progress;
+    const autoTag = g.auto ? `<span class="goal-auto">自动${cp.note ? '· ' + cp.note : ''}</span>` : `<span class="goal-percent">${pct}%</span>`;
+    return `
     <div class="goal-item">
       <div class="goal-top">
         <span class="goal-icon">${g.icon}</span>
         <span class="goal-title">${g.title}</span>
+        ${autoTag}
       </div>
       <div class="goal-detail">${g.detail}</div>
-      <div class="progress-bar"><div class="progress-fill" style="width:${g.progress}%"></div></div>
-      <div class="goal-percent">${g.progress}%</div>
-    </div>
-  `).join('');
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function addGoal() {
+  appState.goals.push({ id: 'g' + Date.now(), icon: '🎯', title: '新目标', detail: '点击编辑描述', progress: 0, auto: null });
+  saveGoals();
+  renderGoals();
+  openGoalEditor();
+}
+
+function openGoalEditor() {
+  const html = `<div class="modal-title">🎯 长期目标（真实进展）</div>
+    <div class="goal-edit-tip">自动项（本周训练/本月阅读）进度由你的真实打卡与阅读记录计算，不可手动改；其余可自由编辑。</div>
+    <div id="goalEditList">${appState.goals.map(g => `
+      <div class="goal-edit-row" data-id="${g.id}">
+        <input class="ge-icon" value="${g.icon}" maxlength="2" onchange="updateGoal('${g.id}','icon',this.value)">
+        <input class="ge-title" value="${g.title}" onchange="updateGoal('${g.id}','title',this.value)">
+        <button class="ge-del" onclick="deleteGoal('${g.id}')">✕</button>
+        <input class="ge-detail" value="${g.detail}" placeholder="描述" onchange="updateGoal('${g.id}','detail',this.value)">
+        ${g.auto ? `<div class="ge-auto">自动进度</div>` : `
+          <input class="ge-prog" type="range" min="0" max="100" value="${g.progress}" oninput="updateGoal('${g.id}','progress',this.value)">
+          <span class="ge-progval">${g.progress}%</span>`}
+      </div>`).join('')}</div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeModal()">完成</button>
+    </div>`;
+  openModal(html);
+}
+
+function updateGoal(id, field, val) {
+  const g = appState.goals.find(x => x.id === id);
+  if (!g) return;
+  if (field === 'progress') g.progress = parseInt(val) || 0;
+  else g[field] = val;
+  saveGoals();
+  renderGoals();
+}
+function deleteGoal(id) {
+  appState.goals = appState.goals.filter(x => x.id !== id);
+  saveGoals();
+  renderGoals();
+  openGoalEditor();
 }
 
 // ===== 模块1：学习路线 =====
@@ -4197,10 +4497,51 @@ function renderModule1() {
         <ol>
           ${lesson.questions.map(q => `<li>${q}</li>`).join('')}
         </ol>
+        <div class="ai-qa">
+          <div class="ai-qa-title">💬 问 AI 巩固（点问题直接问，或自由提问）</div>
+          <div class="ai-qa-msgs" id="aiQaMsgs"><div class="ai-hint">点击下方问题，或输入你自己的思考，让 AI 陪你深度拆解。</div></div>
+          <div class="ai-qa-quick">
+            ${lesson.questions.map((q, i) => `<span class="ai-chip" onclick="askAIQuestion(${i})">${q}</span>`).join('')}
+          </div>
+          <div class="ai-qa-input">
+            <input id="aiQaInput" class="ai-qa-text" placeholder="输入你的思考/问题..." onkeydown="if(event.key==='Enter')askAIFree()">
+            <button class="ai-qa-send" onclick="askAIFree()">➤</button>
+          </div>
+        </div>
       </div>
-      <div class="lesson-hint">💡 当前第 ${appState.currentKnowledgeIdx + 1}/${pool.length} 个知识点，点击"换一下"切换</div>
+      <div class="lesson-hint">💡 今日知识点第 ${appState.currentKnowledgeIdx + 1}/${pool.length} 个（每天自动轮换），点"换一下"可看其它</div>
     </div>
   `;
+
+  // ===== 我的阅读记录（真实可记录 + AI 整理）=====
+  const freq = appState.readingFreq;
+  const dayOpts = [['1', '一'], ['2', '二'], ['3', '三'], ['4', '四'], ['5', '五'], ['6', '六'], ['7', '日']];
+  html += `<div class="section-title">📖 我的阅读记录</div>`;
+  html += `<div class="reading-card">
+    <div class="reading-freq">
+      <span class="rf-label">记录频率</span>
+      <select id="rfMode" onchange="changeReadingFreq()" class="rf-select">
+        <option value="daily" ${freq.mode === 'daily' ? 'selected' : ''}>每天</option>
+        <option value="weekly" ${freq.mode === 'weekly' ? 'selected' : ''}>每周 ${freq.times} 次</option>
+        <option value="custom" ${freq.mode === 'custom' ? 'selected' : ''}>自定义星期</option>
+      </select>
+      ${freq.mode === 'weekly' ? `<span class="rf-times">每周 <input type="number" min="1" max="7" value="${freq.times}" id="rfTimes" onchange="changeReadingFreq()" class="rf-times-input"> 次</span>` : ''}
+      ${freq.mode === 'custom' ? `<span class="rf-days">${dayOpts.map(([d, n]) => `<span class="rf-day ${freq.days.includes(+d) ? 'on' : ''}" onclick="toggleReadDay(${d})">${n}</span>`).join('')}</span>` : ''}
+    </div>
+    <div class="reading-add">
+      <input id="rdBook" class="rd-input" placeholder="今天读了什么书">
+      <div class="rd-pages">
+        <input id="rdStart" class="rd-page" type="number" placeholder="起页">
+        <span>~</span>
+        <input id="rdEnd" class="rd-page" type="number" placeholder="止页">
+      </div>
+      <textarea id="rdThought" class="rd-thought" placeholder="今天的感想 / 收获 / 疑问…"></textarea>
+      <button class="checkin-btn" style="font-size:13px;padding:9px;" onclick="addReading()">＋ 记录今天读了什么</button>
+    </div>
+    <div class="reading-list" id="readingList"></div>
+    <button class="ai-organize-btn" onclick="aiOrganizeReading()">🤖 AI 整理我的阅读</button>
+    <div id="readingAiResult" class="reading-ai-result"></div>
+  </div>`;
 
   // 学习路线阶段
   html += '<div class="section-title">🗺️ 系统化学习路线</div>';
@@ -4250,78 +4591,306 @@ function renderModule1() {
     </div>
   </div>`;
 
-  // 近期阅读分析
-  const rs = data.readingStats;
+  // 近期阅读分析（从真实阅读记录计算）
   html += `<div class="section-title" style="margin-top:16px;">📊 近期阅读分析</div>`;
-  html += `<div class="reading-stats-card">
+  html += `<div id="readingAnalysis">${buildReadingAnalysisHTML()}</div>`;
+
+  container.innerHTML = html;
+  renderReadingList();
+}
+
+function buildReadingAnalysisHTML() {
+  const stats = computeReadingStats();
+  if (stats.empty) {
+    return `<div class="reading-stats-card"><div class="rs-empty">还没有阅读记录，在上方「我的阅读记录」记一笔，这里会自动统计 ✨</div></div>`;
+  }
+  let h = `<div class="reading-stats-card">
     <div class="rs-grid">
       <div class="rs-item">
-        <div class="rs-num">${rs.totalDays}</div>
+        <div class="rs-num">${stats.totalDays}</div>
         <div class="rs-label">累计阅读天数</div>
       </div>
       <div class="rs-item">
-        <div class="rs-num">${rs.totalHours}<span style="font-size:12px;">h</span></div>
+        <div class="rs-num">${stats.totalHours}<span style="font-size:12px;">h</span></div>
         <div class="rs-label">累计阅读时长</div>
       </div>
       <div class="rs-item">
-        <div class="rs-num">${rs.thisYearHours}<span style="font-size:12px;">h</span></div>
+        <div class="rs-num">${stats.thisYearHours}<span style="font-size:12px;">h</span></div>
         <div class="rs-label">本年阅读时长</div>
       </div>
     </div>
-    <div class="rs-section-title">📚 阅读最久的书 TOP4</div>
+    <div class="rs-section-title">📚 阅读最多的书 TOP4</div>
     <div class="rs-book-list">`;
-  rs.topBooks.forEach((b, i) => {
-    html += `<div class="rs-book-item">
+  stats.topBooks.forEach((b, i) => {
+    h += `<div class="rs-book-item">
       <div class="rs-rank">${i + 1}</div>
       <div class="rs-book-info">
         <div class="rs-book-title">${b.title}</div>
-        <div class="rs-book-author">${b.author} · ${b.hours}小时</div>
+        <div class="rs-book-author">共 ${b.pages} 页 · ${b.entries} 次记录</div>
       </div>
     </div>`;
   });
-  html += `</div>`;
-  // 年度趋势
-  html += `<div class="rs-section-title">📈 年度阅读时长趋势</div>`;
-  html += `<div class="rs-bar-chart">`;
-  const maxHours = Math.max(...rs.yearlyBreakdown.map(y => y.hours));
-  rs.yearlyBreakdown.forEach(y => {
-    const barHeight = Math.round((y.hours / maxHours) * 100);
-    html += `<div class="rs-bar-col">
-      <div class="rs-bar" style="height:${barHeight}%;" title="${y.hours}h"></div>
-      <div class="rs-bar-val">${y.hours}h</div>
-      <div class="rs-bar-label">${y.year}</div>
-    </div>`;
-  });
-  html += `</div>`;
-  // 近4周趋势
-  html += `<div class="rs-section-title">📅 近4周阅读分钟数</div>`;
-  html += `<div class="rs-bar-chart">`;
-  const maxMins = Math.max(...rs.weeklyTrend.map(w => w.minutes), 1);
-  rs.weeklyTrend.forEach(w => {
+  h += `</div>`;
+  h += `<div class="rs-section-title">📅 近4周阅读分钟数</div>`;
+  h += `<div class="rs-bar-chart">`;
+  const maxMins = Math.max(...stats.weeklyTrend.map(w => w.minutes), 1);
+  stats.weeklyTrend.forEach(w => {
     const barHeight = Math.round((w.minutes / maxMins) * 100);
-    html += `<div class="rs-bar-col">
+    h += `<div class="rs-bar-col">
       <div class="rs-bar rs-bar-2" style="height:${Math.max(barHeight, 3)}%;" title="${w.minutes}min"></div>
       <div class="rs-bar-val">${w.minutes}m</div>
       <div class="rs-bar-label">${w.week}</div>
     </div>`;
   });
-  html += `</div>`;
-  // 偏好分析
-  html += `<div class="rs-preference">
+  h += `</div>`;
+  h += `<div class="rs-preference">
     <div class="rs-section-title">🎯 阅读偏好分析</div>
-    <div class="rs-pref-text">${rs.preferenceAnalysis}</div>
+    <div class="rs-pref-text">${stats.preference}</div>
   </div>`;
-  html += `</div>`;
+  h += `</div>`;
+  return h;
+}
 
-  container.innerHTML = html;
+function refreshReadingAnalysis() {
+  const el = document.getElementById('readingAnalysis');
+  if (el) el.innerHTML = buildReadingAnalysisHTML();
 }
 
 function changeKnowledgePoint() {
   const pool = APP_DATA.module1.knowledgePool;
   appState.currentKnowledgeIdx = (appState.currentKnowledgeIdx + 1) % pool.length;
+  appState.knowledgeManual = true;
   renderModule1();
   showToast(`已切换至：${pool[appState.currentKnowledgeIdx].topic}`);
   document.getElementById('m1-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ===== AI 交互（DeepSeek / 豆包）=====
+function escapeHtml(s) {
+  return String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+}
+
+async function callAI(systemPrompt, userPrompt) {
+  const s = appState.aiSettings;
+  if (!s || !s.key) return { error: '尚未配置 AI 密钥，请点首页右上角 ⚙️ 填写' };
+  // 走后端中转代理：密钥仅在本机 localStorage，按请求临时传给后端转发，不进代码/仓库
+  const base = getApiBase();
+  const payload = {
+    provider: s.provider,
+    key: s.key,
+    endpoint: s.endpoint,
+    system: systemPrompt,
+    user: userPrompt,
+  };
+  try {
+    const r = await fetch(base + '/api/ai/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!r.ok) { const t = await r.text(); return { error: 'AI 网关 ' + r.status + '：' + t.slice(0, 160) }; }
+    const j = await r.json();
+    if (j.error) return { error: j.error };
+    const text = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+    if (text) return { text };
+    return { error: 'AI 返回格式异常：' + JSON.stringify(j).slice(0, 140) };
+  } catch (e) {
+    return { error: '调用失败（可能未配置后端或网络问题）：' + (e.message || e) };
+  }
+}
+
+// 通用底部弹窗
+function openModal(html) {
+  document.getElementById('modalSheet').innerHTML = html;
+  document.getElementById('modalMask').classList.add('show');
+  document.getElementById('modalSheet').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('modalMask').classList.remove('show');
+  document.getElementById('modalSheet').classList.remove('show');
+}
+
+function openAISettings() {
+  const s = appState.aiSettings;
+  const html = `<div class="modal-title">🤖 AI 设置</div>
+    <div class="ai-tip">密钥只保存在你本机（localStorage），调用时经你的私有后端中转转发，既不进代码也不进公开仓库，仅此 App 可用。</div>
+    <div class="ai-field">
+      <div class="ai-label">服务商</div>
+      <div class="ai-seg">
+        <button class="ai-seg-btn ${s.provider === 'deepseek' ? 'on' : ''}" onclick="setAIProvider('deepseek')">DeepSeek</button>
+        <button class="ai-seg-btn ${s.provider === 'doubao' ? 'on' : ''}" onclick="setAIProvider('doubao')">豆包(火山方舟)</button>
+      </div>
+    </div>
+    <div class="ai-field">
+      <div class="ai-label">API Key</div>
+      <input id="aiKey" class="ai-input" placeholder="粘贴你的密钥，如 sk-... 或 ark..." value="${s.key}">
+    </div>
+    ${s.provider === 'doubao' ? `<div class="ai-field">
+      <div class="ai-label">模型端点 ID（豆包必填，ARK 控制台获取 ep-xxx）</div>
+      <input id="aiEndpoint" class="ai-input" placeholder="ep-xxxxxxxx" value="${s.endpoint}">
+    </div>` : ''}
+    <div class="modal-actions">
+      <button class="modal-btn ghost" onclick="closeModal()">取消</button>
+      <button class="modal-btn" onclick="saveAISettingsFromUI()">保存</button>
+    </div>`;
+  openModal(html);
+}
+function setAIProvider(p) { appState.aiSettings.provider = p; saveAISettings(appState.aiSettings); openAISettings(); }
+function saveAISettingsFromUI() {
+  const key = document.getElementById('aiKey').value.trim();
+  const endpointEl = document.getElementById('aiEndpoint');
+  const endpoint = endpointEl ? endpointEl.value.trim() : '';
+  appState.aiSettings.key = key;
+  appState.aiSettings.endpoint = endpoint;
+  saveAISettings(appState.aiSettings);
+  closeModal();
+  showToast(key ? '✅ AI 设置已保存' : '已清除 AI 密钥');
+}
+
+// 思考巩固题 → AI
+function askAIQuestion(i) {
+  const lesson = APP_DATA.module1.knowledgePool[appState.currentKnowledgeIdx];
+  const q = lesson.questions[i];
+  sendAIMessage(`请结合知识点《${lesson.topic}》（来源：${lesson.source}），帮我深入拆解这个问题：${q}`);
+}
+function askAIFree() {
+  const inp = document.getElementById('aiQaInput');
+  if (!inp) return;
+  const v = inp.value.trim();
+  if (!v) return;
+  inp.value = '';
+  sendAIMessage(v);
+}
+async function sendAIMessage(userText) {
+  const box = document.getElementById('aiQaMsgs');
+  if (!box) return;
+  box.innerHTML += `<div class="ai-msg ai-user">${escapeHtml(userText)}</div>`;
+  const loading = document.createElement('div');
+  loading.className = 'ai-msg ai-bot ai-loading';
+  loading.textContent = 'AI 思考中…';
+  box.appendChild(loading);
+  box.scrollTop = box.scrollHeight;
+  const sys = '你是一位善于启发思考的学习教练。针对用户给出的知识点与问题，用通俗、有结构、带例子的方式回答，帮助对方真正理解而非只给标准答案。控制在220字以内。';
+  const res = await callAI(sys, userText);
+  loading.remove();
+  if (res.error) {
+    box.innerHTML += `<div class="ai-msg ai-bot ai-err">⚠️ ${escapeHtml(res.error)}</div>`;
+  } else {
+    box.innerHTML += `<div class="ai-msg ai-bot">${escapeHtml(res.text)}</div>`;
+  }
+  box.scrollTop = box.scrollHeight;
+}
+
+// ===== 阅读记录 =====
+function changeReadingFreq() {
+  const sel = document.getElementById('rfMode');
+  appState.readingFreq.mode = sel.value;
+  if (appState.readingFreq.mode === 'weekly') {
+    const t = document.getElementById('rfTimes');
+    appState.readingFreq.times = parseInt(t.value) || 4;
+  }
+  saveReadingFreq(appState.readingFreq);
+  renderModule1();
+}
+function toggleReadDay(d) {
+  const days = appState.readingFreq.days;
+  const i = days.indexOf(d);
+  if (i >= 0) days.splice(i, 1); else days.push(d);
+  saveReadingFreq(appState.readingFreq);
+  renderModule1();
+}
+function addReading() {
+  const book = document.getElementById('rdBook').value.trim();
+  const start = parseInt(document.getElementById('rdStart').value) || 0;
+  const end = parseInt(document.getElementById('rdEnd').value) || 0;
+  const thought = document.getElementById('rdThought').value.trim();
+  if (!book && !thought) { showToast('请至少填写书名或感想'); return; }
+  const pages = (start && end) ? Math.max(0, end - start) : 0;
+  const logs = loadReading();
+  logs.unshift({ date: getTodayKey(), book, start, end, pages, thought });
+  saveReading(logs);
+  appState.reading = logs;
+  document.getElementById('rdBook').value = '';
+  document.getElementById('rdStart').value = '';
+  document.getElementById('rdEnd').value = '';
+  document.getElementById('rdThought').value = '';
+  renderReadingList();
+  refreshReadingAnalysis();
+  renderGoals();
+  showToast('✅ 已记录今天的阅读');
+}
+function renderReadingList() {
+  const el = document.getElementById('readingList');
+  if (!el) return;
+  const logs = loadReading().slice(0, 12);
+  if (logs.length === 0) { el.innerHTML = '<div class="reading-empty">还没有记录，今天读了什么？</div>'; return; }
+  el.innerHTML = logs.map(l => `
+    <div class="reading-item">
+      <div class="ri-top"><span class="ri-book">📕 ${escapeHtml(l.book || '未命名')}</span><span class="ri-date">${l.date}</span></div>
+      ${l.pages ? `<div class="ri-pages">P${l.start}–P${l.end}（${l.pages}页）</div>` : ''}
+      ${l.thought ? `<div class="ri-thought">${escapeHtml(l.thought)}</div>` : ''}
+    </div>`).join('');
+}
+async function aiOrganizeReading() {
+  const logs = loadReading().slice(0, 20);
+  const box = document.getElementById('readingAiResult');
+  if (!box) return;
+  if (logs.length === 0) { showToast('先记录几条阅读，再来让 AI 整理～'); return; }
+  box.innerHTML = '<div class="ai-msg ai-bot ai-loading">AI 正在整理你的阅读…</div>';
+  const text = logs.map(l => `【${l.date}】《${l.book}》${l.pages ? ' P' + l.start + '-' + l.end : ''}${l.thought ? ' 感想：' + l.thought : ''}`).join('\n');
+  const sys = '你是一位温柔有洞察的阅读教练。根据用户近期读书记录，整理成：①这段时间的阅读主题/关注点；②最有价值的几点思考提炼；③下一步阅读建议。语言自然，控制在320字内。';
+  const res = await callAI(sys, text);
+  box.innerHTML = res.error
+    ? `<div class="ai-msg ai-bot ai-err">⚠️ ${escapeHtml(res.error)}</div>`
+    : `<div class="ai-msg ai-bot">${escapeHtml(res.text)}</div>`;
+}
+
+// 从真实记录计算阅读统计
+function computeReadingStats() {
+  const logs = loadReading();
+  if (!logs.length) return { empty: true };
+  const MIN_PER_PAGE = 2;
+  const days = new Set(logs.map(l => l.date));
+  let totalMin = 0;
+  const byBook = {};
+  logs.forEach(l => {
+    const m = (l.pages || 0) * MIN_PER_PAGE;
+    totalMin += m;
+    if (l.book) {
+      if (!byBook[l.book]) byBook[l.book] = { title: l.book, pages: 0, entries: 0 };
+      byBook[l.book].pages += (l.pages || 0);
+      byBook[l.book].entries += 1;
+    }
+  });
+  const now = new Date();
+  const y = now.getFullYear();
+  const thisYearMin = logs.filter(l => l.date.startsWith(String(y))).reduce((s, l) => s + (l.pages || 0) * MIN_PER_PAGE, 0);
+  const topBooks = Object.values(byBook).sort((a, b) => b.pages - a.pages).slice(0, 4);
+  // 近4周（按自然周）
+  const weekly = [];
+  for (let w = 3; w >= 0; w--) {
+    const base = new Date(now);
+    base.setDate(now.getDate() - w * 7);
+    const dw = base.getDay();
+    const mon = new Date(base); mon.setDate(base.getDate() - ((dw + 6) % 7)); mon.setHours(0, 0, 0, 0);
+    const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+    const mins = logs.filter(l => { const d = new Date(l.date + 'T00:00:00'); return d >= mon && d <= sun; })
+      .reduce((s, l) => s + (l.pages || 0) * MIN_PER_PAGE, 0);
+    weekly.push({ week: `${mon.getMonth() + 1}/${mon.getDate()}`, minutes: mins });
+  }
+  const topNames = topBooks.slice(0, 3).map(b => b.title.replace(/《|》/g, '')).join('、');
+  const preference = topNames
+    ? `你近期主要在读：${topNames}。${logs.length >= 10 ? '阅读习惯已较稳定，继续保持～' : '刚开始积累，多记录几次就能看到你的偏好画像。'}`
+    : '记录更多书目后，这里会生成你的阅读偏好画像。';
+  return {
+    empty: false,
+    totalDays: days.size,
+    totalHours: (totalMin / 60).toFixed(1),
+    thisYearHours: (thisYearMin / 60).toFixed(1),
+    topBooks,
+    weeklyTrend: weekly,
+    preference
+  };
 }
 
 // ===== 模块2：资讯简报 =====
@@ -4542,7 +5111,7 @@ function renderModule3() {
 
   // 打卡按钮
   html += `<div style="text-align:center;margin-top:16px;">
-    <button class="checkin-btn" id="checkinBtn3" onclick="checkinMuscleTraining()">✅ 完成训练打卡</button>
+    <button class="checkin-btn ${isCheckedInToday() ? 'done' : ''}" id="checkinBtn3" onclick="checkinMuscleTraining()">${isCheckedInToday() ? '✅ 今日已打卡' : '✅ 完成训练打卡'}</button>
   </div>`;
 
   container.innerHTML = html;
@@ -4603,29 +5172,25 @@ function checkinMuscleTraining() {
     showToast('请先选择今日训练肌群');
     return;
   }
-  if (appState.checkedIn) {
+  if (isCheckedInToday()) {
     showToast('今日已完成打卡');
     return;
   }
+  addCheckin();
   appState.checkedIn = true;
-  APP_DATA.module3.currentWeek.completedSessions++;
-  document.getElementById('statSessions').textContent = 
-    `${APP_DATA.module3.currentWeek.completedSessions}/${APP_DATA.module3.currentWeek.plannedSessions}`;
-  
+  renderQuickStats();
+  renderModule3();
+
   const groups = APP_DATA.module3.muscleGroups.filter(mg => appState.selectedMuscleGroups.includes(mg.id));
   const trainedNames = groups.map(g => g.name).join(' + ');
-  
-  const btn = document.getElementById('checkinBtn3');
-  btn.classList.add('done');
-  btn.innerHTML = '✅ 已完成打卡';
-  
+
   showToast(`✅ 打卡成功！${trainedNames}已完成`);
   setTimeout(() => {
     showToast('📝 请告诉管家训练感受，方便调整下次计划');
   }, 1500);
 
   const todo = appState.todos.find(t => t.id === 't3');
-  if (todo) { todo.done = true; renderTodos(); }
+  if (todo && !todo.done) { todo.done = true; renderTodos(); saveTodos(); }
 }
 
 function clickWeekDay(dayName, planned) {
@@ -5707,8 +6272,9 @@ function mergeHealthData(defaultData, userData) {
 // ===== 华为运动健康：真实 OAuth 授权同步 =====
 // 已授权（有会话 cookie）→ 直接拉数据；未授权 → 跳转华为授权页
 // 后端服务地址：部署华为同步后端后，在 App 内"设置后端地址"填写，存 localStorage
+// 默认值指向已部署的 Render 后端，使 AI 中转开箱即用（仅为公开 URL，不含任何密钥）
 function getApiBase() {
-  return (localStorage.getItem('hw_api_base') || '').replace(/\/+$/, '');
+  return (localStorage.getItem('hw_api_base') || 'https://yuting-workbench.onrender.com').replace(/\/+$/, '');
 }
 
 function saveApiBase() {
@@ -5727,6 +6293,23 @@ function saveApiBase() {
 }
 
 async function syncHuaweiHealth() {
+  // iOS 原生壳：直接走 Apple HealthKit 桥接（无需华为后端）
+  const hk = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.HealthKitBridge;
+  if (hk) {
+    try {
+      const avail = await hk.isAvailable();
+      if (!avail.available) { showToast('⚠️ 当前设备不支持健康数据（请在 iPhone 真机运行）'); return; }
+      showToast('请在系统弹窗中允许读取健康数据…');
+      const auth = await hk.requestAuthorization();
+      if (!auth.authorized) { showToast('⚠️ 未授权健康数据，已取消同步'); return; }
+      const data = await hk.queryToday();
+      applyAppleHealth(data);
+    } catch (e) {
+      showToast('⚠️ Apple 健康读取失败：' + ((e && (e.errorMessage || e.message)) || e));
+    }
+    return;
+  }
+  // —— 以下为原华为后端授权逻辑（Web/PWA 环境）——
   const base = getApiBase();
   showToast('正在同步华为运动健康数据...');
   try {
@@ -5801,6 +6384,25 @@ function applyHuaweiData(raw) {
   saveUserHealthData(ud);
   renderModule3();
   showToast('✅ 已从华为运动健康同步最新数据');
+}
+
+// Apple HealthKit 数据接入（iOS 原生壳内调用）
+function applyAppleHealth(data) {
+  if (!data) { showToast('未获取到健康数据'); return; }
+  const raw = {
+    activity: { dailyActivitySummary: [{ steps: data.steps || 0, calories: data.calories || 0 }] },
+  };
+  if (data.heartRate != null) raw.heartRate = { value: data.heartRate };
+  if (data.weight != null) raw.weight = { value: data.weight };
+  applyHuaweiData(raw);
+  if (data.sleepHours != null) {
+    const ud = getUserHealthData() || {};
+    ud.latest = ud.latest || {};
+    ud.latest.sleepHours = data.sleepHours;
+    saveUserHealthData(ud);
+    renderModule3();
+  }
+  showToast('✅ 已从 Apple 健康同步今日数据');
 }
 
 // 从华为采样点抽取数值（兼容多种返回结构，联调时校准）

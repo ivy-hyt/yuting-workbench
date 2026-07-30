@@ -1,0 +1,8 @@
+{
+  "appId": "com.yuting.workbench",
+  "appName": "雨婷工作台",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}

@@ -9,5 +9,11 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "@capacitor/cli": "^8.4.2",
+    "@capacitor/core": "^8.4.2",
+    "@capacitor/ios": "^8.4.2",
+    "@yuting/healthkit-bridge": "file:plugins/healthkit-bridge"
   }
 }
