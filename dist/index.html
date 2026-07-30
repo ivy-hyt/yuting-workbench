@@ -3374,7 +3374,7 @@ body {
       <div class="greeting">下午好 👋</div>
       <div class="username" id="userName">何雨婷</div>
       <div class="date" id="todayDate">2026年7月28日 周二</div>
-      <div class="home-gear" onclick="openAISettings()" title="设置">⚙️</div>
+      <div class="home-gear" onclick="openAISettings()" title="AI 服务">⚙️</div>
       <div class="quick-stats" id="quickStats"></div>
     </div>
 
@@ -4164,7 +4164,7 @@ let appState = {
   goals: [],
   reading: [],
   readingFreq: { mode: 'weekly', times: 4, days: [1, 3, 5, 7] },
-  aiSettings: { provider: 'deepseek', key: '', endpoint: '' },
+  aiProvider: 'default',
   knowledgeManual: false
 };
 
@@ -4237,9 +4237,9 @@ function saveReading(list) { saveJSON('yutingReading', list); }
 function loadReadingFreq() { return loadJSON('yutingReadingFreq', { mode: 'weekly', times: 4, days: [1, 3, 5, 7] }); }
 function saveReadingFreq(f) { saveJSON('yutingReadingFreq', f); }
 
-// ---- AI 设置 ----
-function loadAISettings() { return loadJSON('yutingAI', { provider: 'deepseek', key: '', endpoint: '' }); }
-function saveAISettings(s) { saveJSON('yutingAI', s); }
+// ---- AI 服务商偏好 ----
+function loadAIProvider() { return loadJSON('yutingAIProvider', 'default'); }
+function saveAIProvider(p) { saveJSON('yutingAIProvider', p); }
 
 // 按日期种子的知识点索引（每天不同，跨年不重复）
 function getDailyKnowledgeIdx() {
@@ -4258,7 +4258,7 @@ function init() {
   appState.goals = loadGoals();
   appState.reading = loadReading();
   appState.readingFreq = loadReadingFreq();
-  appState.aiSettings = loadAISettings();
+  appState.aiProvider = loadAIProvider();
   appState.currentKnowledgeIdx = getDailyKnowledgeIdx();
   renderQuickStats();
   renderModuleGrid();
@@ -4671,14 +4671,9 @@ function escapeHtml(s) {
 }
 
 async function callAI(systemPrompt, userPrompt) {
-  const s = appState.aiSettings;
-  if (!s || !s.key) return { error: '尚未配置 AI 密钥，请点首页右上角 ⚙️ 填写' };
-  // 走后端中转代理：密钥仅在本机 localStorage，按请求临时传给后端转发，不进代码/仓库
   const base = getApiBase();
   const payload = {
-    provider: s.provider,
-    key: s.key,
-    endpoint: s.endpoint,
+    provider: appState.aiProvider === 'default' ? null : appState.aiProvider,
     system: systemPrompt,
     user: userPrompt,
   };
@@ -4688,7 +4683,12 @@ async function callAI(systemPrompt, userPrompt) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    if (!r.ok) { const t = await r.text(); return { error: 'AI 网关 ' + r.status + '：' + t.slice(0, 160) }; }
+    const isJson = (r.headers.get('content-type') || '').includes('application/json');
+    if (!r.ok) {
+      const t = isJson ? await r.text() : '后端返回 HTML（通常是旧版本未部署 /api/ai/chat）';
+      return { error: 'AI 网关 ' + r.status + '：' + t.slice(0, 160) };
+    }
+    if (!isJson) return { error: '后端返回非 JSON（可能是旧版本或未部署 /api/ai/chat），请重新部署后端' };
     const j = await r.json();
     if (j.error) return { error: j.error };
     const text = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
@@ -4711,41 +4711,23 @@ function closeModal() {
 }
 
 function openAISettings() {
-  const s = appState.aiSettings;
-  const html = `<div class="modal-title">🤖 AI 设置</div>
-    <div class="ai-tip">密钥只保存在你本机（localStorage），调用时经你的私有后端中转转发，既不进代码也不进公开仓库，仅此 App 可用。</div>
+  const p = appState.aiProvider;
+  const html = `<div class="modal-title">🤖 AI 服务</div>
+    <div class="ai-tip">AI 密钥已由后端统一配置，无需在 App 内填写。你可以选择优先使用哪个服务商，或交给后端自动选择。</div>
     <div class="ai-field">
-      <div class="ai-label">服务商</div>
+      <div class="ai-label">优先服务商</div>
       <div class="ai-seg">
-        <button class="ai-seg-btn ${s.provider === 'deepseek' ? 'on' : ''}" onclick="setAIProvider('deepseek')">DeepSeek</button>
-        <button class="ai-seg-btn ${s.provider === 'doubao' ? 'on' : ''}" onclick="setAIProvider('doubao')">豆包(火山方舟)</button>
+        <button class="ai-seg-btn ${p === 'default' ? 'on' : ''}" onclick="setAIProvider('default')">后端默认</button>
+        <button class="ai-seg-btn ${p === 'deepseek' ? 'on' : ''}" onclick="setAIProvider('deepseek')">DeepSeek</button>
+        <button class="ai-seg-btn ${p === 'doubao' ? 'on' : ''}" onclick="setAIProvider('doubao')">豆包</button>
       </div>
     </div>
-    <div class="ai-field">
-      <div class="ai-label">API Key</div>
-      <input id="aiKey" class="ai-input" placeholder="粘贴你的密钥，如 sk-... 或 ark..." value="${s.key}">
-    </div>
-    ${s.provider === 'doubao' ? `<div class="ai-field">
-      <div class="ai-label">模型端点 ID（豆包必填，ARK 控制台获取 ep-xxx）</div>
-      <input id="aiEndpoint" class="ai-input" placeholder="ep-xxxxxxxx" value="${s.endpoint}">
-    </div>` : ''}
     <div class="modal-actions">
-      <button class="modal-btn ghost" onclick="closeModal()">取消</button>
-      <button class="modal-btn" onclick="saveAISettingsFromUI()">保存</button>
+      <button class="modal-btn" onclick="closeModal()">知道了</button>
     </div>`;
   openModal(html);
 }
-function setAIProvider(p) { appState.aiSettings.provider = p; saveAISettings(appState.aiSettings); openAISettings(); }
-function saveAISettingsFromUI() {
-  const key = document.getElementById('aiKey').value.trim();
-  const endpointEl = document.getElementById('aiEndpoint');
-  const endpoint = endpointEl ? endpointEl.value.trim() : '';
-  appState.aiSettings.key = key;
-  appState.aiSettings.endpoint = endpoint;
-  saveAISettings(appState.aiSettings);
-  closeModal();
-  showToast(key ? '✅ AI 设置已保存' : '已清除 AI 密钥');
-}
+function setAIProvider(p) { appState.aiProvider = p; saveAIProvider(p); openAISettings(); }
 
 // 思考巩固题 → AI
 function askAIQuestion(i) {

@@ -36,7 +36,17 @@ const CFG = {
   // 前端来源：华为授权完成后跳回的地址 + 允许跨域请求的来源
   frontendOrigin: process.env.HW_FRONTEND_ORIGIN || '',
   corsOrigin: process.env.HW_CORS_ORIGIN || (process.env.HW_FRONTEND_ORIGIN || ''),
+  // AI 配置：密钥仅在后端环境变量，前端不再触碰
+  aiProvider: process.env.AI_PROVIDER || 'deepseek',
+  deepseekKey: process.env.DEEPSEEK_API_KEY || '',
+  doubaoKey: process.env.DOUBAO_API_KEY || '',
+  doubaoEndpoint: process.env.DOUBAO_ENDPOINT || '',
 };
+
+// 允许跨域的来源（Web 前端 + iOS Capacitor 壳）
+const ALLOWED_ORIGINS = new Set(
+  [CFG.frontendOrigin, CFG.corsOrigin, 'capacitor://localhost', 'ionic://localhost'].filter(Boolean)
+);
 
 // 按请求域名推导回调地址（部署到任何平台都无需手工改）
 function resolveRedirectUri(req) {
@@ -79,11 +89,11 @@ function setCookie(res, name, value, maxAge = 2592000) {
   res.setHeader('Set-Cookie', `${name}=${value}; HttpOnly; Path=/; Max-Age=${maxAge}; SameSite=None; Secure`);
 }
 
-// CORS：仅允许配置的前端来源，并支持携带凭据
+// CORS：允许 Web 前端与 iOS Capacitor 壳，并支持携带凭据
 function applyCors(res, req) {
   const origin = req.headers.origin;
-  if (CFG.corsOrigin && origin === CFG.corsOrigin) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
+  if (!origin || ALLOWED_ORIGINS.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -252,11 +262,10 @@ const server = http.createServer(async (req, res) => {
   const parsed = new URL(req.url, `http://localhost:${PORT}`);
   const p = parsed.pathname;
 
-  // ===== AI 中转代理（用户自带密钥，按请求传入，后端不存储、不写日志）=====
-  // 该接口以请求体中的用户密钥鉴权，不依赖 Cookie/会话，故可放开跨域到任意来源，
-  // 既绕开浏览器/WebView 对 DeepSeek/豆包 的 CORS 限制，又保证密钥绝不进入代码或仓库。
+  // ===== AI 中转代理（密钥仅在后端环境变量，前端不再触碰）=====
+  // 用户无需在 App 内填写任何密钥；后端读取 DEEPSEEK_API_KEY / DOUBAO_API_KEY 转发请求。
   if (p === '/api/ai/chat') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    applyCors(res, req);
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
@@ -266,16 +275,23 @@ const server = http.createServer(async (req, res) => {
     req.on('end', async () => {
       let reqBody;
       try { reqBody = JSON.parse(buf); } catch (e) { return sendJson(res, 400, { error: '请求体不是合法 JSON' }); }
-      const { provider, key, endpoint, model, system, user } = reqBody;
-      if (!key) return sendJson(res, 400, { error: '缺少 API Key' });
-      let url, mdl;
-      if (provider === 'doubao') {
+      const { provider, model, system, user } = reqBody;
+      if (!user) return sendJson(res, 400, { error: '缺少 user 内容' });
+
+      const useDoubao = (provider === 'doubao') || (!provider && CFG.aiProvider === 'doubao');
+      let url, key, mdl;
+      if (useDoubao) {
+        if (!CFG.doubaoKey) return sendJson(res, 503, { error: '后端未配置豆包 API Key' });
         url = 'https://ark.cn-beijing.volcesec.com/api/v3/chat/completions';
-        mdl = model || endpoint || 'doubao-seed-1-6-250615';
+        key = CFG.doubaoKey;
+        mdl = model || CFG.doubaoEndpoint || 'doubao-seed-1-6-250615';
       } else {
+        if (!CFG.deepseekKey) return sendJson(res, 503, { error: '后端未配置 DeepSeek API Key' });
         url = 'https://api.deepseek.com/chat/completions';
+        key = CFG.deepseekKey;
         mdl = model || 'deepseek-chat';
       }
+
       try {
         const r = await fetch(url, {
           method: 'POST',
@@ -407,4 +423,9 @@ server.listen(PORT, () => {
   }
   console.log('[回调地址] 自动按部署域名生成: /api/health/callback（需在华为开发者联盟登记为该应用的回调地址）');
   if (CFG.frontendOrigin) console.log('[前端来源]', CFG.frontendOrigin);
+  const aiStatus = [];
+  if (CFG.deepseekKey) aiStatus.push('DeepSeek');
+  if (CFG.doubaoKey) aiStatus.push('豆包');
+  if (aiStatus.length) console.log('[AI 服务] 已配置：' + aiStatus.join('、') + '（默认 ' + CFG.aiProvider + '）');
+  else console.warn('[警告] 未检测到 DEEPSEEK_API_KEY / DOUBAO_API_KEY，AI 功能不可用');
 });
