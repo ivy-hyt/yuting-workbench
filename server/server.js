@@ -282,7 +282,7 @@ const server = http.createServer(async (req, res) => {
       let url, key, mdl;
       if (useDoubao) {
         if (!CFG.doubaoKey) return sendJson(res, 503, { error: '后端未配置豆包 API Key' });
-        url = 'https://ark.cn-beijing.volcesec.com/api/v3/chat/completions';
+        url = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
         key = CFG.doubaoKey;
         mdl = model || CFG.doubaoEndpoint || 'doubao-seed-1-6-250615';
       } else {
