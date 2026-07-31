@@ -4789,7 +4789,7 @@ async function callAI(systemPrompt, userPrompt, opts) {
   opts = opts || {};
   const base = getApiBase();
   const payload = {
-    provider: appState.aiProvider === 'default' ? null : appState.aiProvider,
+    provider: appState.aiProvider === 'default' ? 'zhipu' : appState.aiProvider,
     system: systemPrompt,
     user: userPrompt,
   };
@@ -4878,13 +4878,13 @@ function closeModal() {
 function openAISettings() {
   const p = appState.aiProvider;
   const html = `<div class="modal-title">🤖 AI 服务</div>
-    <div class="ai-tip">AI 密钥已由后端统一配置，无需在 App 内填写。默认使用 <b>Gemini 2.5 Flash</b>。</div>
+    <div class="ai-tip">AI 密钥已由后端统一配置，无需在 App 内填写。默认使用 <b>智谱 GLM-4-Flash</b>。</div>
     <div class="ai-tip" style="margin-top:-6px;color:var(--text-light);">已接入：① 学习模块「问 AI 巩固」② <b>智能大管家</b>对话（关键词未命中时调用）。</div>
     <div class="ai-field">
       <div class="ai-label">优先服务商</div>
       <div class="ai-seg">
-        <button class="ai-seg-btn ${p === 'default' || p === 'gemini' ? 'on' : ''}" onclick="setAIProvider('gemini')">Gemini</button>
-        <button class="ai-seg-btn ${p === 'zhipu' ? 'on' : ''}" onclick="setAIProvider('zhipu')">智谱</button>
+        <button class="ai-seg-btn ${p === 'gemini' ? 'on' : ''}" onclick="setAIProvider('gemini')">Gemini</button>
+        <button class="ai-seg-btn ${p === 'default' || p === 'zhipu' ? 'on' : ''}" onclick="setAIProvider('zhipu')">智谱</button>
         <button class="ai-seg-btn ${p === 'deepseek' ? 'on' : ''}" onclick="setAIProvider('deepseek')">DeepSeek</button>
         <button class="ai-seg-btn ${p === 'doubao' ? 'on' : ''}" onclick="setAIProvider('doubao')">豆包</button>
       </div>

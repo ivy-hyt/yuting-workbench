@@ -37,8 +37,9 @@ const CFG = {
   frontendOrigin: process.env.HW_FRONTEND_ORIGIN || '',
   corsOrigin: process.env.HW_CORS_ORIGIN || (process.env.HW_FRONTEND_ORIGIN || ''),
   // AI 配置：密钥仅在后端环境变量，前端不再触碰
-  // 默认走 Gemini（GEMINI_MODEL 可配，默认 gemini-2.5-flash）；zhipu/deepseek/doubao 保留为备选
-  aiProvider: process.env.AI_PROVIDER || 'gemini',
+  // 默认走智谱 GLM-4-Flash（ZHIPU_MODEL 可配，默认 glm-4-flash）；gemini/deepseek/doubao 保留为备选
+  // 注：Gemini 新用户已停用 gemini-2.5-flash 且免费额度为 0，故默认回退智谱
+  aiProvider: process.env.AI_PROVIDER || 'zhipu',
   geminiKey: process.env.GEMINI_API_KEY || '',
   geminiModel: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
   zhipuKey: process.env.ZHIPU_API_KEY || '',
@@ -270,7 +271,7 @@ const server = http.createServer(async (req, res) => {
   const p = parsed.pathname;
 
   // ===== AI 中转代理（密钥仅在后端环境变量，前端不再触碰）=====
-  // 默认走 Gemini（GEMINI_MODEL 可配）；zhipu/deepseek/doubao 保留为备选。
+  // 默认走智谱 GLM-4-Flash（ZHIPU_MODEL 可配）；gemini/deepseek/doubao 保留为备选。
   // 所有厂商响应统一映射成 OpenAI 兼容结构 { choices:[{ message:{ content } }] }，前端无需改动。
   if (p === '/api/ai/chat') {
     applyCors(res, req);
@@ -289,7 +290,7 @@ const server = http.createServer(async (req, res) => {
       const { provider, model, system, user } = reqBody;
       if (!user) return sendJson(res, 400, { error: '缺少 user 内容' });
 
-      // 默认 Gemini；前端可指定 provider 覆盖
+      // 默认智谱；前端可指定 provider 覆盖
       const prov = provider || CFG.aiProvider;
 
       // ===== Gemini 分支（Google 原生格式，key 走 query 参数，无 Bearer 头）=====
