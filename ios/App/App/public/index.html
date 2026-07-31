@@ -1,0 +1,6631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="雨婷工作台">
+  <meta name="theme-color" content="#7C6FF0">
+  <title>雨婷工作台</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <style>
+/* ========================================
+   何雨婷个人工作台 - 样式表
+   韩系低饱和 · 移动端优先
+   ======================================== */
+
+:root {
+  /* 清爽现代配色 */
+  --bg-primary: #F7F8FC;
+  --bg-card: #FFFFFF;
+  --bg-soft: #EFF2FB;
+  --bg-input: #F5F6FB;
+  --text-primary: #1E293B;
+  --text-secondary: #64748B;
+  --text-light: #94A3B8;
+  --accent: #7C6FF0;
+  --accent-light: #B4A9F7;
+  --accent-dark: #6356E0;
+  --highlight: #2DD4A7;
+  --success: #2DD4A7;
+  --warn: #FFB547;
+  --danger: #FF6B7A;
+  --border: #E8ECF6;
+  --shadow: 0 2px 12px rgba(124, 111, 240, 0.08);
+  --shadow-hover: 0 4px 20px rgba(124, 111, 240, 0.12);
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Noto Sans SC', 'Segoe UI', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ===== 顶部状态栏 ===== */
+.status-bar {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: transparent;
+}
+
+/* ===== 页面容器 ===== */
+.app-container {
+  padding-bottom: calc(88px + env(safe-area-inset-bottom));
+  min-height: 100vh;
+}
+
+.page {
+  display: none;
+  animation: fadeIn 0.3s ease;
+}
+
+.page.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== 首页头部 ===== */
+.home-header {
+  background: linear-gradient(135deg, #7C6FF0 0%, #B4A9F7 100%);
+  padding: calc(16px + env(safe-area-inset-top)) 20px 24px;
+  border-radius: 0 0 28px 28px;
+  position: relative;
+}
+
+.home-gear {
+  position: absolute;
+  top: calc(14px + env(safe-area-inset-top));
+  right: 16px;
+  font-size: 22px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.home-header .greeting {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 4px;
+}
+
+.home-header .username {
+  font-size: 24px;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.home-header .date {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 4px;
+}
+
+.home-header .quick-stats {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.quick-stat {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  flex: 1;
+  text-align: center;
+}
+
+.quick-stat .stat-num {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent-dark);
+}
+
+.quick-stat .stat-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+/* ===== 模块入口卡片 ===== */
+.module-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 20px;
+}
+
+.module-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.module-card:active {
+  transform: scale(0.96);
+}
+
+.module-card .module-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+
+.module-card .module-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.module-card .module-sub {
+  font-size: 11px;
+  color: var(--text-light);
+  line-height: 1.4;
+}
+
+.module-card .module-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--success);
+  color: white;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+/* ===== 区块通用 ===== */
+.section {
+  padding: 0 20px;
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.section-title .more {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-light);
+  font-weight: 400;
+}
+
+/* ===== 待办清单 ===== */
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow);
+}
+
+.todo-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.todo-check.done {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.todo-check.done::after {
+  content: '✓';
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.todo-text {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.todo-text.done {
+  text-decoration: line-through;
+  color: var(--text-light);
+}
+
+.todo-tag {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: var(--bg-soft);
+  color: var(--text-secondary);
+}
+
+/* ===== 状态记录 ===== */
+.status-item {
+  display: flex;
+  gap: 12px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow);
+}
+
+.status-item .status-date {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-dark);
+  white-space: nowrap;
+}
+
+.status-item .status-text {
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+/* ===== 长期目标 ===== */
+.goal-item {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow);
+}
+
+.goal-item .goal-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.goal-item .goal-icon {
+  font-size: 18px;
+}
+
+.goal-item .goal-title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.goal-item .goal-detail {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.progress-bar {
+  height: 6px;
+  background: var(--bg-soft);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent-light), var(--accent));
+  transition: width 0.5s;
+}
+
+.goal-percent {
+  font-size: 11px;
+  color: var(--text-light);
+  text-align: right;
+  margin-top: 4px;
+}
+
+/* ===== 模块页头部 ===== */
+.module-header {
+  padding: calc(16px + env(safe-area-inset-top)) 20px 16px;
+  background: var(--bg-card);
+  border-radius: 0 0 24px 24px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+
+.module-header .back-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  margin-bottom: 12px;
+}
+
+.module-header .m-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.module-header .m-sub {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* ===== 通用卡片 ===== */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+
+.card-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.card-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+/* ===== 学习路线阶段 ===== */
+.phase-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  border-left: 3px solid var(--accent);
+}
+
+.phase-card .phase-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent-dark);
+}
+
+.phase-card .phase-duration {
+  font-size: 11px;
+  color: var(--text-light);
+  margin: 2px 0 8px;
+}
+
+.phase-card .phase-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.book-list {
+  margin-top: 8px;
+}
+
+.book-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.book-item:last-child {
+  border-bottom: none;
+}
+
+.book-order {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent-dark);
+  flex-shrink: 0;
+}
+
+.book-info {
+  flex: 1;
+}
+
+.book-info .book-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.book-info .book-author {
+  font-size: 11px;
+  color: var(--text-light);
+}
+
+.book-info .book-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-top: 3px;
+}
+
+.book-level {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  margin-left: 4px;
+}
+
+.level-入门 { background: #E8F5E9; color: #5B8C5A; }
+.level-进阶 { background: #FFF3E0; color: #C68C3C; }
+.level-实战 { background: #FCE4EC; color: #C45B6E; }
+
+/* ===== 今日课程 ===== */
+.lesson-card {
+  background: linear-gradient(135deg, #F0EDFF 0%, #E8E0FF 100%);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  margin-bottom: 12px;
+}
+
+.lesson-card .lesson-topic {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent-dark);
+  margin-bottom: 4px;
+}
+
+.lesson-card .lesson-source {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-bottom: 12px;
+}
+
+.lesson-card .lesson-content p {
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.7;
+  margin-bottom: 8px;
+}
+
+.question-box {
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin-top: 12px;
+}
+
+.question-box .q-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-dark);
+  margin-bottom: 8px;
+}
+
+.question-box ol {
+  padding-left: 18px;
+}
+
+.question-box li {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 6px;
+}
+
+/* ===== 资讯简报 ===== */
+.news-section {
+  margin-bottom: 16px;
+}
+
+.news-section .news-cat {
+  font-size: 14px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 10px;
+  display: inline-block;
+  margin-bottom: 10px;
+  color: white;
+}
+
+.news-item {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow);
+}
+
+.news-item .news-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.news-item .news-brief {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 6px;
+}
+
+.news-item .news-insight {
+  font-size: 12px;
+  color: var(--accent-dark);
+  line-height: 1.5;
+  background: var(--bg-soft);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+}
+
+/* ===== 健身训练 ===== */
+.workout-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+}
+
+.workout-card:active {
+  transform: scale(0.97);
+}
+
+.workout-card.selected {
+  border-color: var(--accent);
+  background: #F5F2FF;
+}
+
+.workout-card .w-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.workout-card .w-meta {
+  display: flex;
+  gap: 8px;
+  margin: 6px 0 8px;
+}
+
+.workout-card .w-tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: var(--bg-soft);
+  color: var(--text-secondary);
+}
+
+.workout-card .w-muscles {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.exercise-item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.exercise-item:last-child {
+  border-bottom: none;
+}
+
+.exercise-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.exercise-sets {
+  font-size: 11px;
+  color: var(--accent-dark);
+  font-weight: 600;
+}
+
+.exercise-focus {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 3px;
+}
+
+.exercise-tip {
+  font-size: 11px;
+  color: var(--warn);
+  margin-top: 2px;
+}
+
+.stretch-list, .warmup-list {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+  padding-left: 4px;
+}
+
+/* 周训练计划表 */
+.week-plan {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 0;
+}
+
+.week-day {
+  flex-shrink: 0;
+  min-width: 80px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 10px 8px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.week-day .wd-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.week-day .wd-plan {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin: 4px 0;
+  line-height: 1.3;
+}
+
+.week-day .wd-status {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.wd-rest { background: #F0EEE9; color: var(--text-light); }
+.wd-pending { background: #FFF3E0; color: #C68C3C; }
+.wd-done { background: #E8F5E9; color: #5B8C5A; }
+
+/* 打卡按钮 */
+.checkin-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.2s;
+}
+
+.checkin-btn:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+.checkin-btn.done {
+  background: var(--success);
+}
+
+/* 身体感受选择 */
+.feeling-selector {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.feeling-btn {
+  flex: 1;
+  padding: 10px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  background: white;
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.feeling-btn.active {
+  border-color: var(--accent);
+  background: #F5F2FF;
+  color: var(--accent-dark);
+  font-weight: 600;
+}
+
+/* 饮食参考 */
+.meal-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.meal-item:last-child {
+  border-bottom: none;
+}
+
+.meal-time {
+  font-size: 11px;
+  color: var(--accent-dark);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.meal-content {
+  flex: 1;
+  margin: 0 8px;
+}
+
+.meal-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.meal-suggestion {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+.meal-cal {
+  font-size: 11px;
+  color: var(--text-light);
+  white-space: nowrap;
+}
+
+/* ===== 穿搭模块 ===== */
+.blogger-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+
+.blogger-card .b-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.blogger-card .b-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-light), var(--accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.blogger-card .b-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.blogger-card .b-followers {
+  font-size: 11px;
+  color: var(--text-light);
+}
+
+.blogger-card .b-style {
+  font-size: 12px;
+  color: var(--accent-dark);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.blogger-card .b-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.blogger-card .b-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.b-item-tag {
+  font-size: 10px;
+  padding: 3px 8px;
+  background: var(--bg-soft);
+  border-radius: 8px;
+  color: var(--text-secondary);
+}
+
+.blogger-card .b-formula {
+  font-size: 12px;
+  color: var(--accent-dark);
+  background: #F5F2FF;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  line-height: 1.5;
+}
+
+.match-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--success);
+  color: white;
+  font-weight: 600;
+}
+
+/* 配色展示 */
+.color-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.color-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.color-swatch {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+.color-label {
+  font-size: 9px;
+  color: var(--text-light);
+  text-align: center;
+  max-width: 52px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 穿搭公式 */
+.formula-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow);
+  border-left: 3px solid var(--accent);
+}
+
+.formula-card .f-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.formula-card .f-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.formula-card .f-tip {
+  font-size: 11px;
+  color: var(--warn);
+}
+
+/* 今日穿搭推荐 */
+.outfit-card {
+  background: linear-gradient(135deg, #F0EDFF 0%, #E8E0FF 100%);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  margin-bottom: 12px;
+}
+
+.outfit-card .o-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent-dark);
+  margin-bottom: 12px;
+}
+
+.outfit-card .o-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.outfit-card .o-label {
+  font-size: 12px;
+  color: var(--text-light);
+  width: 50px;
+  flex-shrink: 0;
+}
+
+.outfit-card .o-value {
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.outfit-card .o-tip {
+  font-size: 12px;
+  color: var(--accent-dark);
+  background: rgba(255,255,255,0.5);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  margin-top: 8px;
+}
+
+/* ===== 自媒体模块 ===== */
+.track-table {
+  overflow-x: auto;
+}
+
+.track-row {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow);
+}
+
+.track-row .t-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.track-row .t-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.track-row .t-score {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.score-high { background: #E8F5E9; color: #5B8C5A; }
+.score-mid { background: #FFF3E0; color: #C68C3C; }
+.score-low { background: #FFEBEE; color: #C45B5E; }
+
+.track-row .t-barrier {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-bottom: 4px;
+}
+
+.track-row .t-detail {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.track-row .t-detail span {
+  color: var(--accent-dark);
+  font-weight: 600;
+}
+
+/* 对标账号 */
+.benchmark-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+
+.benchmark-card .bm-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.benchmark-card .bm-followers {
+  font-size: 11px;
+  color: var(--accent-dark);
+  margin-bottom: 8px;
+}
+
+.benchmark-card .bm-section {
+  margin-bottom: 8px;
+}
+
+.benchmark-card .bm-label {
+  font-size: 11px;
+  color: var(--text-light);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.benchmark-card .bm-value {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* 选题推荐 */
+.topic-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+
+.topic-card .tp-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.topic-card .tp-heat {
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.topic-card .tp-row {
+  margin-bottom: 6px;
+}
+
+.topic-card .tp-label {
+  font-size: 11px;
+  color: var(--accent-dark);
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.topic-card .tp-value {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.tag-list span {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: var(--bg-soft);
+  border-radius: 6px;
+  color: var(--text-secondary);
+}
+
+/* 脚本框架 */
+.script-step {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.script-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.script-info .script-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.script-info .script-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-top: 2px;
+}
+
+.script-info .script-example {
+  font-size: 11px;
+  color: var(--accent-dark);
+  background: var(--bg-soft);
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  margin-top: 4px;
+}
+
+/* ===== 底部导航 ===== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  z-index: 100;
+  padding-top: 8px;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nav-item .nav-icon {
+  font-size: 22px;
+  line-height: 1;
+  opacity: 0.55;
+  transition: all 0.2s;
+}
+
+.nav-item .nav-label {
+  font-size: 11px;
+  color: var(--text-light);
+  transition: all 0.2s;
+}
+
+.nav-item.active .nav-icon {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.nav-item.active .nav-label {
+  color: var(--accent-dark);
+  font-weight: 600;
+}
+
+/* ===== 浮动管家按钮 ===== */
+.assistant-fab {
+  position: fixed;
+  bottom: 76px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+  cursor: pointer;
+  z-index: 101;
+  box-shadow: 0 4px 20px rgba(124, 111, 240, 0.4);
+  animation: pulse 2s infinite;
+  transition: all 0.3s;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(124, 111, 240, 0.4); }
+  50% { box-shadow: 0 4px 30px rgba(124, 111, 240, 0.6); }
+}
+
+.assistant-fab:active {
+  transform: scale(0.9);
+}
+
+/* ===== 管家对话面板 ===== */
+.assistant-panel {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  width: 100%;
+  max-width: 430px;
+  height: 85vh;
+  background: var(--bg-primary);
+  border-radius: 28px 28px 0 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: 0 -4px 40px rgba(0,0,0,0.15);
+}
+
+.assistant-panel.open {
+  transform: translateX(-50%) translateY(0);
+}
+
+.assistant-header {
+  padding: calc(16px + env(safe-area-inset-top)) 20px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  border-radius: 28px 28px 0 0;
+}
+
+.assistant-header .ah-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.assistant-header .ah-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-light), var(--accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.assistant-header .ah-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.assistant-header .ah-sub {
+  font-size: 11px;
+  color: var(--success);
+}
+
+.assistant-header .ah-close {
+  font-size: 20px;
+  color: var(--text-light);
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+/* 今日总览（管家面板内） */
+.assistant-overview {
+  padding: 14px 16px;
+  background: var(--bg-card);
+  margin: 12px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+}
+
+.assistant-overview .ao-title {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.assistant-overview .ao-item {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  padding: 4px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+/* 对话区域 */
+.chat-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-msg {
+  max-width: 80%;
+  padding: 10px 14px;
+  border-radius: var(--radius-lg);
+  font-size: 13px;
+  line-height: 1.6;
+  animation: msgIn 0.3s ease;
+}
+
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.chat-msg.bot {
+  align-self: flex-start;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-bottom-left-radius: 4px;
+  box-shadow: var(--shadow);
+}
+
+.chat-msg.user {
+  align-self: flex-end;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-msg.system {
+  align-self: center;
+  background: transparent;
+  color: var(--text-light);
+  font-size: 11px;
+  max-width: 100%;
+}
+
+/* 快捷入口 */
+.quick-actions {
+  display: flex;
+  gap: 6px;
+  padding: 0 16px 8px;
+  flex-wrap: wrap;
+}
+
+.quick-action {
+  font-size: 11px;
+  padding: 6px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.quick-action:active {
+  background: var(--bg-soft);
+  transform: scale(0.95);
+}
+
+/* 输入区域 */
+.chat-input-area {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+}
+
+.chat-input {
+  flex: 1;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  font-size: 13px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.chat-input:focus {
+  border-color: var(--accent-light);
+}
+
+.chat-send {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: white;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.chat-send:active {
+  transform: scale(0.9);
+}
+
+.chat-send:disabled {
+  opacity: 0.4;
+}
+
+/* 打字动画 */
+.typing-dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.typing-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-light);
+  animation: typing 1.4s infinite;
+}
+
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing {
+  0%, 60%, 100% { transform: scale(1); opacity: 0.4; }
+  30% { transform: scale(1.3); opacity: 1; }
+}
+
+/* ===== 空白间距 ===== */
+.spacer {
+  height: 20px;
+}
+
+/* ===== Toast 提示 ===== */
+.toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: rgba(61, 57, 53, 0.92);
+  color: white;
+  padding: 10px 24px;
+  border-radius: 20px;
+  font-size: 13px;
+  z-index: 300;
+  opacity: 0;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* ===== 遮罩层 ===== */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 150;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ===== 滚动条美化 ===== */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* ===== 穿搭偏好选择 ===== */
+.preference-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: white;
+  font-size: 12px;
+  cursor: pointer;
+  flex: 1;
+  transition: all 0.2s;
+}
+
+.preference-btn.like { color: var(--success); border-color: var(--success); }
+.preference-btn.dislike { color: var(--danger); border-color: var(--danger); }
+.preference-btn.neutral { color: var(--text-light); }
+
+.preference-btn:active {
+  transform: scale(0.95);
+}
+
+/* ===== 知识点切换按钮 ===== */
+.change-btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.change-btn:active {
+  transform: scale(0.93);
+  opacity: 0.85;
+}
+
+.lesson-hint {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-top: 10px;
+  text-align: center;
+}
+
+/* ===== 书籍微信读书链接 ===== */
+.book-title-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  text-decoration: none;
+}
+
+.book-title-link .book-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-dark);
+}
+
+.book-title-link:active .book-title {
+  opacity: 0.7;
+}
+
+.weread-icon {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: #E8F5E9;
+  color: #5B8C5A;
+  white-space: nowrap;
+}
+
+/* ===== 周训练计划可点击 ===== */
+.week-day-clickable {
+  transition: all 0.2s;
+}
+
+.week-day-clickable:active {
+  transform: scale(0.95);
+  border: 2px solid var(--accent);
+}
+
+.wd-action {
+  font-size: 9px;
+  color: var(--accent);
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+/* ===== 训练视频链接 ===== */
+.video-link {
+  display: inline-block;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: #FFF3E0;
+  color: #E8843C;
+  text-decoration: none;
+  margin-left: auto;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.video-link:active {
+  opacity: 0.7;
+  transform: scale(0.95);
+}
+
+/* ===== 天气穿搭 ===== */
+.weather-card {
+  background: linear-gradient(135deg, #E0F7FA 0%, #B2EBF2 100%);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.weather-card .w-location {
+  font-size: 13px;
+  font-weight: 700;
+  color: #00695C;
+  margin-bottom: 4px;
+}
+
+.weather-card .w-temp {
+  font-size: 28px;
+  font-weight: 800;
+  color: #00897B;
+}
+
+.weather-card .w-desc {
+  font-size: 12px;
+  color: #00695C;
+  margin-top: 4px;
+}
+
+.weather-card .w-outfit {
+  background: rgba(255,255,255,0.7);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: #004D40;
+  line-height: 1.6;
+}
+
+/* ===== 色块选搭 ===== */
+.color-chip-clickable {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.color-chip-clickable:active {
+  transform: scale(0.9);
+}
+
+.color-chip-selected .color-swatch {
+  box-shadow: 0 0 0 3px var(--accent), 0 0 0 5px white;
+  transform: scale(1.1);
+}
+
+.color-chip-selected .color-label {
+  color: var(--accent-dark);
+  font-weight: 600;
+}
+
+.color-select-hint {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-top: 8px;
+  text-align: center;
+}
+
+.outfit-result {
+  margin-top: 12px;
+}
+
+.outfit-result-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow);
+}
+
+.outfit-result-card .or-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-dark);
+  margin-bottom: 6px;
+}
+
+.outfit-result-card .or-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.outfit-result-card .or-link {
+  display: inline-block;
+  font-size: 11px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.outfit-result-card .or-link:active {
+  transform: scale(0.95);
+}
+
+/* ===== 搭配公式图片卡 ===== */
+.formula-image-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 0;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  border-left: 3px solid var(--accent);
+}
+
+.formula-image-card .fi-header {
+  padding: 14px 16px 8px;
+}
+
+.formula-image-card .fi-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.formula-image-card .fi-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.formula-image-card .fi-tip {
+  font-size: 11px;
+  color: var(--warn);
+  margin-top: 4px;
+}
+
+.formula-image-card .fi-image {
+  width: 100%;
+  height: 180px;
+  background: var(--bg-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.formula-image-card .fi-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.formula-image-card .fi-link {
+  display: block;
+  text-align: center;
+  padding: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  text-decoration: none;
+}
+
+.formula-image-card .fi-link:active {
+  opacity: 0.85;
+}
+
+/* ===== 博主卡片可点击 ===== */
+.blogger-card-clickable {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.blogger-card-clickable:active {
+  transform: scale(0.97);
+}
+
+.blogger-card .b-link-btn {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 11px;
+  padding: 6px 14px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #E1306C 0%, #C13584 100%);
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  text-align: center;
+}
+
+.blogger-card .b-link-btn:active {
+  transform: scale(0.95);
+}
+
+/* ===== 穿搭图滑动卡片 ===== */
+.outfit-swipe-container {
+  position: relative;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.outfit-swipe-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+.outfit-swipe-card.swipe-left {
+  transform: translateX(-120%);
+  opacity: 0;
+}
+
+.outfit-swipe-card.swipe-right {
+  transform: translateX(120%);
+  opacity: 0;
+}
+
+.outfit-swipe-img {
+  width: 100%;
+  height: 280px;
+  background: linear-gradient(135deg, #F0EDFF, #E8E0FF);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.outfit-swipe-img .osi-placeholder {
+  font-size: 48px;
+  opacity: 0.4;
+}
+
+.outfit-swipe-img .osi-style-tag {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(255,255,255,0.9);
+  padding: 4px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-dark);
+}
+
+.outfit-swipe-img .osi-counter {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0,0,0,0.4);
+  color: white;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+}
+
+.outfit-swipe-body {
+  padding: 14px 16px;
+}
+
+.outfit-swipe-body .osb-desc {
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.outfit-swipe-body .osb-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.outfit-swipe-body .osb-tags span {
+  font-size: 10px;
+  padding: 2px 8px;
+  background: var(--bg-soft);
+  border-radius: 8px;
+  color: var(--text-secondary);
+}
+
+.outfit-swipe-body .osb-link {
+  display: inline-block;
+  font-size: 11px;
+  color: var(--accent-dark);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.outfit-swipe-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.outfit-swipe-btn {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+}
+
+.outfit-swipe-btn.dislike {
+  background: #FFF0F0;
+  color: var(--danger);
+}
+
+.outfit-swipe-btn.like {
+  background: #E8F5E9;
+  color: var(--success);
+}
+
+.outfit-swipe-btn:active {
+  transform: scale(0.88);
+}
+
+.outfit-swipe-undo {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.outfit-swipe-undo button {
+  background: none;
+  border: none;
+  font-size: 12px;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.outfit-preference-summary {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  justify-content: space-between;
+}
+
+.outfit-preference-summary .ops-like {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.outfit-preference-summary .ops-dislike {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+/* ===== 博主换一换 ===== */
+.blogger-pool-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.blogger-change-btn {
+  background: var(--bg-soft);
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 6px 14px;
+  font-size: 12px;
+  color: var(--accent-dark);
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.blogger-change-btn:active {
+  transform: scale(0.93);
+}
+
+.blogger-platform-tag {
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--bg-soft);
+  color: var(--text-secondary);
+  margin-left: 4px;
+}
+
+/* ===== 新风格推荐 ===== */
+.new-style-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 0;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.new-style-card .ns-header {
+  padding: 14px 16px 8px;
+}
+
+.new-style-card .ns-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.new-style-card .ns-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+
+.new-style-card .ns-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.new-style-card .ns-tags span {
+  font-size: 10px;
+  padding: 2px 8px;
+  background: var(--bg-soft);
+  border-radius: 8px;
+  color: var(--text-secondary);
+}
+
+.new-style-card .ns-link {
+  display: block;
+  text-align: center;
+  padding: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  text-decoration: none;
+}
+
+.new-style-card .ns-link:active {
+  opacity: 0.85;
+}
+
+/* ===== 赛道可点击卡片 ===== */
+.track-clickable-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: all 0.2s;
+  border-left: 4px solid var(--accent);
+}
+
+.track-clickable-card:active {
+  transform: scale(0.97);
+}
+
+.track-clickable-card .tcc-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.track-clickable-card .tcc-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.track-clickable-card .tcc-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.track-clickable-card .tcc-score {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #E8F5E9;
+  color: #5B8C5A;
+  font-weight: 600;
+}
+
+.track-clickable-card .tcc-meta {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-bottom: 6px;
+}
+
+.track-clickable-card .tcc-expand {
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.track-blogger-list {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.track-blogger-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.track-blogger-item:last-child {
+  border-bottom: none;
+}
+
+.track-blogger-item .tbi-platform {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--bg-soft);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.track-blogger-item .tbi-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.track-blogger-item .tbi-followers {
+  font-size: 11px;
+  color: var(--accent-dark);
+  font-weight: 600;
+}
+
+.track-blogger-item .tbi-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-top: 2px;
+  flex: 1;
+}
+
+.track-blogger-item .tbi-arrow {
+  font-size: 16px;
+  color: var(--accent);
+}
+
+/* ===== 对标账号可跳转 ===== */
+.benchmark-jump-btn {
+  display: block;
+  text-align: center;
+  padding: 8px;
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #FF6B7A 0%, #E63946 100%);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+}
+
+.benchmark-jump-btn:active {
+  opacity: 0.85;
+}
+
+/* ===== 爆款选题真实链接 ===== */
+.topic-link-btn {
+  display: inline-block;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #FF6B7A 0%, #E63946 100%);
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.topic-link-btn:active {
+  opacity: 0.85;
+}
+
+/* ===== 脚本分析输入区 ===== */
+.script-analysis-area {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-top: 12px;
+  box-shadow: var(--shadow);
+}
+
+.script-analysis-area .sa-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.script-analysis-area .sa-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.script-analysis-area .sa-input {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.script-analysis-area .sa-input:focus {
+  border-color: var(--accent-light);
+}
+
+.script-analysis-area .sa-btn {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.script-analysis-area .sa-btn:active {
+  transform: scale(0.97);
+}
+
+.script-analysis-result {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg-soft);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.script-analysis-result .sar-title {
+  font-weight: 700;
+  color: var(--accent-dark);
+  margin-bottom: 6px;
+}
+
+/* ===== 阅读分析 ===== */
+.reading-stats-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+
+.rs-grid {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.rs-item {
+  flex: 1;
+  text-align: center;
+  background: var(--bg-soft);
+  border-radius: var(--radius-md);
+  padding: 12px 8px;
+}
+
+.rs-num {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--accent-dark);
+}
+
+.rs-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.rs-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 14px 0 8px;
+}
+
+.rs-book-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rs-book-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: var(--bg-soft);
+  border-radius: var(--radius-sm);
+}
+
+.rs-rank {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rs-book-info {
+  flex: 1;
+}
+
+.rs-book-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rs-book-author {
+  font-size: 10px;
+  color: var(--text-light);
+}
+
+.rs-bar-chart {
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+  height: 100px;
+  padding: 8px 0;
+}
+
+.rs-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.rs-bar {
+  width: 60%;
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-light) 100%);
+  border-radius: 4px 4px 0 0;
+  min-height: 4px;
+  transition: height 0.5s;
+}
+
+.rs-bar-2 {
+  background: linear-gradient(180deg, var(--success) 0%, #6EE7B7 100%);
+}
+
+.rs-bar-val {
+  font-size: 9px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.rs-bar-label {
+  font-size: 9px;
+  color: var(--text-light);
+}
+
+.rs-preference {
+  margin-top: 14px;
+  padding: 10px 12px;
+  background: #F5F2FF;
+  border-radius: var(--radius-md);
+}
+
+.rs-pref-text {
+  font-size: 12px;
+  color: var(--accent-dark);
+  line-height: 1.6;
+}
+
+/* ===== 个人训练数据 ===== */
+.personal-stats-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+
+.ps-grid {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.ps-item {
+  flex: 1;
+  text-align: center;
+  background: var(--bg-soft);
+  border-radius: var(--radius-md);
+  padding: 12px 8px;
+}
+
+.ps-num {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--accent-dark);
+}
+
+.ps-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.ps-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 14px 0 8px;
+}
+
+.ps-weight-chart {
+  display: flex;
+  gap: 4px;
+  align-items: flex-end;
+  height: 100px;
+  padding: 8px 0;
+}
+
+.ps-weight-point {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.ps-weight-val {
+  font-size: 10px;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+.ps-weight-bar {
+  width: 70%;
+  background: var(--accent-light);
+  border-radius: 4px 4px 0 0;
+  min-height: 4px;
+  transition: height 0.5s;
+}
+
+.ps-weight-date {
+  font-size: 9px;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
+.ps-bodyfat-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ps-bf-item {
+  flex: 1;
+  text-align: center;
+  background: var(--bg-soft);
+  border-radius: var(--radius-sm);
+  padding: 8px 4px;
+}
+
+.ps-bf-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent-dark);
+}
+
+.ps-bf-date {
+  font-size: 9px;
+  color: var(--text-light);
+}
+
+.ps-muscle-freq {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ps-mf-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ps-mf-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  width: 50px;
+  flex-shrink: 0;
+}
+
+.ps-mf-bar-wrap {
+  flex: 1;
+  height: 24px;
+  background: var(--bg-soft);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.ps-mf-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-light) 100%);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+  font-size: 10px;
+  color: white;
+  font-weight: 600;
+  min-width: 40px;
+  transition: width 0.5s;
+}
+
+.ps-mf-last {
+  font-size: 10px;
+  color: var(--text-light);
+  width: 70px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ===== 肌群多选网格 ===== */
+.muscle-group-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.muscle-group-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+  text-align: center;
+}
+
+.muscle-group-card:active {
+  transform: scale(0.95);
+}
+
+.muscle-group-card.mg-selected {
+  border-color: var(--accent);
+  background: #F5F2FF;
+}
+
+.mg-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin: 0 auto 8px;
+}
+
+.mg-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.mg-muscles {
+  font-size: 10px;
+  color: var(--text-light);
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
+/* ===== 跟练视频卡片 ===== */
+.video-group-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+
+.vg-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.vg-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.vg-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.vg-muscles {
+  font-size: 10px;
+  color: var(--text-light);
+  margin-left: auto;
+}
+
+.vg-video-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.video-link-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg-soft);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.video-link-card:active {
+  transform: scale(0.97);
+  background: var(--accent-light);
+}
+
+.vl-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.vl-info {
+  flex: 1;
+}
+
+.vl-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.vl-meta {
+  font-size: 10px;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
+.vl-arrow {
+  font-size: 16px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+/* ===== 健康数据同步 ===== */
+.hw-base-box {
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+.hw-base-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+.hw-base-row {
+  display: flex;
+  gap: 8px;
+}
+.hw-base-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 12px;
+  background: var(--bg-input, #fff);
+  color: var(--text);
+  outline: none;
+}
+.hw-base-input:focus {
+  border-color: var(--accent);
+}
+.hw-base-save {
+  background: var(--accent-light, #F3F0FF);
+  color: var(--accent);
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.hw-base-tip {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-top: 6px;
+  word-break: break-all;
+}
+.health-sync-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(255,120,140,0.3);
+  transition: transform 0.2s;
+}
+.health-sync-btn:active { transform: scale(0.95); }
+
+/* ===== 今日喝水记录 ===== */
+.water-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow);
+}
+.water-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.water-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.water-goal-edit {
+  font-size: 12px;
+  color: var(--accent);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 10px;
+  background: var(--bg-soft);
+}
+.water-progress-wrap {
+  height: 14px;
+  background: var(--bg-soft);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.water-progress-bar {
+  height: 100%;
+  background: linear-gradient(135deg, #6FD3FF, #7C6FF0);
+  border-radius: 10px;
+  transition: width 0.4s ease;
+  min-width: 0;
+}
+.water-nums {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+.water-drunk {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--accent-dark);
+}
+.water-unit {
+  font-size: 12px;
+  color: var(--text-light);
+}
+.water-sep {
+  font-size: 16px;
+  color: var(--text-light);
+  margin: 0 2px;
+}
+.water-goal {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.water-pct {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+.water-btns {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.water-add-btn {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.water-add-btn:active {
+  transform: scale(0.95);
+  background: var(--accent-light);
+  color: var(--accent-dark);
+}
+.water-custom {
+  display: flex;
+  gap: 8px;
+}
+.water-input {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 14px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  outline: none;
+}
+.water-input:focus { border-color: var(--accent); }
+.water-custom-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.health-sync-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+}
+.health-sync-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+}
+.health-sync-content {
+  position: relative;
+  background: #fff;
+  border-radius: 16px;
+  width: 92%;
+  max-width: 420px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+.health-sync-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  z-index: 1;
+}
+.health-sync-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.health-sync-close {
+  font-size: 18px;
+  color: var(--text-light);
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.health-sync-body {
+  padding: 16px 20px;
+}
+.health-sync-tip {
+  background: #FFF4F0;
+  border: 1px solid #FFD9CC;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+.hs-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.hs-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.hs-step-num {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hs-link-btn {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 16px;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(255,120,140,0.3);
+}
+.hs-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 14px 0 12px;
+  color: var(--text-light);
+  font-size: 11px;
+}
+.hs-divider::before, .hs-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.hs-form-section {
+  margin-bottom: 16px;
+}
+.hs-form-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.hs-form-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.hs-field {
+  flex: 1;
+}
+.hs-field label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+.hs-field input,
+.hs-field select {
+  width: 100%;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: #fff;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.hs-field input:focus,
+.hs-field select:focus {
+  border-color: var(--accent);
+}
+.health-sync-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+.hs-cancel-btn {
+  flex: 1;
+  border: 1.5px solid var(--border);
+  background: #fff;
+  color: var(--text-secondary);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.hs-submit-btn {
+  flex: 2;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(255,120,140,0.3);
+}
+
+/* 今日健康概览 */
+.ps-today-health {
+  margin: 12px 0;
+  padding: 12px;
+  background: var(--bg-card);
+  border-radius: 10px;
+}
+.ps-today-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.ps-today-item {
+  text-align: center;
+  padding: 8px;
+  background: #fff;
+  border-radius: 8px;
+}
+.ps-today-num {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.ps-today-label {
+  font-size: 10px;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
+/* ===== 添加到主屏幕引导（已移除） ===== */
+
+/* ===== 通用底部弹窗 ===== */
+.modal-mask {
+  position: fixed; inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s; z-index: 200;
+}
+.modal-mask.show { opacity: 1; pointer-events: auto; }
+.modal-sheet {
+  position: fixed; left: 50%; bottom: 0;
+  transform: translate(-50%, 100%);
+  width: 100%; max-width: 430px;
+  background: var(--bg-card);
+  border-radius: 22px 22px 0 0;
+  padding: 20px 18px calc(20px + env(safe-area-inset-bottom));
+  z-index: 201;
+  transition: transform .28s cubic-bezier(.22,.61,.36,1);
+  max-height: 80vh; overflow-y: auto;
+  box-shadow: 0 -8px 30px rgba(0,0,0,.15);
+}
+.modal-sheet.show { transform: translate(-50%, 0); }
+.modal-title { font-size: 17px; font-weight: 700; margin-bottom: 12px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+.modal-btn {
+  flex: 1; padding: 12px; border: none; border-radius: 12px;
+  background: var(--accent); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer;
+}
+.modal-btn.ghost { background: var(--bg-soft); color: var(--text-secondary); }
+
+/* ===== 长期目标编辑 ===== */
+.goal-edit-link {
+  font-size: 12px; color: var(--accent-dark); cursor: pointer;
+  background: var(--bg-soft); padding: 4px 10px; border-radius: 20px; margin-left: 6px;
+}
+.goal-auto {
+  font-size: 11px; color: var(--highlight); background: rgba(45,212,167,.12);
+  padding: 2px 8px; border-radius: 20px; font-weight: 600;
+}
+.goal-edit-tip { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px; }
+.goal-edit-row { background: var(--bg-soft); border-radius: 12px; padding: 10px; margin-bottom: 10px; }
+.ge-icon { width: 38px; height: 34px; border: none; border-radius: 8px; background: #fff; text-align: center; font-size: 16px; }
+.ge-title { flex: 1; min-width: 0; border: none; border-radius: 8px; background: #fff; padding: 8px; font-size: 13px; }
+.ge-detail { width: 100%; border: none; border-radius: 8px; background: #fff; padding: 8px; font-size: 12px; margin-top: 6px; }
+.ge-del { border: none; background: var(--danger); color: #fff; border-radius: 8px; width: 30px; height: 34px; font-size: 14px; cursor: pointer; }
+.ge-auto { font-size: 12px; color: var(--highlight); margin-top: 6px; }
+.ge-prog { width: 60%; margin-top: 6px; }
+.ge-progval { font-size: 12px; color: var(--text-secondary); margin-left: 6px; }
+
+/* ===== AI 设置 ===== */
+.ai-tip { font-size: 12px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 14px; }
+.ai-field { margin-bottom: 14px; }
+.ai-label { font-size: 13px; font-weight: 600; margin-bottom: 6px; display: block; }
+.ai-input {
+  width: 100%; border: 1px solid var(--border); border-radius: 10px;
+  padding: 11px 12px; font-size: 14px; background: var(--bg-input); color: var(--text-primary);
+}
+.ai-seg { display: flex; gap: 8px; }
+.ai-seg-btn {
+  flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--bg-soft); color: var(--text-secondary); font-size: 14px; cursor: pointer;
+}
+.ai-seg-btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ===== 思考巩固题 AI 问答 ===== */
+.ai-qa { margin-top: 14px; border-top: 1px dashed var(--border); padding-top: 12px; }
+.ai-qa-title { font-size: 13px; font-weight: 600; color: var(--accent-dark); margin-bottom: 8px; }
+.ai-qa-msgs {
+  max-height: 220px; overflow-y: auto; background: var(--bg-soft);
+  border-radius: 12px; padding: 10px; margin-bottom: 8px; font-size: 13px; line-height: 1.6;
+}
+.ai-hint { color: var(--text-light); font-size: 12px; }
+.ai-msg { margin-bottom: 8px; padding: 8px 10px; border-radius: 10px; }
+.ai-user { background: var(--accent); color: #fff; margin-left: 24px; }
+.ai-bot { background: #fff; color: var(--text-primary); border: 1px solid var(--border); margin-right: 24px; white-space: pre-wrap; }
+.ai-bot.ai-loading, .ai-err { color: var(--text-secondary); }
+.ai-err { color: var(--danger) !important; }
+.ai-qa-quick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.ai-chip {
+  font-size: 12px; background: #fff; border: 1px solid var(--accent-light); color: var(--accent-dark);
+  border-radius: 20px; padding: 6px 10px; cursor: pointer; line-height: 1.4;
+}
+.ai-qa-input { display: flex; gap: 8px; }
+.ai-qa-text {
+  flex: 1; border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 12px; font-size: 14px; background: var(--bg-input); color: var(--text-primary);
+}
+.ai-qa-send {
+  border: none; background: var(--accent); color: #fff; border-radius: 10px;
+  width: 44px; font-size: 16px; cursor: pointer;
+}
+
+/* ===== 阅读记录 ===== */
+.reading-card { background: var(--bg-card); border-radius: var(--radius-md); padding: 14px; box-shadow: var(--shadow); }
+.reading-freq { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+.rf-select { border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; background: var(--bg-input); font-size: 13px; color: var(--text-primary); }
+.rf-times-input { width: 44px; border: 1px solid var(--border); border-radius: 8px; padding: 6px; text-align: center; }
+.rf-days { display: flex; gap: 4px; }
+.rf-day {
+  width: 28px; height: 28px; border-radius: 50%; background: var(--bg-soft); color: var(--text-secondary);
+  display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer;
+}
+.rf-day.on { background: var(--accent); color: #fff; }
+.reading-add { display: flex; flex-direction: column; gap: 8px; }
+.rd-input, .rd-page, .rd-thought {
+  border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+  font-size: 14px; background: var(--bg-input); color: var(--text-primary); width: 100%;
+}
+.rd-pages { display: flex; align-items: center; gap: 8px; }
+.rd-page { width: 80px; text-align: center; }
+.rd-thought { min-height: 60px; resize: vertical; font-family: inherit; }
+.reading-list { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+.reading-empty { font-size: 12px; color: var(--text-light); text-align: center; padding: 8px; }
+.reading-item { background: var(--bg-soft); border-radius: 10px; padding: 10px; }
+.ri-top { display: flex; justify-content: space-between; font-size: 13px; }
+.ri-book { font-weight: 600; color: var(--accent-dark); }
+.ri-date { color: var(--text-light); font-size: 11px; }
+.ri-pages { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+.ri-thought { font-size: 12px; color: var(--text-primary); margin-top: 4px; line-height: 1.5; }
+.ai-organize-btn {
+  margin-top: 12px; width: 100%; border: none; border-radius: 12px; padding: 11px;
+  background: linear-gradient(135deg, #7C6FF0, #B4A9F7); color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.reading-ai-result { margin-top: 10px; }
+.reading-ai-result .ai-msg { margin-bottom: 0; }
+
+/* 阅读统计 */
+.rs-empty { font-size: 13px; color: var(--text-light); text-align: center; padding: 20px 10px; line-height: 1.6; }
+
+/* 待办完成置底 */
+.todo-done-item { opacity: .6; }
+.todo-done-item .todo-text.done { text-decoration: line-through; }
+
+</style>
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- ========== 首页 ========== -->
+  <div class="page active" id="page-home">
+    <div class="home-header">
+      <div class="greeting">下午好 👋</div>
+      <div class="username" id="userName">何雨婷</div>
+      <div class="date" id="todayDate">2026年7月28日 周二</div>
+      <div class="home-gear" onclick="openAISettings()" title="AI 服务">⚙️</div>
+      <div class="quick-stats" id="quickStats"></div>
+    </div>
+
+    <!-- 模块入口 -->
+    <div class="module-grid" id="moduleGrid"></div>
+
+    <!-- 当日待办 -->
+    <div class="section">
+      <div class="section-title">
+        📋 今日待办 <span class="more" id="todoProgress"></span>
+      </div>
+      <div id="todoList"></div>
+    </div>
+
+    <!-- 近期状态 -->
+    <div class="section">
+      <div class="section-title">📝 近期状态记录</div>
+      <div id="statusList"></div>
+    </div>
+
+    <!-- 长期目标 -->
+    <div class="section">
+      <div class="section-title">🎯 长期目标汇总</div>
+      <div id="goalList"></div>
+    </div>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- ========== 模块1：学习 ========== -->
+  <div class="page" id="page-module1">
+    <div class="module-header">
+      <div class="back-btn" onclick="showPage('home')">← 返回首页</div>
+      <div class="m-title">📚 人性 · 社交 · 沟通能力提升</div>
+      <div class="m-sub" id="m1-subtitle">前期知识输入为主，实战循序渐进</div>
+    </div>
+    <div class="section" id="m1-content"></div>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- ========== 模块2：资讯 ========== -->
+  <div class="page" id="page-module2">
+    <div class="module-header">
+      <div class="back-btn" onclick="showPage('home')">← 返回首页</div>
+      <div class="m-title">📰 每日5分钟行业资讯简报</div>
+      <div class="m-sub" id="m2-subtitle">今日 · 2026年7月28日 · 周二</div>
+    </div>
+    <div class="section" id="m2-content"></div>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- ========== 模块3：健身 ========== -->
+  <div class="page" id="page-module3">
+    <div class="module-header">
+      <div class="back-btn" onclick="showPage('home')">← 返回首页</div>
+      <div class="m-title">💪 健身打卡 · 动态自适应塑形计划</div>
+      <div class="m-sub" id="m3-subtitle">目标：精瘦紧致线条 · 马甲线</div>
+    </div>
+    <div class="section" id="m3-content"></div>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- ========== 模块4：穿搭 ========== -->
+  <div class="page" id="page-module4">
+    <div class="module-header">
+      <div class="back-btn" onclick="showPage('home')">← 返回首页</div>
+      <div class="m-title">👗 穿搭风格 · 低饱和韩系</div>
+      <div class="m-sub" id="m4-subtitle">幼态顿感脸 × 松弛日常向</div>
+    </div>
+    <div class="section" id="m4-content"></div>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- ========== 模块5：自媒体 ========== -->
+  <div class="page" id="page-module5">
+    <div class="module-header">
+      <div class="back-btn" onclick="showPage('home')">← 返回首页</div>
+      <div class="m-title">📱 抖音美食自媒体运营</div>
+      <div class="m-sub" id="m5-subtitle">目标变现 · 居家餐 + 减脂餐赛道</div>
+    </div>
+    <div class="section" id="m5-content"></div>
+    <div class="spacer"></div>
+  </div>
+
+</div>
+
+<!-- ========== 底部导航 ========== -->
+<div class="bottom-nav">
+  <div class="nav-item active" data-page="home" onclick="showPage('home')">
+    <span class="nav-icon">🏠</span>
+    <span class="nav-label">首页</span>
+  </div>
+  <div class="nav-item" data-page="module1" onclick="showPage('module1')">
+    <span class="nav-icon">📚</span>
+    <span class="nav-label">学习</span>
+  </div>
+  <div class="nav-item" data-page="module3" onclick="showPage('module3')">
+    <span class="nav-icon">💪</span>
+    <span class="nav-label">健身</span>
+  </div>
+  <div class="nav-item" data-page="module4" onclick="showPage('module4')">
+    <span class="nav-icon">👗</span>
+    <span class="nav-label">穿搭</span>
+  </div>
+  <div class="nav-item" data-page="module5" onclick="showPage('module5')">
+    <span class="nav-icon">📱</span>
+    <span class="nav-label">自媒体</span>
+  </div>
+</div>
+
+<!-- ========== 浮动管家按钮 ========== -->
+<div class="assistant-fab" onclick="toggleAssistant()">
+  🧑‍💼
+</div>
+
+<!-- ========== 遮罩层 ========== -->
+<div class="overlay" id="overlay" onclick="toggleAssistant()"></div>
+
+<!-- ========== 管家对话面板 ========== -->
+<div class="assistant-panel" id="assistantPanel">
+  <div class="assistant-header">
+    <div class="ah-left">
+      <div class="ah-avatar">🧑‍💼</div>
+      <div>
+        <div class="ah-title">智能大管家</div>
+        <div class="ah-sub">● 在线 · 随时待命</div>
+      </div>
+    </div>
+    <div class="ah-close" onclick="toggleAssistant()">✕</div>
+  </div>
+
+  <!-- 今日总览 -->
+  <div class="assistant-overview" id="assistantOverview"></div>
+
+  <!-- 对话区域 -->
+  <div class="chat-area" id="chatArea"></div>
+
+  <!-- 快捷入口 -->
+  <div class="quick-actions" id="quickActions"></div>
+
+  <!-- 输入区域 -->
+  <div class="chat-input-area">
+    <input type="text" class="chat-input" id="chatInput" placeholder="和管家说点什么..." 
+           onkeydown="if(event.key==='Enter')sendMessage()">
+    <button class="chat-send" id="sendBtn" onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<!-- ========== 通用底部弹窗 ========== -->
+<div class="modal-mask" id="modalMask" onclick="closeModal()"></div>
+<div class="modal-sheet" id="modalSheet"></div>
+
+<!-- ========== Toast ========== -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ========================================
+// 何雨婷个人工作台 - 模块数据
+// ========================================
+
+const APP_DATA = {
+
+  // ===== 用户档案 =====
+  profile: {
+    name: "何雨婷",
+    gender: "女",
+    age: 24,
+    height: "158cm",
+    weight: "49kg",
+    bodyFat: "23%",
+    goal: "精瘦紧致线条、马甲线",
+    styleGoal: "日常松弛低饱和韩系风格",
+    faceType: "幼态顿感脸",
+    equipment: "1kg哑铃",
+    trainingBase: "20节私教课基础",
+    mediaGoal: "抖音美食短视频变现",
+    mediaTracks: "居家餐、减脂餐"
+  },
+
+  // ===== 长期目标 =====
+  longTermGoals: [
+    { icon: "💪", title: "身材管理", detail: "体脂率降至20%，练出马甲线", progress: 40 },
+    { icon: "📚", title: "认知提升", detail: "完成人性/社交/沟通三大知识体系搭建", progress: 15 },
+    { icon: "👗", title: "穿搭体系", detail: "建立专属低饱和韩系穿搭风格库", progress: 20 },
+    { icon: "📱", title: "自媒体变现", detail: "抖音粉丝1W+，实现稳定变现", progress: 5 },
+    { icon: "🌍", title: "信息视野", detail: "每日5分钟行业资讯，保持信息敏感度", progress: 30 }
+  ],
+
+  // ===== 当日待办 =====
+  todayTodos: [
+    { id: "t1", module: "学习", text: "完成今日知识点精读 + 思考题", done: false },
+    { id: "t2", module: "资讯", text: "阅读5分钟行业资讯简报", done: false },
+    { id: "t3", module: "健身", text: "选择并完成今日训练计划（可选）", done: false },
+    { id: "t4", module: "穿搭", text: "浏览今日穿搭推荐，标记偏好", done: false },
+    { id: "t5", module: "自媒体", text: "查看今日爆款选题推荐", done: false }
+  ],
+
+  // ===== 近期状态记录 =====
+  recentStatus: [
+    { date: "07-28", content: "工作台初始化，五大模块同步上线" },
+    { date: "07-27", content: "上肢训练后肩部微酸，状态良好" },
+    { date: "07-26", content: "完成美食赛道初步调研，锁定居家餐+减脂餐方向" }
+  ],
+
+  // ===== 模块1：学习路线 =====
+  module1: {
+    title: "人性 · 社交 · 沟通能力提升",
+    subtitle: "前期知识输入为主，实战循序渐进",
+    phases: [
+      {
+        phase: "第一阶段 · 地基搭建",
+        duration: "第1-2月",
+        desc: "建立历史与社会学底层认知，理解人性规律的社会根源",
+        subjects: [
+          {
+            name: "历史学",
+            books: [
+              { title: "《人类简史》", author: "尤瓦尔·赫拉利", level: "入门", desc: "从认知革命到科学革命，理解人类社会运作的底层逻辑", order: 1, bookId: "855812", deepLink: "https://weread.qq.com/book-detail?type=1&v=d4a322a05d0f04d4a01f0d6" },
+              { title: "《枪炮、病菌与钢铁》", author: "贾雷德·戴蒙德", level: "进阶", desc: "地理环境如何决定文明差异，理解权力与资源分配", order: 2, bookId: "42766048", deepLink: "https://weread.qq.com/book-detail?type=1&v=843329f0728c8ee08434fb1" },
+              { title: "《万历十五年》", author: "黄仁宇", level: "进阶", desc: "从微观历史切片看人情世故与权力博弈", order: 3, bookId: "3300036999", deepLink: "https://weread.qq.com/book-detail?type=1&v=af732390813ab74f3g019ddd" }
+            ]
+          },
+          {
+            name: "社会学",
+            books: [
+              { title: "《乡土中国》", author: "费孝通", level: "入门", desc: "理解中国人的社会结构与人情网络", order: 1, bookId: "3300027208", deepLink: "https://weread.qq.com/book-detail?type=1&v=30d320b0813ab7120g018c2e" },
+              { title: "《社会学概论》", author: "郑杭生", level: "入门", desc: "系统搭建社会学知识框架（微信读书暂未收录，建议纸质阅读）", order: 2, bookId: null }
+            ]
+          }
+        ]
+      },
+      {
+        phase: "第二阶段 · 人性规律",
+        duration: "第3-4月",
+        desc: "深入社会心理学，掌握人性底层规律与人际博弈逻辑",
+        subjects: [
+          {
+            name: "社会心理学",
+            books: [
+              { title: "《社会性动物》", author: "埃利奥特·阿伦森", level: "入门", desc: "社会心理学经典入门，理解从众、偏见、吸引力", order: 1, bookId: "32764984", deepLink: "https://weread.qq.com/book-detail?type=1&v=fcb322c071f3f438fcb5e8c" },
+              { title: "《影响力》", author: "罗伯特·西奥迪尼", level: "入门", desc: "6大说服原理，直接可用于日常人际", order: 2, bookId: "41504771", deepLink: "https://weread.qq.com/book-detail?type=1&v=9ad32d40727950039add092" },
+              { title: "乌合之众", author: "古斯塔夫·勒庞", level: "进阶", desc: "理解群体心理与群体非理性行为", order: 3, bookId: "3300127322", deepLink: "https://weread.qq.com/book-detail?type=1&v=d1732010813ab983cg012120" }
+            ]
+          },
+          {
+            name: "人性规律",
+            books: [
+              { title: "《人性的弱点》", author: "戴尔·卡耐基", level: "入门", desc: "待人接物基本原则，实用话术基础", order: 1, bookId: "522205", deepLink: "https://weread.qq.com/book-detail?type=1&v=a233272057f7dda23713095" },
+              { title: "《潜规则》", author: "吴思", level: "进阶", desc: "中国社会运行的隐藏逻辑与利益规则", order: 2, bookId: "812680", deepLink: "https://weread.qq.com/book-detail?type=1&v=03b32a705c668803be75fde" }
+            ]
+          }
+        ]
+      },
+      {
+        phase: "第三阶段 · 沟通实战",
+        duration: "第5-6月",
+        desc: "知识储备充足后，进入沟通话术训练与社交情景模拟",
+        subjects: [
+          {
+            name: "沟通逻辑",
+            books: [
+              { title: "《非暴力沟通》", author: "马歇尔·卢森堡", level: "入门", desc: "观察-感受-需要-请求四步法，化解冲突", order: 1, bookId: "3300060305", deepLink: "https://weread.qq.com/book-detail?type=1&v=b7d32470813ab7e0eg015e3f" },
+              { title: "《关键对话》", author: "科里·帕特森", level: "进阶", desc: "高风险场景下的沟通策略", order: 2, bookId: "3300052436", deepLink: "https://weread.qq.com/book-detail?type=1&v=3c632c10813ab7afbg016b8f" },
+              { title: "《优势谈判》", author: "罗杰·道森", level: "进阶", desc: "谈判博弈技巧，利益最大化话术", order: 3, bookId: "3300011736", deepLink: "https://weread.qq.com/book-detail?type=1&v=9ac322d0813ab6b15g016593" }
+            ]
+          },
+          {
+            name: "社交情景",
+            books: [
+              { title: "《待人接物》系列实操手册", author: "整理自读", level: "实战", desc: "场景化话术训练：饭局、职场、社交", order: 1, bookId: null }
+            ]
+          }
+        ]
+      }
+    ],
+    todayLesson: {
+      date: "2026-07-28",
+      topic: "社会心理学 · 从众效应（Conformity）",
+      source: "《社会性动物》第2章",
+      content: [
+        "【核心概念】从众效应指个体在群体压力下改变自己的判断或行为，与多数人保持一致。阿希实验证明：即使答案明显错误，约75%的人至少有一次跟随多数人的错误判断。",
+        "【底层逻辑】从众源于两种需求：①信息性从众——认为别人掌握更多信息，自己不确定时倾向参考他人；②规范性从众——希望被群体接纳，避免被孤立。",
+        "【现实映射】社交媒体刷屏跟风、消费决策参考他人评价、职场中沉默螺旋现象，本质上都是信息性+规范性从众的叠加。",
+        "【行动启示】当多数人意见一致时，警惕自己的判断是否被群体带偏；决策前问自己：'如果不参考任何人的意见，我的真实判断是什么？'"
+      ],
+      questions: [
+        "回忆最近一次'随大流'的决定，它是信息性从众还是规范性从众？如果重来你会怎么选？",
+        "在社交媒体运营中，如何利用从众效应提升内容传播力？又如何避免被数据带偏创作方向？",
+        "当你发现团队决策可能有误但多数人支持时，用非暴力沟通的思路你会怎么表达不同意见？"
+      ]
+    },
+    // 知识点池（用于"换一下"切换）
+    knowledgePool: [
+      {
+        topic: "社会心理学 · 从众效应（Conformity）",
+        source: "《社会性动物》第2章",
+        content: [
+          "【核心概念】从众效应指个体在群体压力下改变自己的判断或行为，与多数人保持一致。阿希实验证明：即使答案明显错误，约75%的人至少有一次跟随多数人的错误判断。",
+          "【底层逻辑】从众源于两种需求：①信息性从众——认为别人掌握更多信息，自己不确定时倾向参考他人；②规范性从众——希望被群体接纳，避免被孤立。",
+          "【现实映射】社交媒体刷屏跟风、消费决策参考他人评价、职场中沉默螺旋现象，本质上都是信息性+规范性从众的叠加。",
+          "【行动启示】当多数人意见一致时，警惕自己的判断是否被群体带偏；决策前问自己：'如果不参考任何人的意见，我的真实判断是什么？'"
+        ],
+        questions: [
+          "回忆最近一次'随大流'的决定，它是信息性从众还是规范性从众？如果重来你会怎么选？",
+          "在社交媒体运营中，如何利用从众效应提升内容传播力？又如何避免被数据带偏创作方向？",
+          "当你发现团队决策可能有误但多数人支持时，用非暴力沟通的思路你会怎么表达不同意见？"
+        ]
+      },
+      {
+        topic: "社会心理学 · 旁观者效应（Bystander Effect）",
+        source: "《社会性动物》第8章",
+        content: [
+          "【核心概念】旁观者效应指在紧急情况下，在场人数越多，个体提供帮助的可能性越低。经典的 Kitty Genovese 案件引发了对此现象的研究。",
+          "【底层逻辑】责任分散——人数越多，每个人感受到的责任越小；同时存在多元无知，大家都看别人反应来判断情况严重性，结果都误以为不严重。",
+          "【现实映射】职场中'三个和尚没水喝'现象、群聊中无人回应的求助、社交媒体上的围观不行动。",
+          "【行动启示】遇到紧急情况时，指定具体的人求助（'穿红衣服的，帮我打120'）；在团队中明确分工避免责任分散。"
+        ],
+        questions: [
+          "你在工作或生活中是否经历过'旁观者效应'？当时是什么让你没有行动？",
+          "作为自媒体运营者，如何将旁观者效应的原理反过来用，提高粉丝的互动和参与率？",
+          "如果你是团队领导，如何设计机制避免团队中的责任分散？"
+        ]
+      },
+      {
+        topic: "人性规律 · 互惠原理（Reciprocity）",
+        source: "《影响力》第2章",
+        content: [
+          "【核心概念】互惠原理指人类天性中存在'投桃报李'的倾向——收到他人的恩惠后，会感到有义务回报。这种倾向深植于人类社会，是维持社会合作的基础。",
+          "【底层逻辑】互惠的力量在于：①不完全对等——小恩惠可能换来大回报；②先给予再索取比直接索取有效得多；③拒绝-退让策略（先提大请求被拒，再提小请求）也是互惠的变体。",
+          "【现实映射】超市免费试吃→购买、朋友请客→回请、职场中主动帮忙→日后获得支持、销售中的'先送小礼物'策略。",
+          "【行动启示】在人际交往中，主动给予价值（帮助、资源、关注）能建立长期互惠关系；同时也要警惕被互惠原理'操控'——收到的恩惠是否真的需要回报？"
+        ],
+        questions: [
+          "回忆一次你因为互惠原理而做出决定或消费的经历，事后你觉得自己是'被操控'还是'心甘情愿'？",
+          "在自媒体运营中，如何运用互惠原理提升粉丝粘性和转化率？",
+          "互惠原理与'道德绑架'之间的边界在哪里？如何在给予时不让对方感到压力？"
+        ]
+      },
+      {
+        topic: "沟通逻辑 · 非暴力沟通四步法",
+        source: "《非暴力沟通》第1-3章",
+        content: [
+          "【核心概念】非暴力沟通（NVC）由马歇尔·卢森堡提出，核心是四步法：观察→感受→需要→请求。区分观察与评论、感受与想法、请求与命令。",
+          "【底层逻辑】暴力沟通的根源在于：①混淆观察与评论（'你总是迟到' vs '这周你迟到了3次'）；②表达想法而非感受（'我觉得被忽视了' vs '我感到失落'）；③不明确需要（模糊的期待）；④提出命令而非请求。",
+          "【现实映射】情侣争吵、职场批评、亲子沟通中，大多数冲突不是因为事实本身，而是沟通方式触发了对方的防御机制。",
+          "【行动公式】'当我看到/听到____（观察），我感到____（感受），因为我需要____（需要），你是否愿意____（请求）？'"
+        ],
+        questions: [
+          "用非暴力沟通四步法，重新组织一句你最近对身边人说过的话，看看有什么不同？",
+          "在自媒体评论区，面对负面评论，如何用非暴力沟通的思路回应？",
+          "非暴力沟通在什么场景下可能不适用？它的局限性是什么？"
+        ]
+      },
+      {
+        topic: "社会学 · 差序格局与熟人社会",
+        source: "《乡土中国》第4章",
+        content: [
+          "【核心概念】费孝通提出'差序格局'——中国人的社会关系像水波纹一样，以自我为中心，按亲疏远近一圈圈向外扩散。这与西方的'团体格局'（像捆柴一样，每根柴属于固定团体）截然不同。",
+          "【底层逻辑】差序格局导致：①关系远近决定行为标准（对'自己人'和'外人'用不同规则）；②人情交换是社会运行的核心货币；③'圈子'比'制度'更有约束力。",
+          "【现实映射】中国社会的'找关系'文化、饭局社交的本质、职场中的'站队'现象、商业合作中'先做朋友再做生意'的逻辑。",
+          "【行动启示】理解差序格局不是要认同'走后门'，而是理解中国人际关系的底层代码——在社交中，'先建立信任再谈合作'比直接谈利益更有效。"
+        ],
+        questions: [
+          "在你的社交圈中，是否感受到'差序格局'的存在？你是如何处理不同圈层关系的？",
+          "差序格局对自媒体运营有什么启示？如何利用'圈子文化'做用户裂变？",
+          "差序格局的'阴暗面'是什么？在现代社会中，它是否正在被改变？"
+        ]
+      },
+      {
+        topic: "人性规律 · 沉没成本谬误（Sunk Cost Fallacy）",
+        source: "《思考，快与慢》相关章节",
+        content: [
+          "【核心概念】沉没成本谬误指人们因为已经在某件事上投入了时间、金钱或精力，即使继续做下去不理性，也不愿放弃。'来都来了''都坚持这么久了'是最常见的沉没成本陷阱。",
+          "【底层逻辑】人类大脑厌恶损失——失去100元的痛苦感大约是获得100元快乐感的2倍。这种损失厌恶让我们在'该止损'时选择'继续投入'。",
+          "【现实映射】看完一部烂片因为'票都买了'、继续一段消耗的关系因为'都在一起这么久了'、不放弃一个没前景的项目因为'投入了太多'。",
+          "【行动启示】做决策时问自己：'如果我是从今天才开始考虑这件事，没有任何之前的投入，我还会选择做吗？'如果答案是否，就应该止损。"
+        ],
+        questions: [
+          "回忆一次你因为沉没成本而坚持做某事的经历，事后你觉得自己做了正确的选择吗？",
+          "在自媒体运营中，如何判断一个账号方向该坚持还是该及时止损换方向？",
+          "沉没成本谬误和'坚持就是胜利'之间如何区分？什么时候该坚持，什么时候该放弃？"
+        ]
+      }
+    ],
+    knowledgeReview: {
+      title: "本周复盘计划",
+      items: [
+        "周一-周四：每日1个知识点输入 + 2道思考题",
+        "周五：本周知识点串联回顾（思维导图）",
+        "周六：1个社交情景模拟练习",
+        "周日：自由复盘日，记录本周洞察"
+      ]
+    },
+    // 近期阅读分析（来自微信读书真实数据）
+    readingStats: {
+      totalDays: 415,
+      totalHours: 161.9,
+      thisYearHours: 14.8,
+      thisMonthDays: 0,
+      thisMonthHours: 0,
+      yearlyBreakdown: [
+        { year: "2021", hours: 13.0 },
+        { year: "2022", hours: 41.4 },
+        { year: "2023", hours: 21.6 },
+        { year: "2024", hours: 64.7 },
+        { year: "2025", hours: 6.5 },
+        { year: "2026", hours: 14.8 }
+      ],
+      topBooks: [
+        { title: "你当像鸟飞往你的山", author: "塔拉·韦斯特弗", hours: 17.6 },
+        { title: "一句顶一万句", author: "刘震云", hours: 13.4 },
+        { title: "在细雨中呼喊", author: "余华", hours: 11.0 },
+        { title: "许茂和他的女儿们", author: "周克芹", hours: 10.8 }
+      ],
+      preferenceAnalysis: "偏好文学与社科类书籍，阅读深度较高（单本平均阅读时长超10小时），但近期阅读频率下降，建议恢复每日30分钟阅读习惯",
+      weeklyTrend: [
+        { week: "本周", minutes: 0 },
+        { week: "上周", minutes: 42 },
+        { week: "前两周", minutes: 128 },
+        { week: "前三周", minutes: 85 }
+      ]
+    }
+  },
+
+  // ===== 模块2：每日行业资讯 =====
+  module2: {
+    title: "每日5分钟行业资讯简报",
+    subtitle: "今日 · 2026年7月28日 · 周二",
+    readTime: "约4分钟",
+    sections: [
+      {
+        category: "🔥 核心热点",
+        color: "#FF6B6B",
+        items: [
+          { title: "抖音电商发布2026半年度美食赛道报告", brief: "居家烹饪类内容同比增长156%，减脂餐赛道月均搜索量突破2.4亿次，'一人食'场景内容完播率最高达68%。", insight: "减脂餐+一人食是当前最佳切入点，建议雨婷优先布局此方向，用'一人食减脂餐'标签建立账号定位。" },
+          { title: "国家发改委出台促进消费新政策", brief: "明确支持本地生活数字化、即时零售、社区电商发展，对小微内容创作者税收优惠政策延续至2027年。", insight: "美食自媒体可关注本地生活团购带货变现路径，个体创作者税收优惠期延长降低了变现门槛。" }
+        ]
+      },
+      {
+        category: "📈 趋势变化",
+        color: "#4ECDC4",
+        items: [
+          { title: "AI视频生成工具爆发，美食内容门槛进一步降低", brief: "快手可灵、字节即梦AI视频生成工具更新，可一键生成烹饪过程视频，但平台明确标记AI生成内容限流。", insight: "AI生成内容限流说明真实拍摄仍是核心竞争力。可以用AI做脚本/选题辅助，但烹饪过程坚持实拍。" },
+          { title: "小红书美食内容向抖音外溢", brief: "多个小红书美食博主同步运营抖音账号，图文转短视频趋势明显，'沉浸式做饭ASMR'赛道增长最快。", insight: "沉浸式做饭ASMR门槛低、无需露脸，适合雨婷前期测试，与减脂餐赛道天然契合。" }
+        ]
+      },
+      {
+        category: "📋 政策要点",
+        color: "#95E1D3",
+        items: [
+          { title: "网信办新规：短视频内容分级管理7月起试行", brief: "美食类内容需标注食材热量信息（减脂类强制），未标注健康提示的减肥相关内容将限流。", insight: "减脂餐内容必须标注卡路里和营养信息，反而增加专业度和信任感，建议提前准备食材营养数据库。" }
+        ]
+      },
+      {
+        category: "🎯 个人机会/风险",
+        color: "#F38181",
+        items: [
+          { title: "机会：减脂餐+一人食赛道红利期", brief: "搜索量高、竞争尚不饱和、内容门槛适中，是进入的最佳窗口。", insight: "建议本周内确定账号定位，完成前3条内容选题锁定。" },
+          { title: "风险：同质化内容可能被快速复制", brief: "减脂餐赛道模仿门槛低，爆款容易被搬运。", insight: "在内容中融入个人标签（如'158cm小个子减脂日记'），建立差异化壁垒。" }
+        ]
+      }
+    ]
+  },
+
+  // ===== 模块3：健身计划 =====
+  module3: {
+    title: "健身打卡 · 动态自适应塑形计划",
+    subtitle: "目标：精瘦紧致线条 · 马甲线",
+    currentWeek: {
+      week: "Week 1",
+      completedSessions: 0,
+      plannedSessions: 4,
+      muscleGroupsTrained: [],
+      lastFeedback: null
+    },
+    // 四大肌群板块（多选训练）
+    muscleGroups: [
+      {
+        id: "mg1",
+        name: "胸部 + 肩部",
+        icon: "💪",
+        color: "#FF6B7A",
+        muscles: ["胸大肌", "三角肌前束", "三角肌中束"],
+        videos: [
+          { title: "30分钟哑铃胸肩跟练 | 居家塑形", url: "https://search.bilibili.com/all?keyword=哑铃胸肩跟练+居家+女生+30分钟", source: "B站搜索", duration: "30min" },
+          { title: "HASfit 45分钟全身哑铃锻炼", url: "https://bilibili.com/video/BV1kAibB6Eoi/", source: "B站", duration: "45min" }
+        ]
+      },
+      {
+        id: "mg2",
+        name: "背部 + 臀部",
+        icon: "🍑",
+        color: "#FFB547",
+        muscles: ["背阔肌", "臀大肌", "中下背部"],
+        videos: [
+          { title: "Eleni Fit 30分钟蜜桃臀负重训练", url: "https://bilibili.com/video/BV19iijBbEfL/", source: "B站", duration: "30min" },
+          { title: "哑铃背臀跟练 | 居家塑形", url: "https://search.bilibili.com/all?keyword=哑铃背臀跟练+居家+女生+30分钟", source: "B站搜索", duration: "30min" }
+        ]
+      },
+      {
+        id: "mg3",
+        name: "腿部 + 臀部",
+        icon: "🦵",
+        color: "#7C6FF0",
+        muscles: ["股四头肌", "腘绳肌", "臀大肌"],
+        videos: [
+          { title: "30分钟哑铃腿臀塑形跟练", url: "https://search.bilibili.com/all?keyword=哑铃腿臀跟练+居家+女生+30分钟", source: "B站搜索", duration: "30min" },
+          { title: "Eleni Fit 30分钟蜜桃臀负重训练", url: "https://bilibili.com/video/BV19iijBbEfL/", source: "B站", duration: "30min" }
+        ]
+      },
+      {
+        id: "mg4",
+        name: "核心 + 马甲线",
+        icon: "🔥",
+        color: "#2DD4A7",
+        muscles: ["腹直肌", "腹斜肌", "核心深层"],
+        videos: [
+          { title: "马甲线专项跟练 | 30分钟", url: "https://search.bilibili.com/all?keyword=马甲线跟练+30分钟+女生+居家", source: "B站搜索", duration: "30min" },
+          { title: "核心训练跟练 | 哑铃负重", url: "https://search.bilibili.com/all?keyword=核心训练+哑铃+跟练+女生+30分钟", source: "B站搜索", duration: "30min" }
+        ]
+      }
+    ],
+    weeklyPlan: [
+      { day: "周一", planned: "胸部+肩部", status: "待选择" },
+      { day: "周二", planned: "休息/轻度拉伸", status: "休息日" },
+      { day: "周三", planned: "背部+臀部", status: "待选择" },
+      { day: "周四", planned: "核心+腹部", status: "待选择" },
+      { day: "周五", planned: "休息/有氧", status: "休息日" },
+      { day: "周六", planned: "腿部+臀部", status: "待选择" },
+      { day: "周日", planned: "全身轻度恢复", status: "弹性日" }
+    ],
+    // 个人训练数据
+    personalStats: {
+      weightHistory: [
+        { date: "06-01", weight: 50.5 },
+        { date: "06-15", weight: 50.2 },
+        { date: "07-01", weight: 49.8 },
+        { date: "07-15", weight: 49.3 },
+        { date: "07-28", weight: 49.0 }
+      ],
+      bodyFatHistory: [
+        { date: "06-01", value: 24.5 },
+        { date: "07-01", value: 23.8 },
+        { date: "07-28", value: 23.0 }
+      ],
+      muscleGroupFrequency: [
+        { group: "胸肩", count: 3, lastTrained: "07-22" },
+        { group: "背臀", count: 2, lastTrained: "07-25" },
+        { group: "腿臀", count: 1, lastTrained: "07-18" },
+        { group: "核心", count: 4, lastTrained: "07-26" }
+      ],
+      totalSessions: 10,
+      totalDuration: 380, // 分钟
+      streak: 0 // 连续打卡天数
+    }
+  },
+
+  // ===== 模块4：穿搭 =====
+  module4: {
+    title: "穿搭风格打造 · 幼态顿感脸 × 低饱和韩系",
+    subtitle: "松弛日常向 · 避开过度甜腻与凌厉",
+    // 今日穿搭推荐（图片滑动卡片）
+    outfitCards: [
+      { id: "oc1", style: "燕麦色松弛通勤", desc: "宽松针织短袖 + 米白阔腿裤 + 乐福鞋", pinterestUrl: "https://www.pinterest.com/search/pins/?q=korean+outfit+oatmeal+loose+wide+pants+minimalist", tags: ["通勤", "低饱和", "松弛"] },
+      { id: "oc2", style: "灰粉温柔日常", desc: "灰粉oversized衬衫 + 直筒牛仔裤 + 帆布鞋", pinterestUrl: "https://www.pinterest.com/search/pins/?q=korean+dusty+pink+oversized+shirt+jeans+outfit", tags: ["日常", "温柔", "灰粉"] },
+      { id: "oc3", style: "雾霾蓝知性叠穿", desc: "雾霾蓝薄针织 + 白T内搭 + 高腰直筒裤", pinterestUrl: "https://www.pinterest.com/search/pins/?q=korean+blue+layering+knit+outfit+minimalist", tags: ["叠穿", "知性", "雾霾蓝"] },
+      { id: "oc4", style: "米白同色系松弛", desc: "米白针织 + 浅卡其阔腿裤 + 玛丽珍鞋", pinterestUrl: "https://www.pinterest.com/search/pins/?q=korean+cream+tonal+outfit+knit+wide+pants", tags: ["同色系", "松弛", "米白"] },
+      { id: "oc5", style: "鼠尾草绿文艺风", desc: "鼠尾草绿开衫 + 高腰半裙 + 乐福鞋", pinterestUrl: "https://www.pinterest.com/search/pins/?q=korean+sage+green+cardigan+skirt+outfit", tags: ["文艺", "低饱和", "绿色"] },
+      { id: "oc6", style: "燕麦色小个子显高", desc: "短款针织 + 高腰阔腿裤 + 尖头鞋", pinterestUrl: "https://www.pinterest.com/search/pins/?q=korean+petite+crop+top+high+waist+pants+outfit", tags: ["显高", "小个子", "高腰"] },
+      { id: "oc7", style: "浅卡其通勤质感", desc: "浅卡西装外套 + 白T + 烟管裤 + 牛津鞋", pinterestUrl: "https://www.pinterest.com/search/pins/?q=korean+beige+blazer+cigarette+pants+outfit", tags: ["通勤", "质感", "浅卡"] },
+      { id: "oc8", style: "奶油色温柔约会", desc: "奶白色连衣裙 + 浅色开衫 + 玛丽珍鞋", pinterestUrl: "https://www.pinterest.com/search/pins/?q=korean+cream+dress+cardigan+date+outfit", tags: ["约会", "温柔", "奶油色"] }
+    ],
+    colorPalette: {
+      title: "低饱和韩系配色方案",
+      seasons: [
+        { season: "春夏季", colors: ["燕麦色 #E8DDD0", "灰粉 #D4B5A8", "雾霾蓝 #A8B8C4", "鼠尾草绿 #B5C4A8", "米白 #F5F0EB", "浅卡其 #D4C4A8"] },
+        { season: "秋冬季", colors: ["焦糖棕 #A8784D", "燕麦色 #D4C9B8", "灰咖 #9C8B7A", "深雾蓝 #6B7B8A", "暖灰 #C4BCB0", "砖红 #B87060"] }
+      ]
+    },
+    // 真实韩系穿搭博主（小红书 + Instagram）
+    bloggerPool1: [
+      { name: "@Go4mi", platform: "小红书", url: "https://www.xiaohongshu.com/search_result?keyword=Go4mi", followers: "5万+", style: "基础款穿出地道韩味", desc: "155cm/38kg，小个子基础款韩系，低饱和配色教科书级", height: "155cm", items: ["基础款衬衫", "直筒裤", "帆布鞋"], matchScore: 95 },
+      { name: "@知恩珍", platform: "小红书", url: "https://www.xiaohongshu.com/search_result?keyword=知恩珍", followers: "3万+", style: "随性慵懒氛围感", desc: "158cm/48kg，随性慵懒氛围感拉满，低饱和松弛日常", height: "158cm", items: ["宽松针织", "阔腿裤", "平底鞋"], matchScore: 93 },
+      { name: "@菜菜爱拍照", platform: "小红书", url: "https://www.xiaohongshu.com/search_result?keyword=菜菜爱拍照", followers: "4万+", style: "配色柔和氛围感一绝", desc: "155cm/40kg，配色柔和氛围感一绝，低饱和韩系日常", height: "155cm", items: ["柔和色系上衣", "高腰裤", "乐福鞋"], matchScore: 92 },
+      { name: "@我是其琪呀-", platform: "小红书", url: "https://www.xiaohongshu.com/search_result?keyword=我是其琪呀", followers: "6万+", style: "ins松弛感百搭耐看", desc: "158cm/45kg，ins松弛感百搭耐看，日常韩系通勤", height: "158cm", items: ["基础款", "直筒裤", "帆布鞋"], matchScore: 90 },
+      { name: "@七七奶茶不加糖", platform: "小红书", url: "https://www.xiaohongshu.com/search_result?keyword=七七奶茶不加糖", followers: "4万+", style: "清爽简约超耐看", desc: "158cm/44kg，清爽简约超耐看，低饱和韩系日常穿搭", height: "158cm", items: ["简约上衣", "牛仔裤", "小白鞋"], matchScore: 89 }
+    ],
+    bloggerPool2: [
+      { name: "@白白Crystal", platform: "小红书", url: "https://www.xiaohongshu.com/user/profile/2675465840", followers: "24.2万", style: "韩系极简氛围感", desc: "成都博主，韩系极简主义+氛围感穿搭，低饱和配色高级感", height: "160cm", items: ["极简单品", "中性色系", "质感配饰"], matchScore: 91 },
+      { name: "@小甜椒Rukia", platform: "小红书", url: "https://www.xiaohongshu.com/user/profile/944554501", followers: "89.8万", style: "韩系极简ootd", desc: "杭州博主，韩系极简主义穿搭，ootd氛围感，粉丝量大参考价值高", height: "163cm", items: ["ootd单品", "极简风", "氛围配饰"], matchScore: 88 },
+      { name: "@一系鹿鹿", platform: "小红书", url: "https://www.xiaohongshu.com/user/profile/wuyuyang214", followers: "28.4万", style: "韩系氛围感合集", desc: "长沙博主，韩系+氛围感+合集穿搭，职场生活韩系风格", height: "162cm", items: ["韩系单品", "职场穿搭", "氛围配饰"], matchScore: 87 },
+      { name: "@tiissue", platform: "Instagram", url: "https://www.instagram.com/tiissue/", followers: "30万+", style: "小个子少女知性风", desc: "156cm韩国博主，小个子女生穿搭标杆，少女/知性/甜酷风格", height: "156cm", items: ["简约单品", "半裙", "配饰点缀"], matchScore: 94 },
+      { name: "@1yeah_silver", platform: "Instagram", url: "https://www.instagram.com/1yeah_silver/", followers: "20万+", style: "低饱和通勤日常", desc: "韩国博主，低饱和色调搭配，通勤日常耐看有个性", height: "160cm", items: ["基础款", "低饱和色", "百搭单品"], matchScore: 90 }
+    ],
+    // 新风格推荐池
+    newStylePool: [
+      { style: "法式慵懒风", desc: "丝质衬衫+高腰阔腿裤+猫跟鞋，优雅松弛", pinterestUrl: "https://www.pinterest.com/search/pins/?q=french+lazy+chic+outfit+silk+shirt", tags: ["法式", "慵懒", "丝质"] },
+      { style: "日系极简风", desc: "棉麻材质+宽松剪裁+大地色系，自然松弛", pinterestUrl: "https://www.pinterest.com/search/pins/?q=japanese+minimalist+cotton+linen+outfit", tags: ["日系", "极简", "棉麻"] },
+      { style: "轻复古通勤风", desc: "复古色系西装+高腰裙+玛丽珍鞋，知性复古", pinterestUrl: "https://www.pinterest.com/search/pins/?q=vintage+retro+blazer+skirt+outfit", tags: ["复古", "通勤", "知性"] },
+      { style: "极简中性风", desc: "黑白灰基础色+直线条剪裁+皮鞋，利落高级", pinterestUrl: "https://www.pinterest.com/search/pins/?q=minimalist+neutral+black+white+grey+outfit", tags: ["极简", "中性", "利落"] },
+      { style: "奶油少女风", desc: "奶白色连衣裙+针织开衫+玛丽珍鞋，温柔清甜", pinterestUrl: "https://www.pinterest.com/search/pins/?q=cream+girly+dress+cardigan+outfit", tags: ["奶油", "少女", "温柔"] }
+    ]
+  },
+
+  // ===== 模块5：美食自媒体 =====
+  module5: {
+    title: "抖音美食自媒体运营 · 目标变现",
+    subtitle: "减脂餐 + 一人食 + 沉浸式做饭ASMR",
+    // 三大细分赛道（可点击跳转）
+    tracks: [
+      {
+        name: "减脂餐",
+        icon: "🥗",
+        color: "#2DD4A7",
+        entryBarrier: "低",
+        skills: "基础营养知识 + 简单厨艺",
+        monetization: "带货代餐/健康食品/食谱课",
+        pros: "搜索量大，变现路径清晰，受众精准",
+        cons: "需要持续更新营养知识，内容容易重复",
+        matchScore: 95,
+        topBloggers: [
+          { name: "张张的低卡美食", platform: "抖音", url: "https://www.douyin.com/search/张张的低卡美食", followers: "10万", desc: "低卡低脂餐为核心，丝瓜三鲜汤等爆款，好喝还掉秤" },
+          { name: "Q酱(食物热量侠)", platform: "抖音", url: "https://www.douyin.com/search/Q酱食物热量侠", followers: "50万", desc: "NASM认证教练，食物热量对比+低卡低脂餐搭配" },
+          { name: "昊哥陪你瘦", platform: "抖音", url: "https://www.douyin.com/search/昊哥陪你瘦", followers: "40万", desc: "生活化减脂博主，6年帮助3万+学员瘦身" }
+        ]
+      },
+      {
+        name: "一人食",
+        icon: "🍱",
+        color: "#FFB547",
+        entryBarrier: "低",
+        skills: "氛围感拍摄 + 简单厨艺",
+        monetization: "带货厨具/餐具/小家电",
+        pros: "完播率高，共鸣感强，拍摄门槛低",
+        cons: "变现天花板较低，需要丰富场景",
+        matchScore: 88,
+        topBloggers: [
+          { name: "胡仔一人食", platform: "抖音", url: "https://www.douyin.com/search/胡仔一人食", followers: "204万", desc: "面向烹饪新手，创意食谱+一人食生活态度，B站237万粉" },
+          { name: "太阳の饭", platform: "抖音", url: "https://www.douyin.com/search/太阳の饭", followers: "70万", desc: "无解说沉浸式做饭，只有厨房声音，清爽一锅出，半年涨粉70万" },
+          { name: "阿晨吃饱了", platform: "抖音", url: "https://www.douyin.com/search/阿晨吃饱了", followers: "高人气", desc: "餐饮行业经验，研究各种小吃，视频兼具教学和科普" }
+        ]
+      },
+      {
+        name: "沉浸式做饭ASMR",
+        icon: "🎧",
+        color: "#7C6FF0",
+        entryBarrier: "极低",
+        skills: "收音 + 灯光",
+        monetization: "带货厨具/ASMR相关",
+        pros: "无需露脸，制作简单，国际流量好",
+        cons: "变现较难，依赖播放量分成",
+        matchScore: 75,
+        topBloggers: [
+          { name: "バヤシBayashi", platform: "TikTok", url: "https://www.tiktok.com/@bayashi.tiktok", followers: "5480万", desc: "TikTok ASMR做饭第一人，吉尼斯世界纪录，全球顶级美食创作者" },
+          { name: "太阳の饭", platform: "抖音", url: "https://www.douyin.com/search/太阳の饭", followers: "70万", desc: "国内沉浸式做饭标杆，无解说，只有厨房声音，秩序感极强" },
+          { name: "cookingWITHfred", platform: "TikTok", url: "https://www.tiktok.com/@cookingwlthfred", followers: "千万级", desc: "加拿大ASMR做饭博主，35亿播放量，高制作水准" }
+        ]
+      }
+    ],
+    // 对标账号（可跳转社交媒体主页）
+    benchmarkAccounts: [
+      {
+        name: "猪猪狠无敌",
+        platform: "抖音",
+        url: "https://www.douyin.com/search/猪猪狠无敌",
+        followers: "638万",
+        track: "美食+减脂",
+        strategy: "美食教程+生活记录，《大众减脂小课堂》系列播放数十亿",
+        contentTemplate: "生活化场景 → 家常美食制作 → 互动引导",
+        strengths: "粉丝量大，内容覆盖广，减脂小课堂系列稳定",
+        imitation: "复制减脂小课堂概念，改为小个子减脂日常"
+      },
+      {
+        name: "胡仔一人食",
+        platform: "抖音+B站",
+        url: "https://www.douyin.com/search/胡仔一人食",
+        followers: "抖音204万 / B站237万",
+        track: "一人食+创意料理",
+        strategy: "面向烹饪新手，创意食谱+一人食生活态度，《用零食做饭的100天》",
+        contentTemplate: "食材展示 → 创意制作过程 → 成品 → 生活态度",
+        strengths: "双平台运营，创意持续性强，一人食标签清晰",
+        imitation: "复制一人食+创意概念，改为减脂版一人食系列"
+      },
+      {
+        name: "太阳の饭",
+        platform: "抖音",
+        url: "https://www.douyin.com/search/太阳の饭",
+        followers: "70万",
+        track: "沉浸式做饭ASMR",
+        strategy: "无解说沉浸式做饭，只有厨房声音，清爽一锅出，半年涨粉70万",
+        contentTemplate: "无解说 → 沉浸式制作过程 → 成品 → 治愈感",
+        strengths: "制作极简，涨粉速度极快，氛围感强",
+        imitation: "直接复刻无解说沉浸式做饭模式，加入减脂餐元素"
+      }
+    ],
+    // 今日爆款选题（真实平台热门）
+    todayHotTopics: [
+      {
+        title: "#158小个子的一天减脂餐#",
+        heat: "🔥🔥🔥🔥",
+        platform: "抖音",
+        searchUrl: "https://www.douyin.com/search/158小个子减脂餐",
+        format: "Vlog形式，记录全天三餐，标注热量",
+        hook: "158cm 49kg 我每天吃什么？（附热量）",
+        scriptIdea: "开头：体重+身高数字冲击 → 快速展示三餐 → 结尾总结今日摄入",
+        shootTip: "俯拍+正面拍交替，每餐15秒，总时长60秒内",
+        tags: ["#减脂餐", "#一人食", "#小个子穿搭", "#健康饮食", "#减脂日记"]
+      },
+      {
+        title: "#沉浸式做减脂晚餐#",
+        heat: "🔥🔥🔥",
+        platform: "抖音",
+        searchUrl: "https://www.douyin.com/search/沉浸式做减脂晚餐",
+        format: "沉浸式ASMR，无解说",
+        hook: "下班后沉浸式做一份300卡减脂晚餐",
+        scriptIdea: "全程ASMR收音，展示切菜/烹饪/摆盘过程，结尾标注热量",
+        shootTip: "固定机位俯拍，补光灯+干净背景，收音用手机贴麦克风",
+        tags: ["#沉浸式做饭", "#减脂餐", "#ASMR", "#一人食", "#治愈"]
+      },
+      {
+        title: "#一周减脂备餐#",
+        heat: "🔥🔥🔥🔥",
+        platform: "抖音",
+        searchUrl: "https://www.douyin.com/search/一周减脂备餐",
+        format: "快剪合集，一次备餐一周",
+        hook: "100元备好一周减脂餐，每天不到15块",
+        scriptIdea: "采购展示 → 批量制作快剪 → 分装展示 → 每日打卡",
+        shootTip: "素材分多次拍摄，剪辑成1分钟快节奏合集",
+        tags: ["#减脂备餐", "#mealprep", "#减脂餐", "#省钱", "#一周饮食"]
+      }
+    ],
+    // 爆款脚本框架模板
+    scriptFramework: {
+      title: "爆款脚本框架模板",
+      structures: [
+        { step: 1, name: "钩子（0-3秒）", desc: "数字冲击/反差/悬念，让观众停下来", examples: "158cm 49kg｜我每天吃什么 / 300卡减脂晚餐长这样" },
+        { step: 2, name: "建立预期（3-8秒）", desc: "告诉观众这条视频能看到什么", examples: "今天做一份超简单的减脂晚餐，只要5分钟" },
+        { step: 3, name: "主体内容（8-50秒）", desc: "制作过程/展示/讲解，节奏快", examples: "快剪制作过程，每步3-5秒" },
+        { step: 4, name: "价值点/信息卡（50-55秒）", desc: "给出核心价值，如热量/营养/小技巧", examples: "今日摄入XXX卡，蛋白质XXg" },
+        { step: 5, name: "引导互动（55-60秒）", desc: "引导关注/评论/收藏", examples: "评论区告诉我你想学什么减脂餐" }
+      ],
+      commentStrategy: "置顶评论放详细食谱/热量，引导用户收藏；回复前10条评论提升互动率",
+      tagStrategy: "5-8个标签：2个大词(#减脂餐 #一人食) + 2个精准词(#小个子减脂 #减脂日记) + 2个热点词 + 1个IP词",
+      // 脚本分析功能
+      analysisFeature: {
+        title: "🔗 链接脚本深度分析",
+        desc: "粘贴抖音/小红书/B站视频链接，管家将拆解其脚本框架、钩子设计、节奏结构、转化点",
+        placeholder: "粘贴视频链接，多个链接用换行分隔...",
+        examples: [
+          "https://www.douyin.com/video/xxx",
+          "https://www.xiaohongshu.com/explore/xxx"
+        ]
+      }
+    }
+  }
+};
+
+</script>
+<script>
+// ========================================
+// 何雨婷个人工作台 - 应用逻辑
+// ========================================
+
+// ===== 全局状态 =====
+let appState = {
+  currentPage: 'home',
+  selectedWorkout: null,
+  bodyFeeling: null,
+  checkedIn: false,
+  todos: [],
+  weekPlan: [],
+  chatHistory: [],
+  trainedMuscles: [],
+  currentKnowledgeIdx: 0,
+  selectedColors: [],
+  weatherData: null,
+  // 模块3：肌群多选
+  selectedMuscleGroups: [],
+  // 模块4：穿搭图滑动
+  outfitCardIdx: 0,
+  outfitLikes: JSON.parse(localStorage.getItem('outfitLikes') || '[]'),
+  outfitDislikes: JSON.parse(localStorage.getItem('outfitDislikes') || '[]'),
+  bloggerPoolIdx: 1,
+  newStyleIdx: 0,
+  // 模块5：脚本分析
+  scriptAnalysisResult: null,
+  // 持久化状态
+  goals: [],
+  reading: [],
+  readingFreq: { mode: 'weekly', times: 4, days: [1, 3, 5, 7] },
+  aiProvider: 'default',
+  knowledgeManual: false
+};
+
+// ===== 存储与持久化 =====
+function getTodayKey() {
+  const n = new Date();
+  return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+}
+function loadJSON(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch (e) { return fallback; }
+}
+function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+// ---- 待办（按日期持久化，跨天重置）----
+function loadTodos() {
+  const saved = loadJSON('yutingTodos', null);
+  const today = getTodayKey();
+  if (saved && saved.date === today) return saved.items;
+  return JSON.parse(JSON.stringify(APP_DATA.todayTodos));
+}
+function saveTodos() { saveJSON('yutingTodos', { date: getTodayKey(), items: appState.todos }); }
+
+// ---- 训练打卡（记录打卡日期）----
+function loadCheckins() { return loadJSON('yutingCheckins', []); }
+function addCheckin() {
+  const list = loadCheckins();
+  const t = getTodayKey();
+  if (!list.includes(t)) { list.push(t); saveJSON('yutingCheckins', list); }
+}
+function isCheckedInToday() { return loadCheckins().includes(getTodayKey()); }
+function getWeekCheckinCount() {
+  const list = loadCheckins();
+  const now = new Date();
+  const dow = now.getDay();
+  const monday = new Date(now); monday.setDate(now.getDate() - ((dow + 6) % 7));
+  monday.setHours(0, 0, 0, 0);
+  return list.filter(d => { const dt = new Date(d + 'T00:00:00'); return dt >= monday; }).length;
+}
+
+// ---- 长期目标（可编辑，可自动）----
+function loadGoals() {
+  const saved = loadJSON('yutingGoals', null);
+  if (saved) return saved;
+  const seed = APP_DATA.longTermGoals.map((g, i) => ({ id: 'g' + i, icon: g.icon, title: g.title, detail: g.detail, progress: g.progress, auto: null }));
+  seed.push({ id: 'g_train', icon: '🏋️', title: '本周训练打卡', detail: '本周按计划完成训练', progress: 0, auto: 'weekTrain' });
+  seed.push({ id: 'g_read', icon: '📖', title: '本月阅读积累', detail: '本月累计阅读天数', progress: 0, auto: 'monthReading' });
+  saveJSON('yutingGoals', seed);
+  return seed;
+}
+function saveGoals() { saveJSON('yutingGoals', appState.goals); }
+function computeGoalProgress(g) {
+  if (g.auto === 'weekTrain') {
+    const c = getWeekCheckinCount();
+    const planned = APP_DATA.module3.currentWeek.plannedSessions;
+    return { progress: Math.min(100, Math.round(c / planned * 100)), note: `本周 ${c}/${planned} 次` };
+  }
+  if (g.auto === 'monthReading') {
+    const logs = loadJSON('yutingReading', []);
+    const now = new Date();
+    const ym = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    const days = new Set(logs.filter(l => l.date.startsWith(ym)).map(l => l.date));
+    return { progress: Math.min(100, Math.round(days.size / 16 * 100)), note: `本月 ${days.size} 天` };
+  }
+  return { progress: g.progress, note: '' };
+}
+
+// ---- 阅读记录 ----
+function loadReading() { return loadJSON('yutingReading', []); }
+function saveReading(list) { saveJSON('yutingReading', list); }
+function loadReadingFreq() { return loadJSON('yutingReadingFreq', { mode: 'weekly', times: 4, days: [1, 3, 5, 7] }); }
+function saveReadingFreq(f) { saveJSON('yutingReadingFreq', f); }
+
+// ---- AI 服务商偏好 ----
+function loadAIProvider() { return loadJSON('yutingAIProvider', 'default'); }
+function saveAIProvider(p) { saveJSON('yutingAIProvider', p); }
+
+// 按日期种子的知识点索引（每天不同，跨年不重复）
+function getDailyKnowledgeIdx() {
+  const pool = APP_DATA.module1.knowledgePool;
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const dayOfYear = Math.floor((now - start) / 86400000);
+  return dayOfYear % pool.length;
+}
+
+// ===== 初始化 =====
+function init() {
+  initDate();
+  // 从本地存储加载持久化状态
+  appState.todos = loadTodos();
+  appState.goals = loadGoals();
+  appState.reading = loadReading();
+  appState.readingFreq = loadReadingFreq();
+  appState.aiProvider = loadAIProvider();
+  appState.currentKnowledgeIdx = getDailyKnowledgeIdx();
+  renderQuickStats();
+  renderModuleGrid();
+  renderTodos();
+  renderStatus();
+  renderGoals();
+  renderModule1();
+  renderModule2();
+  renderModule3();
+  renderModule4();
+  renderModule5();
+  initAssistant();
+  // 预填充管家欢迎语
+  addBotMessage('雨婷你好，工作台已就绪 ✅\n\n我是你的智能大管家，可以随时和我沟通。试试告诉我：\n• "昨日上肢训练后肌肉酸痛"\n• "今天不想练腿，换个计划"\n• "今天学了什么新内容"\n\n我会自动调整各模块计划！');
+  // PWA：注册离线缓存
+  registerServiceWorker();
+
+  // 华为运动健康授权回调（?hw=authorized）→ 自动拉取数据
+  if (location.search.indexOf('hw=authorized') > -1) {
+    setTimeout(() => syncHuaweiHealth(), 400);
+    history.replaceState({}, '', location.pathname + location.hash);
+  }
+  // 华为授权失败提示
+  if (location.search.indexOf('hw=error') > -1) {
+    const params = new URLSearchParams(location.search);
+    showToast('华为授权失败：' + (params.get('reason') || '未知错误'));
+    history.replaceState({}, '', location.pathname + location.hash);
+  }
+}
+
+// ===== PWA：Service Worker 注册 =====
+function registerServiceWorker() {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch((e) => console.log('SW注册失败', e));
+    });
+  }
+}
+
+// ===== 日期初始化 =====
+function initDate() {
+  const now = new Date();
+  const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  const dateStr = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日 ${weekDays[now.getDay()]}`;
+  document.getElementById('todayDate').textContent = dateStr;
+}
+
+// ===== 快捷统计 =====
+function renderQuickStats() {
+  const stats = document.getElementById('quickStats');
+  const weekCount = getWeekCheckinCount();
+  const planned = APP_DATA.module3.currentWeek.plannedSessions;
+  const checked = isCheckedInToday();
+  stats.innerHTML = `
+    <div class="quick-stat">
+      <div class="stat-num">23%</div>
+      <div class="stat-label">体脂率</div>
+    </div>
+    <div class="quick-stat">
+      <div class="stat-num">49kg</div>
+      <div class="stat-label">体重</div>
+    </div>
+    <div class="quick-stat">
+      <div class="stat-num" id="statSessions">${weekCount}/${planned}</div>
+      <div class="stat-label">本周训练 ${checked ? '✅已打卡' : ''}</div>
+    </div>
+  `;
+}
+
+// ===== 模块入口 =====
+function renderModuleGrid() {
+  const grid = document.getElementById('moduleGrid');
+  const modules = [
+    { id: 'module1', icon: '📚', bg: '#F0EDFF', title: '人性社交沟通', sub: '系统学习路线+每日知识点', badge: '' },
+    { id: 'module2', icon: '📰', bg: '#E0F7FA', title: '行业资讯简报', sub: '5分钟每日精简资讯', badge: 'NEW' },
+    { id: 'module3', icon: '💪', bg: '#FFE0EC', title: '健身塑形打卡', sub: '动态自适应训练计划', badge: '' },
+    { id: 'module4', icon: '👗', bg: '#F3E8FF', title: '穿搭风格打造', sub: '低饱和韩系博主推荐', badge: '' },
+    { id: 'module5', icon: '📱', bg: '#FFF4E0', title: '抖音自媒体', sub: '美食赛道调研+选题', badge: '' },
+    { id: 'module2', icon: '🧑‍💼', bg: '#E8F5E9', title: '智能大管家', sub: '对话即指挥，一键联动', badge: 'AI' }
+  ];
+
+  grid.innerHTML = modules.map(m => `
+    <div class="module-card" onclick="${m.id === 'module2' && m.title === '智能大管家' ? 'toggleAssistant()' : `showPage('${m.id}')`}">
+      ${m.badge ? `<div class="module-badge">${m.badge}</div>` : ''}
+      <div class="module-icon" style="background:${m.bg}">${m.icon}</div>
+      <div class="module-title">${m.title}</div>
+      <div class="module-sub">${m.sub}</div>
+    </div>
+  `).join('');
+}
+
+// ===== 页面切换 =====
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + pageId).classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navItem = document.querySelector(`.nav-item[data-page="${pageId}"]`);
+  if (navItem) navItem.classList.add('active');
+
+  appState.currentPage = pageId;
+  window.scrollTo(0, 0);
+}
+
+// ===== 待办清单 =====
+function renderTodos() {
+  const list = document.getElementById('todoList');
+  const done = appState.todos.filter(t => t.done).length;
+  document.getElementById('todoProgress').textContent = `${done}/${appState.todos.length}`;
+
+  // 未完成在前，已完成沉到最底部
+  const sorted = [...appState.todos].sort((a, b) => (a.done === b.done) ? 0 : (a.done ? 1 : -1));
+  list.innerHTML = sorted.map(todo => `
+    <div class="todo-item ${todo.done ? 'todo-done-item' : ''}">
+      <div class="todo-check ${todo.done ? 'done' : ''}" onclick="toggleTodo('${todo.id}')"></div>
+      <span class="todo-text ${todo.done ? 'done' : ''}">${todo.text}</span>
+      <span class="todo-tag">${todo.module}</span>
+    </div>
+  `).join('');
+}
+
+function toggleTodo(id) {
+  const todo = appState.todos.find(t => t.id === id);
+  if (todo) {
+    todo.done = !todo.done;
+    renderTodos();
+    saveTodos();
+    if (todo.done) showToast(`✅ 已完成：${todo.text}`);
+  }
+}
+
+// ===== 状态记录 =====
+function renderStatus() {
+  const list = document.getElementById('statusList');
+  list.innerHTML = APP_DATA.recentStatus.map(s => `
+    <div class="status-item">
+      <span class="status-date">${s.date}</span>
+      <span class="status-text">${s.content}</span>
+    </div>
+  `).join('');
+}
+
+// ===== 长期目标（可编辑 + 自动进度）=====
+function renderGoals() {
+  const list = document.getElementById('goalList');
+  const html = `
+    <div style="text-align:right;margin-bottom:8px;">
+      <span class="goal-edit-link" onclick="openGoalEditor()">✎ 编辑目标</span>
+      <span class="goal-edit-link" onclick="addGoal()">➕ 添加</span>
+    </div>`;
+  list.innerHTML = html + appState.goals.map(g => {
+    const cp = computeGoalProgress(g);
+    const pct = cp.progress;
+    const autoTag = g.auto ? `<span class="goal-auto">自动${cp.note ? '· ' + cp.note : ''}</span>` : `<span class="goal-percent">${pct}%</span>`;
+    return `
+    <div class="goal-item">
+      <div class="goal-top">
+        <span class="goal-icon">${g.icon}</span>
+        <span class="goal-title">${g.title}</span>
+        ${autoTag}
+      </div>
+      <div class="goal-detail">${g.detail}</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function addGoal() {
+  appState.goals.push({ id: 'g' + Date.now(), icon: '🎯', title: '新目标', detail: '点击编辑描述', progress: 0, auto: null });
+  saveGoals();
+  renderGoals();
+  openGoalEditor();
+}
+
+function openGoalEditor() {
+  const html = `<div class="modal-title">🎯 长期目标（真实进展）</div>
+    <div class="goal-edit-tip">自动项（本周训练/本月阅读）进度由你的真实打卡与阅读记录计算，不可手动改；其余可自由编辑。</div>
+    <div id="goalEditList">${appState.goals.map(g => `
+      <div class="goal-edit-row" data-id="${g.id}">
+        <input class="ge-icon" value="${g.icon}" maxlength="2" onchange="updateGoal('${g.id}','icon',this.value)">
+        <input class="ge-title" value="${g.title}" onchange="updateGoal('${g.id}','title',this.value)">
+        <button class="ge-del" onclick="deleteGoal('${g.id}')">✕</button>
+        <input class="ge-detail" value="${g.detail}" placeholder="描述" onchange="updateGoal('${g.id}','detail',this.value)">
+        ${g.auto ? `<div class="ge-auto">自动进度</div>` : `
+          <input class="ge-prog" type="range" min="0" max="100" value="${g.progress}" oninput="updateGoal('${g.id}','progress',this.value)">
+          <span class="ge-progval">${g.progress}%</span>`}
+      </div>`).join('')}</div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeModal()">完成</button>
+    </div>`;
+  openModal(html);
+}
+
+function updateGoal(id, field, val) {
+  const g = appState.goals.find(x => x.id === id);
+  if (!g) return;
+  if (field === 'progress') g.progress = parseInt(val) || 0;
+  else g[field] = val;
+  saveGoals();
+  renderGoals();
+}
+function deleteGoal(id) {
+  appState.goals = appState.goals.filter(x => x.id !== id);
+  saveGoals();
+  renderGoals();
+  openGoalEditor();
+}
+
+// ===== 模块1：学习路线 =====
+function renderModule1() {
+  const data = APP_DATA.module1;
+  const container = document.getElementById('m1-content');
+
+  let html = '';
+
+  // 今日课程（从知识点池中取当前索引）
+  const pool = data.knowledgePool;
+  const lesson = pool[appState.currentKnowledgeIdx];
+
+  html += `
+    <div class="lesson-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+        <div style="flex:1;">
+          <div class="lesson-topic">📖 今日知识点：${lesson.topic}</div>
+          <div class="lesson-source">来源：${lesson.source}</div>
+        </div>
+        <button class="change-btn" onclick="changeKnowledgePoint()">
+          🔄 换一下
+        </button>
+      </div>
+      <div class="lesson-content">
+        ${lesson.content.map(p => `<p>${p}</p>`).join('')}
+      </div>
+      <div class="question-box">
+        <div class="q-title">🧠 思考巩固题</div>
+        <ol>
+          ${lesson.questions.map(q => `<li>${q}</li>`).join('')}
+        </ol>
+        <div class="ai-qa">
+          <div class="ai-qa-title">💬 问 AI 巩固（点问题直接问，或自由提问）</div>
+          <div class="ai-qa-msgs" id="aiQaMsgs"><div class="ai-hint">点击下方问题，或输入你自己的思考，让 AI 陪你深度拆解。</div></div>
+          <div class="ai-qa-quick">
+            ${lesson.questions.map((q, i) => `<span class="ai-chip" onclick="askAIQuestion(${i})">${q}</span>`).join('')}
+          </div>
+          <div class="ai-qa-input">
+            <input id="aiQaInput" class="ai-qa-text" placeholder="输入你的思考/问题..." onkeydown="if(event.key==='Enter')askAIFree()">
+            <button class="ai-qa-send" onclick="askAIFree()">➤</button>
+          </div>
+        </div>
+      </div>
+      <div class="lesson-hint">💡 今日知识点第 ${appState.currentKnowledgeIdx + 1}/${pool.length} 个（每天自动轮换），点"换一下"可看其它</div>
+    </div>
+  `;
+
+  // ===== 我的阅读记录（真实可记录 + AI 整理）=====
+  const freq = appState.readingFreq;
+  const dayOpts = [['1', '一'], ['2', '二'], ['3', '三'], ['4', '四'], ['5', '五'], ['6', '六'], ['7', '日']];
+  html += `<div class="section-title">📖 我的阅读记录</div>`;
+  html += `<div class="reading-card">
+    <div class="reading-freq">
+      <span class="rf-label">记录频率</span>
+      <select id="rfMode" onchange="changeReadingFreq()" class="rf-select">
+        <option value="daily" ${freq.mode === 'daily' ? 'selected' : ''}>每天</option>
+        <option value="weekly" ${freq.mode === 'weekly' ? 'selected' : ''}>每周 ${freq.times} 次</option>
+        <option value="custom" ${freq.mode === 'custom' ? 'selected' : ''}>自定义星期</option>
+      </select>
+      ${freq.mode === 'weekly' ? `<span class="rf-times">每周 <input type="number" min="1" max="7" value="${freq.times}" id="rfTimes" onchange="changeReadingFreq()" class="rf-times-input"> 次</span>` : ''}
+      ${freq.mode === 'custom' ? `<span class="rf-days">${dayOpts.map(([d, n]) => `<span class="rf-day ${freq.days.includes(+d) ? 'on' : ''}" onclick="toggleReadDay(${d})">${n}</span>`).join('')}</span>` : ''}
+    </div>
+    <div class="reading-add">
+      <input id="rdBook" class="rd-input" placeholder="今天读了什么书">
+      <div class="rd-pages">
+        <input id="rdStart" class="rd-page" type="number" placeholder="起页">
+        <span>~</span>
+        <input id="rdEnd" class="rd-page" type="number" placeholder="止页">
+      </div>
+      <textarea id="rdThought" class="rd-thought" placeholder="今天的感想 / 收获 / 疑问…"></textarea>
+      <button class="checkin-btn" style="font-size:13px;padding:9px;" onclick="addReading()">＋ 记录今天读了什么</button>
+    </div>
+    <div class="reading-list" id="readingList"></div>
+    <button class="ai-organize-btn" onclick="aiOrganizeReading()">🤖 AI 整理我的阅读</button>
+    <div id="readingAiResult" class="reading-ai-result"></div>
+  </div>`;
+
+  // 学习路线阶段
+  html += '<div class="section-title">🗺️ 系统化学习路线</div>';
+  html += '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">点击书名可直接跳转微信读书 📚</div>';
+  data.phases.forEach(phase => {
+    html += `<div class="phase-card">
+      <div class="phase-name">${phase.phase}</div>
+      <div class="phase-duration">${phase.duration}</div>
+      <div class="phase-desc">${phase.desc}</div>`;
+    phase.subjects.forEach(subject => {
+      html += `<div style="font-size:13px;font-weight:600;color:var(--accent-dark);margin:8px 0 4px;">${subject.name}</div>`;
+      html += '<div class="book-list">';
+      subject.books.forEach(book => {
+        let linkHtml = '';
+        const cleanTitle = book.title.replace(/《|》/g, '');
+        if (book.deepLink) {
+          // 微信读书书籍直链（直接跳转到书籍详情页）
+          linkHtml = `<a href="${book.deepLink}" target="_blank" rel="noopener" class="book-title-link">
+            <span class="book-title">${book.title}</span>
+            <span class="book-level level-${book.level}">${book.level}</span>
+            <span class="weread-icon">📖 微信读书打开</span>
+          </a>`;
+        } else {
+          linkHtml = `<span class="book-title">${book.title}</span>
+            <span class="book-level level-${book.level}">${book.level}</span>
+            <span class="weread-icon" style="background:#F0EEE9;color:var(--text-light);">暂未收录</span>`;
+        }
+        html += `<div class="book-item">
+          <div class="book-order">${book.order}</div>
+          <div class="book-info">
+            ${linkHtml}
+            <div class="book-author">${book.author}</div>
+            <div class="book-desc">${book.desc}</div>
+          </div>
+        </div>`;
+      });
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+
+  // 记忆巩固方案
+  html += `<div class="card">
+    <div class="card-title">🔄 记忆巩固学习方案</div>
+    <div class="card-desc" style="font-size:12px;line-height:1.8;">
+      ${data.knowledgeReview.items.map(item => `<div>• ${item}</div>`).join('')}
+    </div>
+  </div>`;
+
+  // 近期阅读分析（从真实阅读记录计算）
+  html += `<div class="section-title" style="margin-top:16px;">📊 近期阅读分析</div>`;
+  html += `<div id="readingAnalysis">${buildReadingAnalysisHTML()}</div>`;
+
+  container.innerHTML = html;
+  renderReadingList();
+}
+
+function buildReadingAnalysisHTML() {
+  const stats = computeReadingStats();
+  if (stats.empty) {
+    return `<div class="reading-stats-card"><div class="rs-empty">还没有阅读记录，在上方「我的阅读记录」记一笔，这里会自动统计 ✨</div></div>`;
+  }
+  let h = `<div class="reading-stats-card">
+    <div class="rs-grid">
+      <div class="rs-item">
+        <div class="rs-num">${stats.totalDays}</div>
+        <div class="rs-label">累计阅读天数</div>
+      </div>
+      <div class="rs-item">
+        <div class="rs-num">${stats.totalHours}<span style="font-size:12px;">h</span></div>
+        <div class="rs-label">累计阅读时长</div>
+      </div>
+      <div class="rs-item">
+        <div class="rs-num">${stats.thisYearHours}<span style="font-size:12px;">h</span></div>
+        <div class="rs-label">本年阅读时长</div>
+      </div>
+    </div>
+    <div class="rs-section-title">📚 阅读最多的书 TOP4</div>
+    <div class="rs-book-list">`;
+  stats.topBooks.forEach((b, i) => {
+    h += `<div class="rs-book-item">
+      <div class="rs-rank">${i + 1}</div>
+      <div class="rs-book-info">
+        <div class="rs-book-title">${b.title}</div>
+        <div class="rs-book-author">共 ${b.pages} 页 · ${b.entries} 次记录</div>
+      </div>
+    </div>`;
+  });
+  h += `</div>`;
+  h += `<div class="rs-section-title">📅 近4周阅读分钟数</div>`;
+  h += `<div class="rs-bar-chart">`;
+  const maxMins = Math.max(...stats.weeklyTrend.map(w => w.minutes), 1);
+  stats.weeklyTrend.forEach(w => {
+    const barHeight = Math.round((w.minutes / maxMins) * 100);
+    h += `<div class="rs-bar-col">
+      <div class="rs-bar rs-bar-2" style="height:${Math.max(barHeight, 3)}%;" title="${w.minutes}min"></div>
+      <div class="rs-bar-val">${w.minutes}m</div>
+      <div class="rs-bar-label">${w.week}</div>
+    </div>`;
+  });
+  h += `</div>`;
+  h += `<div class="rs-preference">
+    <div class="rs-section-title">🎯 阅读偏好分析</div>
+    <div class="rs-pref-text">${stats.preference}</div>
+  </div>`;
+  h += `</div>`;
+  return h;
+}
+
+function refreshReadingAnalysis() {
+  const el = document.getElementById('readingAnalysis');
+  if (el) el.innerHTML = buildReadingAnalysisHTML();
+}
+
+function changeKnowledgePoint() {
+  const pool = APP_DATA.module1.knowledgePool;
+  appState.currentKnowledgeIdx = (appState.currentKnowledgeIdx + 1) % pool.length;
+  appState.knowledgeManual = true;
+  renderModule1();
+  showToast(`已切换至：${pool[appState.currentKnowledgeIdx].topic}`);
+  document.getElementById('m1-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ===== AI 交互（DeepSeek / 豆包）=====
+function escapeHtml(s) {
+  return String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+}
+
+async function callAI(systemPrompt, userPrompt) {
+  const base = getApiBase();
+  const payload = {
+    provider: appState.aiProvider === 'default' ? null : appState.aiProvider,
+    system: systemPrompt,
+    user: userPrompt,
+  };
+  try {
+    const r = await fetch(base + '/api/ai/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const isJson = (r.headers.get('content-type') || '').includes('application/json');
+    if (!r.ok) {
+      const t = isJson ? await r.text() : '后端返回 HTML（通常是旧版本未部署 /api/ai/chat）';
+      return { error: 'AI 网关 ' + r.status + '：' + t.slice(0, 160) };
+    }
+    if (!isJson) return { error: '后端返回非 JSON（可能是旧版本或未部署 /api/ai/chat），请重新部署后端' };
+    const j = await r.json();
+    if (j.error) return { error: j.error };
+    const text = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+    if (text) return { text };
+    return { error: 'AI 返回格式异常：' + JSON.stringify(j).slice(0, 140) };
+  } catch (e) {
+    return { error: '调用失败（可能未配置后端或网络问题）：' + (e.message || e) };
+  }
+}
+
+// 通用底部弹窗
+function openModal(html) {
+  document.getElementById('modalSheet').innerHTML = html;
+  document.getElementById('modalMask').classList.add('show');
+  document.getElementById('modalSheet').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('modalMask').classList.remove('show');
+  document.getElementById('modalSheet').classList.remove('show');
+}
+
+function openAISettings() {
+  const p = appState.aiProvider;
+  const html = `<div class="modal-title">🤖 AI 服务</div>
+    <div class="ai-tip">AI 密钥已由后端统一配置，无需在 App 内填写。默认使用智谱 GLM-4-Flash（永久免费）。你也可以指定其他已配置的服务商。</div>
+    <div class="ai-field">
+      <div class="ai-label">优先服务商</div>
+      <div class="ai-seg">
+        <button class="ai-seg-btn ${p === 'default' ? 'on' : ''}" onclick="setAIProvider('default')">后端默认</button>
+        <button class="ai-seg-btn ${p === 'zhipu' ? 'on' : ''}" onclick="setAIProvider('zhipu')">智谱</button>
+        <button class="ai-seg-btn ${p === 'deepseek' ? 'on' : ''}" onclick="setAIProvider('deepseek')">DeepSeek</button>
+        <button class="ai-seg-btn ${p === 'doubao' ? 'on' : ''}" onclick="setAIProvider('doubao')">豆包</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeModal()">知道了</button>
+    </div>`;
+  openModal(html);
+}
+function setAIProvider(p) { appState.aiProvider = p; saveAIProvider(p); openAISettings(); }
+
+// 思考巩固题 → AI
+function askAIQuestion(i) {
+  const lesson = APP_DATA.module1.knowledgePool[appState.currentKnowledgeIdx];
+  const q = lesson.questions[i];
+  sendAIMessage(`请结合知识点《${lesson.topic}》（来源：${lesson.source}），帮我深入拆解这个问题：${q}`);
+}
+function askAIFree() {
+  const inp = document.getElementById('aiQaInput');
+  if (!inp) return;
+  const v = inp.value.trim();
+  if (!v) return;
+  inp.value = '';
+  sendAIMessage(v);
+}
+async function sendAIMessage(userText) {
+  const box = document.getElementById('aiQaMsgs');
+  if (!box) return;
+  box.innerHTML += `<div class="ai-msg ai-user">${escapeHtml(userText)}</div>`;
+  const loading = document.createElement('div');
+  loading.className = 'ai-msg ai-bot ai-loading';
+  loading.textContent = 'AI 思考中…';
+  box.appendChild(loading);
+  box.scrollTop = box.scrollHeight;
+  const sys = '你是一位善于启发思考的学习教练。针对用户给出的知识点与问题，用通俗、有结构、带例子的方式回答，帮助对方真正理解而非只给标准答案。控制在220字以内。';
+  const res = await callAI(sys, userText);
+  loading.remove();
+  if (res.error) {
+    box.innerHTML += `<div class="ai-msg ai-bot ai-err">⚠️ ${escapeHtml(res.error)}</div>`;
+  } else {
+    box.innerHTML += `<div class="ai-msg ai-bot">${escapeHtml(res.text)}</div>`;
+  }
+  box.scrollTop = box.scrollHeight;
+}
+
+// ===== 阅读记录 =====
+function changeReadingFreq() {
+  const sel = document.getElementById('rfMode');
+  appState.readingFreq.mode = sel.value;
+  if (appState.readingFreq.mode === 'weekly') {
+    const t = document.getElementById('rfTimes');
+    appState.readingFreq.times = parseInt(t.value) || 4;
+  }
+  saveReadingFreq(appState.readingFreq);
+  renderModule1();
+}
+function toggleReadDay(d) {
+  const days = appState.readingFreq.days;
+  const i = days.indexOf(d);
+  if (i >= 0) days.splice(i, 1); else days.push(d);
+  saveReadingFreq(appState.readingFreq);
+  renderModule1();
+}
+function addReading() {
+  const book = document.getElementById('rdBook').value.trim();
+  const start = parseInt(document.getElementById('rdStart').value) || 0;
+  const end = parseInt(document.getElementById('rdEnd').value) || 0;
+  const thought = document.getElementById('rdThought').value.trim();
+  if (!book && !thought) { showToast('请至少填写书名或感想'); return; }
+  const pages = (start && end) ? Math.max(0, end - start) : 0;
+  const logs = loadReading();
+  logs.unshift({ date: getTodayKey(), book, start, end, pages, thought });
+  saveReading(logs);
+  appState.reading = logs;
+  document.getElementById('rdBook').value = '';
+  document.getElementById('rdStart').value = '';
+  document.getElementById('rdEnd').value = '';
+  document.getElementById('rdThought').value = '';
+  renderReadingList();
+  refreshReadingAnalysis();
+  renderGoals();
+  showToast('✅ 已记录今天的阅读');
+}
+function renderReadingList() {
+  const el = document.getElementById('readingList');
+  if (!el) return;
+  const logs = loadReading().slice(0, 12);
+  if (logs.length === 0) { el.innerHTML = '<div class="reading-empty">还没有记录，今天读了什么？</div>'; return; }
+  el.innerHTML = logs.map(l => `
+    <div class="reading-item">
+      <div class="ri-top"><span class="ri-book">📕 ${escapeHtml(l.book || '未命名')}</span><span class="ri-date">${l.date}</span></div>
+      ${l.pages ? `<div class="ri-pages">P${l.start}–P${l.end}（${l.pages}页）</div>` : ''}
+      ${l.thought ? `<div class="ri-thought">${escapeHtml(l.thought)}</div>` : ''}
+    </div>`).join('');
+}
+async function aiOrganizeReading() {
+  const logs = loadReading().slice(0, 20);
+  const box = document.getElementById('readingAiResult');
+  if (!box) return;
+  if (logs.length === 0) { showToast('先记录几条阅读，再来让 AI 整理～'); return; }
+  box.innerHTML = '<div class="ai-msg ai-bot ai-loading">AI 正在整理你的阅读…</div>';
+  const text = logs.map(l => `【${l.date}】《${l.book}》${l.pages ? ' P' + l.start + '-' + l.end : ''}${l.thought ? ' 感想：' + l.thought : ''}`).join('\n');
+  const sys = '你是一位温柔有洞察的阅读教练。根据用户近期读书记录，整理成：①这段时间的阅读主题/关注点；②最有价值的几点思考提炼；③下一步阅读建议。语言自然，控制在320字内。';
+  const res = await callAI(sys, text);
+  box.innerHTML = res.error
+    ? `<div class="ai-msg ai-bot ai-err">⚠️ ${escapeHtml(res.error)}</div>`
+    : `<div class="ai-msg ai-bot">${escapeHtml(res.text)}</div>`;
+}
+
+// 从真实记录计算阅读统计
+function computeReadingStats() {
+  const logs = loadReading();
+  if (!logs.length) return { empty: true };
+  const MIN_PER_PAGE = 2;
+  const days = new Set(logs.map(l => l.date));
+  let totalMin = 0;
+  const byBook = {};
+  logs.forEach(l => {
+    const m = (l.pages || 0) * MIN_PER_PAGE;
+    totalMin += m;
+    if (l.book) {
+      if (!byBook[l.book]) byBook[l.book] = { title: l.book, pages: 0, entries: 0 };
+      byBook[l.book].pages += (l.pages || 0);
+      byBook[l.book].entries += 1;
+    }
+  });
+  const now = new Date();
+  const y = now.getFullYear();
+  const thisYearMin = logs.filter(l => l.date.startsWith(String(y))).reduce((s, l) => s + (l.pages || 0) * MIN_PER_PAGE, 0);
+  const topBooks = Object.values(byBook).sort((a, b) => b.pages - a.pages).slice(0, 4);
+  // 近4周（按自然周）
+  const weekly = [];
+  for (let w = 3; w >= 0; w--) {
+    const base = new Date(now);
+    base.setDate(now.getDate() - w * 7);
+    const dw = base.getDay();
+    const mon = new Date(base); mon.setDate(base.getDate() - ((dw + 6) % 7)); mon.setHours(0, 0, 0, 0);
+    const sun = new Date(mon); sun.setDate(mon.getDate() + 6);
+    const mins = logs.filter(l => { const d = new Date(l.date + 'T00:00:00'); return d >= mon && d <= sun; })
+      .reduce((s, l) => s + (l.pages || 0) * MIN_PER_PAGE, 0);
+    weekly.push({ week: `${mon.getMonth() + 1}/${mon.getDate()}`, minutes: mins });
+  }
+  const topNames = topBooks.slice(0, 3).map(b => b.title.replace(/《|》/g, '')).join('、');
+  const preference = topNames
+    ? `你近期主要在读：${topNames}。${logs.length >= 10 ? '阅读习惯已较稳定，继续保持～' : '刚开始积累，多记录几次就能看到你的偏好画像。'}`
+    : '记录更多书目后，这里会生成你的阅读偏好画像。';
+  return {
+    empty: false,
+    totalDays: days.size,
+    totalHours: (totalMin / 60).toFixed(1),
+    thisYearHours: (thisYearMin / 60).toFixed(1),
+    topBooks,
+    weeklyTrend: weekly,
+    preference
+  };
+}
+
+// ===== 模块2：资讯简报 =====
+function renderModule2() {
+  const data = APP_DATA.module2;
+  const container = document.getElementById('m2-content');
+  document.getElementById('m2-subtitle').textContent = `${data.subtitle} · 阅读时长${data.readTime}`;
+
+  let html = '';
+  data.sections.forEach(section => {
+    html += `<div class="news-section">
+      <span class="news-cat" style="background:${section.color}">${section.category}</span>`;
+    section.items.forEach(item => {
+      html += `<div class="news-item">
+        <div class="news-title">${item.title}</div>
+        <div class="news-brief">${item.brief}</div>
+        <div class="news-insight">💡 ${item.insight}</div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+
+  // 调整按钮
+  html += `<div style="text-align:center;margin-top:8px;">
+    <button class="checkin-btn" style="background:var(--bg-soft);color:var(--text-secondary);font-size:13px;padding:10px;" 
+            onclick="showToast('已记录偏好，明日简报将侧重美食赛道方向')">⚙️ 调整资讯侧重点</button>
+  </div>`;
+
+  container.innerHTML = html;
+}
+
+// ===== 模块3：健身 =====
+function renderModule3() {
+  const data = APP_DATA.module3;
+  const container = document.getElementById('m3-content');
+
+  let html = '';
+
+  // 个人训练数据 — 优先使用用户同步的数据
+  const userHealth = getUserHealthData();
+  const ps = userHealth ? mergeHealthData(data.personalStats, userHealth) : data.personalStats;
+  const hasUserData = userHealth !== null;
+  html += '<div class="section-title">📊 个人训练数据' + (hasUserData ? ' <span style="font-size:11px;color:var(--accent);font-weight:400;">✅ 已同步华为运动健康</span>' : '') + '</div>';
+  // 同步按钮（真实 OAuth 授权同步）
+  html += `<div style="text-align:center;margin-bottom:12px;">
+    <button class="health-sync-btn" onclick="syncHuaweiHealth()">${hasUserData ? '🔄 重新同步华为数据' : '🔐 授权同步华为运动健康'}</button>
+    <div style="margin-top:8px;font-size:11px;color:var(--text-light);">
+      <a href="javascript:void(0)" onclick="openHealthSyncModal()" style="color:var(--text-light);text-decoration:underline;">或手动录入</a>
+    </div>
+  </div>`;
+  // 后端服务地址设置（真实同步需要独立后端，部署后在此填写）
+  const apiBase = getApiBase();
+  html += `<div class="hw-base-box">
+    <div class="hw-base-label">🔧 后端服务地址（部署华为同步后端后填写）</div>
+    <div class="hw-base-row">
+      <input id="hwApiBaseInput" class="hw-base-input" placeholder="https://你的后端.onrender.com" value="${apiBase}" />
+      <button class="hw-base-save" onclick="saveApiBase()">保存</button>
+    </div>
+    <div class="hw-base-tip">当前：${apiBase ? apiBase : '未设置（只能手动录入）'}</div>
+  </div>`;
+  // 今日喝水记录
+  const water = getTodayWater();
+  const wGoal = water.goal;
+  const wDrunk = water.drunk;
+  const wPct = Math.min(Math.round(wDrunk / wGoal * 100), 100);
+  html += `<div class="water-card">
+    <div class="water-head">
+      <div class="water-title">💧 今日喝水</div>
+      <div class="water-goal-edit" onclick="editWaterGoal()">目标 ${wGoal}ml ✎</div>
+    </div>
+    <div class="water-progress-wrap">
+      <div class="water-progress-bar" style="width:${wPct}%;"></div>
+    </div>
+    <div class="water-nums">
+      <span class="water-drunk">${wDrunk}</span><span class="water-unit">ml</span>
+      <span class="water-sep">/</span>
+      <span class="water-goal">${wGoal}</span><span class="water-unit">ml</span>
+      <span class="water-pct">${wPct}%</span>
+    </div>
+    <div class="water-btns">
+      <button class="water-add-btn" onclick="addWater(200)">+200</button>
+      <button class="water-add-btn" onclick="addWater(250)">+250</button>
+      <button class="water-add-btn" onclick="addWater(350)">+350</button>
+      <button class="water-add-btn" onclick="addWater(500)">+500</button>
+    </div>
+    <div class="water-custom">
+      <input id="waterCustomInput" type="number" placeholder="自定义ml" class="water-input" inputmode="numeric" />
+      <button class="water-custom-btn" onclick="addCustomWater()">添加</button>
+    </div>
+  </div>`;
+  html += `<div class="personal-stats-card">
+    <div class="ps-grid">
+      <div class="ps-item">
+        <div class="ps-num">${ps.totalSessions || 0}</div>
+        <div class="ps-label">累计训练次数</div>
+      </div>
+      <div class="ps-item">
+        <div class="ps-num">${ps.totalDuration ? Math.round(ps.totalDuration/60*10)/10 : 0}<span style="font-size:12px;">h</span></div>
+        <div class="ps-label">累计训练时长</div>
+      </div>
+      <div class="ps-item">
+        <div class="ps-num">${ps.streak || 0}</div>
+        <div class="ps-label">连续打卡天数</div>
+      </div>
+    </div>`;
+  // 今日健康概览（步数、心率、睡眠）— 来自华为运动健康
+  if (hasUserData && userHealth.latest) {
+    const lt = userHealth.latest;
+    html += `<div class="ps-today-health">
+      <div class="ps-section-title">📋 今日健康概览</div>
+      <div class="ps-today-grid">`;
+    if (lt.steps !== undefined) html += `<div class="ps-today-item"><div class="ps-today-num">🏃 ${lt.steps}</div><div class="ps-today-label">步数</div></div>`;
+    if (lt.heartRate !== undefined) html += `<div class="ps-today-item"><div class="ps-today-num">❤️ ${lt.heartRate}</div><div class="ps-today-label">静息心率 bpm</div></div>`;
+    if (lt.sleep !== undefined) html += `<div class="ps-today-item"><div class="ps-today-num">😴 ${lt.sleep}<span style="font-size:11px;">h</span></div><div class="ps-today-label">睡眠时长</div></div>`;
+    if (lt.calories !== undefined) html += `<div class="ps-today-item"><div class="ps-today-num">🔥 ${lt.calories}</div><div class="ps-today-label">消耗 kcal</div></div>`;
+    html += `</div></div>`;
+  }
+  // 体重变化趋势
+  html += `<div class="ps-section-title">📈 体重变化趋势</div>
+    <div class="ps-weight-chart">`;
+  if (ps.weightHistory && ps.weightHistory.length > 0) {
+    const minW = Math.min(...ps.weightHistory.map(w => w.weight)) - 0.5;
+    const maxW = Math.max(...ps.weightHistory.map(w => w.weight)) + 0.5;
+    const range = maxW - minW;
+    ps.weightHistory.forEach((w, i) => {
+      const h = 20 + ((w.weight - minW) / range) * 60;
+      const isLast = i === ps.weightHistory.length - 1;
+      html += `<div class="ps-weight-point">
+        <div class="ps-weight-val" style="color:${isLast ? 'var(--accent)' : 'var(--text-light)'};font-weight:${isLast ? '700' : '400'};">${w.weight}</div>
+        <div class="ps-weight-bar" style="height:${h}px;background:${isLast ? 'var(--accent)' : 'var(--accent-light)'};"></div>
+        <div class="ps-weight-date">${w.date}</div>
+      </div>`;
+    });
+  } else {
+    html += '<div style="color:var(--text-light);font-size:13px;padding:20px 0;">暂无体重数据，点击上方按钮同步</div>';
+  }
+  html += `</div>`;
+  // 体脂率
+  html += `<div class="ps-section-title">🔥 体脂率变化</div>`;
+  html += `<div class="ps-bodyfat-row">`;
+  if (ps.bodyFatHistory && ps.bodyFatHistory.length > 0) {
+    ps.bodyFatHistory.forEach(bf => {
+      html += `<div class="ps-bf-item">
+        <div class="ps-bf-val">${bf.value}%</div>
+        <div class="ps-bf-date">${bf.date}</div>
+      </div>`;
+    });
+  } else {
+    html += '<div style="color:var(--text-light);font-size:13px;">暂无体脂数据</div>';
+  }
+  html += `</div>`;
+  // 肌群训练频率
+  html += `<div class="ps-section-title">💪 各肌群训练频率</div>`;
+  html += `<div class="ps-muscle-freq">`;
+  if (ps.muscleGroupFrequency && ps.muscleGroupFrequency.length > 0) {
+    ps.muscleGroupFrequency.forEach(mg => {
+      const maxCount = Math.max(...ps.muscleGroupFrequency.map(m => m.count));
+      const w = (mg.count / maxCount) * 100;
+      html += `<div class="ps-mf-row">
+        <div class="ps-mf-name">${mg.group}</div>
+        <div class="ps-mf-bar-wrap"><div class="ps-mf-bar" style="width:${w}%;">${mg.count}次</div></div>
+        <div class="ps-mf-last">上次：${mg.lastTrained}</div>
+      </div>`;
+    });
+  } else {
+    html += '<div style="color:var(--text-light);font-size:13px;">暂无训练频率数据</div>';
+  }
+  html += `</div></div>`;
+  // 健康数据同步弹窗
+  html += getHealthSyncModalHTML();
+
+  // 本周计划表（可点击）
+  html += '<div class="section-title">📅 本周训练计划 <span class="more" style="font-size:11px;color:var(--text-light);font-weight:400;">点击选择当天训练</span></div>';
+  html += '<div class="week-plan">';
+  data.weeklyPlan.forEach((day, idx) => {
+    const isRestDay = day.status === '休息日' || day.status === '弹性日';
+    const statusClass = day.status === '休息日' || day.status === '弹性日' ? 'wd-rest' : (day.status === '已完成' ? 'wd-done' : 'wd-pending');
+    const clickable = !isRestDay ? `onclick="clickWeekDay('${day.day}', '${day.planned}')"` : '';
+    const cursor = isRestDay ? '' : 'cursor:pointer;';
+    html += `<div class="week-day ${isRestDay ? '' : 'week-day-clickable'}" style="${cursor}" ${clickable}>
+      <div class="wd-name">${day.day}</div>
+      <div class="wd-plan">${day.planned}</div>
+      <span class="wd-status ${statusClass}">${day.status}</span>
+      ${!isRestDay ? '<div class="wd-action">👆 点击选择</div>' : ''}
+    </div>`;
+  });
+  html += '</div>';
+
+  // 身体感受询问
+  html += `
+    <div class="card" style="margin-top:16px;">
+      <div class="card-title">🤔 训练前身体感受</div>
+      <div class="card-desc">告诉我你今天的身体状态，我来为你调整训练计划</div>
+      <div class="feeling-selector" id="feelingSelector">
+        <div class="feeling-btn" data-feeling="good" onclick="selectFeeling('good')">💪 状态很好<br>可以高强度</div>
+        <div class="feeling-btn" data-feeling="normal" onclick="selectFeeling('normal')">😌 一般<br>正常训练</div>
+        <div class="feeling-btn" data-feeling="sore" onclick="selectFeeling('sore')">😣 肌肉酸痛<br>需调整</div>
+        <div class="feeling-btn" data-feeling="tired" onclick="selectFeeling('tired')">😴 疲惫<br>轻度恢复</div>
+      </div>
+    </div>
+  `;
+
+  // 肌群多选训练
+  html += '<div class="section-title">🏋️ 选择今日训练肌群 <span class="more" style="font-size:11px;color:var(--text-light);font-weight:400;">可多选</span></div>';
+  html += '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">选择你想训练的肌群，系统自动匹配B站跟练视频 👇</div>';
+  html += '<div class="muscle-group-grid">';
+  data.muscleGroups.forEach(mg => {
+    html += `<div class="muscle-group-card" id="${mg.id}" onclick="toggleMuscleGroup('${mg.id}')">
+      <div class="mg-icon" style="background:${mg.color}20;color:${mg.color};">${mg.icon}</div>
+      <div class="mg-name">${mg.name}</div>
+      <div class="mg-muscles">${mg.muscles.join(' · ')}</div>
+    </div>`;
+  });
+  html += '</div>';
+
+  // 已选肌群的跟练视频
+  html += '<div id="muscleVideoResult"></div>';
+
+  // 打卡按钮
+  html += `<div style="text-align:center;margin-top:16px;">
+    <button class="checkin-btn ${isCheckedInToday() ? 'done' : ''}" id="checkinBtn3" onclick="checkinMuscleTraining()">${isCheckedInToday() ? '✅ 今日已打卡' : '✅ 完成训练打卡'}</button>
+  </div>`;
+
+  container.innerHTML = html;
+}
+
+// 肌群多选切换
+function toggleMuscleGroup(id) {
+  const el = document.getElementById(id);
+  const idx = appState.selectedMuscleGroups.indexOf(id);
+  if (idx >= 0) {
+    appState.selectedMuscleGroups.splice(idx, 1);
+    el.classList.remove('mg-selected');
+  } else {
+    appState.selectedMuscleGroups.push(id);
+    el.classList.add('mg-selected');
+  }
+  renderMuscleVideos();
+}
+
+// 渲染选中肌群的跟练视频
+function renderMuscleVideos() {
+  const container = document.getElementById('muscleVideoResult');
+  if (appState.selectedMuscleGroups.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const groups = APP_DATA.module3.muscleGroups.filter(mg => appState.selectedMuscleGroups.includes(mg.id));
+  let html = '<div class="section-title" style="margin-top:16px;">🎬 B站跟练视频推荐</div>';
+  
+  groups.forEach(mg => {
+    html += `<div class="video-group-card">
+      <div class="vg-header">
+        <span class="vg-icon" style="background:${mg.color}20;color:${mg.color};">${mg.icon}</span>
+        <span class="vg-name">${mg.name}</span>
+        <span class="vg-muscles">${mg.muscles.join(' · ')}</span>
+      </div>
+      <div class="vg-video-list">`;
+    mg.videos.forEach(v => {
+      html += `<a href="${v.url}" target="_blank" rel="noopener" class="video-link-card">
+        <div class="vl-icon">▶️</div>
+        <div class="vl-info">
+          <div class="vl-title">${v.title}</div>
+          <div class="vl-meta">${v.source} · ${v.duration}</div>
+        </div>
+        <div class="vl-arrow">↗</div>
+      </a>`;
+    });
+    html += `</div></div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+// 肌群训练打卡
+function checkinMuscleTraining() {
+  if (appState.selectedMuscleGroups.length === 0) {
+    showToast('请先选择今日训练肌群');
+    return;
+  }
+  if (isCheckedInToday()) {
+    showToast('今日已完成打卡');
+    return;
+  }
+  addCheckin();
+  appState.checkedIn = true;
+  renderQuickStats();
+  renderModule3();
+
+  const groups = APP_DATA.module3.muscleGroups.filter(mg => appState.selectedMuscleGroups.includes(mg.id));
+  const trainedNames = groups.map(g => g.name).join(' + ');
+
+  showToast(`✅ 打卡成功！${trainedNames}已完成`);
+  setTimeout(() => {
+    showToast('📝 请告诉管家训练感受，方便调整下次计划');
+  }, 1500);
+
+  const todo = appState.todos.find(t => t.id === 't3');
+  if (todo && !todo.done) { todo.done = true; renderTodos(); saveTodos(); }
+}
+
+function clickWeekDay(dayName, planned) {
+  // 根据当天计划内容匹配肌群
+  let mgId = null;
+  if (planned.includes('胸') || planned.includes('肩')) mgId = 'mg1';
+  else if (planned.includes('背') || planned.includes('臀')) mgId = 'mg2';
+  else if (planned.includes('腿')) mgId = 'mg3';
+  else if (planned.includes('核心') || planned.includes('腹')) mgId = 'mg4';
+  
+  if (mgId) {
+    // 如果未选中则选中
+    if (!appState.selectedMuscleGroups.includes(mgId)) {
+      toggleMuscleGroup(mgId);
+    }
+    const mg = APP_DATA.module3.muscleGroups.find(m => m.id === mgId);
+    showToast(`📅 已为你选择 ${dayName} 的训练：${mg.name}，下方查看B站跟练视频`);
+    document.getElementById('muscleVideoResult').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } else {
+    showToast(`${dayName} 计划：${planned}，请在下方选择今日训练肌群`);
+    document.querySelector('.muscle-group-grid').scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function selectFeeling(feeling) {
+  appState.bodyFeeling = feeling;
+  document.querySelectorAll('.feeling-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.feeling-btn[data-feeling="${feeling}"]`).classList.add('active');
+
+  // 根据感受给出建议
+  const suggestions = {
+    good: '状态很好！建议选择中等偏高强度训练，可以挑战自己的极限。',
+    normal: '状态正常，按计划选择一个训练即可，注意控制组间休息60-90秒。',
+    sore: '检测到肌肉酸痛，建议选择不同肌群的训练计划，避开酸痛部位。或选择核心+腹部训练。',
+    tired: '身体疲惫，建议今天进行轻度拉伸或休息。可以做一个10分钟的核心激活即可。'
+  };
+  showToast(suggestions[feeling]);
+
+  // 如果酸痛，提示管家可以联动调整
+  if (feeling === 'sore' || feeling === 'tired') {
+    setTimeout(() => {
+      showToast('💡 已同步给管家，可对话告知酸痛部位，管家将调整本周计划');
+    }, 2000);
+  }
+}
+
+// ===== 模块4：穿搭 =====
+function renderModule4() {
+  const data = APP_DATA.module4;
+  const container = document.getElementById('m4-content');
+
+  let html = '';
+
+  // 今日穿搭推荐 - 图片滑动卡片
+  html += '<div class="section-title">👗 今日穿搭推荐 <span class="more" style="font-size:11px;color:var(--text-light);font-weight:400;">左滑不喜欢 · 右滑喜欢</span></div>';
+  html += '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">穿搭图来自Pinterest/Ins韩系博主真人实穿，点击查看更多</div>';
+  html += `<div id="outfitSwipeArea"></div>`;
+  // 偏好统计
+  html += `<div class="outfit-preference-summary" id="outfitPrefSummary">
+    <span>已浏览：<span id="opViewed">0</span> / ${data.outfitCards.length}</span>
+    <span>❤️ 喜欢：<span class="ops-like" id="opLiked">0</span></span>
+    <span>💔 不喜欢：<span class="ops-dislike" id="opDisliked">0</span></span>
+  </div>`;
+
+  // GPS天气穿搭推荐
+  html += '<div class="section-title" style="margin-top:16px;">🌤️ 天气穿搭推荐</div>';
+  html += `<div class="weather-card" id="weatherCard">
+    <div class="w-location" id="weatherLocation">📍 正在获取定位...</div>
+    <div class="w-temp" id="weatherTemp">--°</div>
+    <div class="w-desc" id="weatherDesc"></div>
+    <div class="w-outfit" id="weatherOutfit">正在根据天气为你生成穿搭推荐...</div>
+  </div>
+  <button class="checkin-btn" style="font-size:12px;padding:8px;margin-bottom:12px;background:var(--bg-soft);color:var(--accent-dark);"
+    onclick="initWeather()">🔄 重新获取定位天气</button>`;
+
+  // 配色方案（可点击选搭）
+  html += '<div class="section-title">🎨 低饱和配色方案 <span class="more" style="font-size:11px;color:var(--text-light);font-weight:400;">点击色块选搭</span></div>';
+  html += '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">选择1~3个色块，自动生成适配穿搭推荐 🎯</div>';
+  data.colorPalette.seasons.forEach(season => {
+    html += `<div class="card">
+      <div class="card-title">${season.season}</div>
+      <div class="color-palette">`;
+    season.colors.forEach(c => {
+      const hex = c.match(/#[0-9A-Fa-f]{6}/)?.[0] || '#E8DDD0';
+      const name = c.split('#')[0].trim();
+      html += `<div class="color-chip color-chip-clickable" data-color="${name}" data-hex="${hex}" onclick="toggleColorSelect(this, '${name}', '${hex}')">
+        <div class="color-swatch" style="background:${hex}"></div>
+        <div class="color-label">${name}</div>
+      </div>`;
+    });
+    html += '</div></div>';
+  });
+
+  // 色块选搭结果
+  html += '<div id="colorOutfitResult"></div>';
+
+  // 韩系博主推荐（可换一换 + 可跳转）
+  html += '<div class="section-title">🔍 适配韩系穿搭博主</div>';
+  html += '<div class="blogger-pool-header">';
+  html += '<div style="font-size:12px;color:var(--text-secondary);">点击博主卡片跳转主页 ⬆️</div>';
+  html += '<button class="blogger-change-btn" onclick="changeBloggerPool()">🔄 换一换</button>';
+  html += '</div>';
+  html += '<div id="bloggerListArea"></div>';
+
+  // 尝试新风格
+  html += '<div class="section-title">✨ 尝试新风格</div>';
+  html += '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">点击查看不同风格的穿搭灵感 📸</div>';
+  html += '<div id="newStyleArea"></div>';
+
+  container.innerHTML = html;
+
+  // 初始化各子组件
+  renderOutfitSwipe();
+  renderBloggerList();
+  renderNewStyles();
+  initWeather();
+}
+
+// ===== 穿搭图滑动 =====
+function renderOutfitSwipe() {
+  const data = APP_DATA.module4;
+  const area = document.getElementById('outfitSwipeArea');
+  if (appState.outfitCardIdx >= data.outfitCards.length) {
+    area.innerHTML = `<div class="card" style="text-align:center;padding:24px;">
+      <div style="font-size:32px;margin-bottom:8px;">🎉</div>
+      <div style="font-size:14px;font-weight:600;color:var(--text-primary);">今日穿搭已全部浏览完毕</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-top:6px;">已收集你的喜好数据，后续推荐将更精准</div>
+      <button class="checkin-btn" style="font-size:12px;padding:8px;margin-top:10px;background:var(--bg-soft);color:var(--accent-dark);"
+        onclick="resetOutfitSwipe()">🔄 重新浏览</button>
+    </div>`;
+    return;
+  }
+
+  const card = data.outfitCards[appState.outfitCardIdx];
+  area.innerHTML = `
+    <div class="outfit-swipe-card" id="outfitSwipeCard">
+      <div class="outfit-swipe-img">
+        <span class="osi-style-tag">${card.style}</span>
+        <span class="osi-counter">${appState.outfitCardIdx + 1}/${data.outfitCards.length}</span>
+        <span class="osi-placeholder">👗</span>
+      </div>
+      <div class="outfit-swipe-body">
+        <div class="osb-desc">${card.desc}</div>
+        <div class="osb-tags">${card.tags.map(t => `<span>${t}</span>`).join('')}</div>
+        <a href="${card.pinterestUrl}" target="_blank" rel="noopener" class="osb-link">📸 查看Pinterest真人穿搭图 →</a>
+      </div>
+    </div>
+    <div class="outfit-swipe-actions">
+      <button class="outfit-swipe-btn dislike" onclick="swipeOutfit('dislike')">💔</button>
+      <button class="outfit-swipe-btn like" onclick="swipeOutfit('like')">❤️</button>
+    </div>
+  `;
+}
+
+function swipeOutfit(action) {
+  const card = APP_DATA.module4.outfitCards[appState.outfitCardIdx];
+  const el = document.getElementById('outfitSwipeCard');
+  if (!el) return;
+
+  if (action === 'like') {
+    appState.outfitLikes.push(card.id);
+    el.classList.add('swipe-right');
+  } else {
+    appState.outfitDislikes.push(card.id);
+    el.classList.add('swipe-left');
+  }
+
+  // 保存到 localStorage
+  localStorage.setItem('outfitLikes', JSON.stringify(appState.outfitLikes));
+  localStorage.setItem('outfitDislikes', JSON.stringify(appState.outfitDislikes));
+
+  // 更新统计
+  document.getElementById('opViewed').textContent = appState.outfitCardIdx + 1;
+  document.getElementById('opLiked').textContent = appState.outfitLikes.length;
+  document.getElementById('opDisliked').textContent = appState.outfitDislikes.length;
+
+  setTimeout(() => {
+    appState.outfitCardIdx++;
+    renderOutfitSwipe();
+  }, 300);
+}
+
+function resetOutfitSwipe() {
+  appState.outfitCardIdx = 0;
+  renderOutfitSwipe();
+}
+
+// ===== 博主换一换 =====
+function renderBloggerList() {
+  const data = APP_DATA.module4;
+  const area = document.getElementById('bloggerListArea');
+  const pool = appState.bloggerPoolIdx === 1 ? data.bloggerPool1 : data.bloggerPool2;
+
+  area.innerHTML = pool.map(b => `
+    <div class="blogger-card blogger-card-clickable" onclick="window.open('${b.url}', '_blank')">
+      <div class="b-top">
+        <div class="b-avatar">${b.name.replace('@','').charAt(0)}</div>
+        <div style="flex:1;">
+          <div class="b-name">${b.name} <span class="blogger-platform-tag">${b.platform}</span></div>
+          <div class="b-followers">粉丝 ${b.followers} · ${b.height}</div>
+        </div>
+        <span class="match-badge">匹配 ${b.matchScore}%</span>
+      </div>
+      <div class="b-style">${b.style}</div>
+      <div class="b-desc">${b.desc}</div>
+      <div class="b-items">${b.items.map(i => `<span class="b-item-tag">${i}</span>`).join('')}</div>
+      <div class="b-link-btn">📷 查看主页 →</div>
+    </div>
+  `).join('');
+}
+
+function changeBloggerPool() {
+  appState.bloggerPoolIdx = appState.bloggerPoolIdx === 1 ? 2 : 1;
+  renderBloggerList();
+  showToast(`已切换到第${appState.bloggerPoolIdx}组博主推荐`);
+}
+
+// ===== 新风格推荐 =====
+function renderNewStyles() {
+  const data = APP_DATA.module4;
+  const area = document.getElementById('newStyleArea');
+  const idx = appState.newStyleIdx;
+  const style = data.newStylePool[idx];
+
+  area.innerHTML = `
+    <div class="new-style-card">
+      <div class="ns-header">
+        <div class="ns-name">${style.style}</div>
+        <div class="ns-desc">${style.desc}</div>
+        <div class="ns-tags">${style.tags.map(t => `<span>${t}</span>`).join('')}</div>
+      </div>
+      <a href="${style.pinterestUrl}" target="_blank" rel="noopener" class="ns-link">📸 查看穿搭灵感图 →</a>
+    </div>
+    <div style="text-align:center;margin-top:8px;">
+      <button class="blogger-change-btn" onclick="changeNewStyle()">🔄 换个风格</button>
+    </div>
+  `;
+}
+
+function changeNewStyle() {
+  appState.newStyleIdx = (appState.newStyleIdx + 1) % APP_DATA.module4.newStylePool.length;
+  renderNewStyles();
+  showToast(`已切换至：${APP_DATA.module4.newStylePool[appState.newStyleIdx].style}`);
+}
+
+// ===== GPS天气获取 =====
+function initWeather() {
+  const locationEl = document.getElementById('weatherLocation');
+  const tempEl = document.getElementById('weatherTemp');
+  const descEl = document.getElementById('weatherDesc');
+  const outfitEl = document.getElementById('weatherOutfit');
+
+  if (!navigator.geolocation) {
+    locationEl.textContent = '📍 当前设备不支持定位';
+    tempEl.textContent = '28°';
+    descEl.textContent = '夏季 · 晴';
+    outfitEl.innerHTML = generateWeatherOutfit(28, '晴', '默认城市');
+    return;
+  }
+
+  locationEl.textContent = '📍 正在获取定位...';
+  tempEl.textContent = '...';
+  descEl.textContent = '';
+  outfitEl.textContent = '正在获取天气数据...';
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const { latitude, longitude } = position.coords;
+      fetchWeather(latitude, longitude);
+    },
+    (error) => {
+      // 定位失败，使用默认天气
+      locationEl.textContent = '📍 定位失败，使用默认天气';
+      tempEl.textContent = '28°';
+      descEl.textContent = '夏季 · 晴（默认）';
+      outfitEl.innerHTML = generateWeatherOutfit(28, '晴', '默认');
+    },
+    { timeout: 10000, enableHighAccuracy: true }
+  );
+}
+
+function fetchWeather(lat, lon) {
+  const locationEl = document.getElementById('weatherLocation');
+  const tempEl = document.getElementById('weatherTemp');
+  const descEl = document.getElementById('weatherDesc');
+  const outfitEl = document.getElementById('weatherOutfit');
+
+  // 使用 Open-Meteo 免费API（无需key）
+  const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`;
+
+  fetch(weatherUrl)
+    .then(res => res.json())
+    .then(data => {
+      const cw = data.current_weather;
+      const temp = Math.round(cw.temperature);
+      const code = cw.weathercode;
+      const desc = weatherCodeToText(code);
+
+      // 使用反向地理编码获取城市名
+      const geoUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&accept-language=zh`;
+      fetch(geoUrl)
+        .then(r => r.json())
+        .then(geo => {
+          const city = geo.address?.city || geo.address?.town || geo.address?.county || geo.address?.state || '当前位置';
+          locationEl.textContent = `📍 ${city}`;
+          tempEl.textContent = `${temp}°`;
+          descEl.textContent = `${desc} · 体感约${temp}°`;
+          outfitEl.innerHTML = generateWeatherOutfit(temp, desc, city);
+          appState.weatherData = { temp, desc, city };
+        })
+        .catch(() => {
+          locationEl.textContent = '📍 当前位置';
+          tempEl.textContent = `${temp}°`;
+          descEl.textContent = `${desc} · 体感约${temp}°`;
+          outfitEl.innerHTML = generateWeatherOutfit(temp, desc, '当前位置');
+          appState.weatherData = { temp, desc, city: '当前位置' };
+        });
+    })
+    .catch(() => {
+      locationEl.textContent = '📍 天气获取失败';
+      tempEl.textContent = '28°';
+      descEl.textContent = '夏季 · 晴（默认）';
+      outfitEl.innerHTML = generateWeatherOutfit(28, '晴', '默认');
+    });
+}
+
+function weatherCodeToText(code) {
+  const map = {
+    0: '晴', 1: '晴', 2: '多云', 3: '阴',
+    45: '雾', 48: '雾凇',
+    51: '小雨', 53: '小雨', 55: '中雨',
+    61: '小雨', 63: '中雨', 65: '大雨',
+    71: '小雪', 73: '中雪', 75: '大雪',
+    77: '雪粒',
+    80: '阵雨', 81: '中阵雨', 82: '大阵雨',
+    85: '阵雪', 86: '大阵雪',
+    95: '雷暴', 96: '雷暴冰雹', 99: '强雷暴冰雹'
+  };
+  return map[code] || '未知';
+}
+
+function generateWeatherOutfit(temp, weather, city) {
+  let outfit = '';
+  let tip = '';
+
+  if (temp >= 30) {
+    outfit = `☀️ <b>${temp}°C · ${weather}</b><br>
+    👗 上装：浅色棉质短袖/吊带（燕麦色/米白）<br>
+    👖 下装：高腰阔腿裤或半裙（浅色系）<br>
+    👟 鞋子：帆布鞋/凉鞋<br>
+    👜 配饰：草编包 + 防晒帽`;
+    tip = '高温天气，选择透气浅色系，低饱和韩系依然适用——用材质区分质感';
+  } else if (temp >= 25) {
+    outfit = `🌤️ <b>${temp}°C · ${weather}</b><br>
+    👗 上装：宽松针织短袖/棉质衬衫<br>
+    👖 下装：米白色直筒阔腿裤<br>
+    👟 鞋子：乐福鞋/帆布鞋<br>
+    👜 配饰：帆布托特包 + 银色细项链`;
+    tip = '舒适温度，低饱和大地色系，适合幼态顿感脸的松弛日常';
+  } else if (temp >= 20) {
+    outfit = `⛅ <b>${temp}°C · ${weather}</b><br>
+    👗 上装：薄针织/长袖衬衫<br>
+    👖 下装：直筒牛仔裤/阔腿裤<br>
+    👟 鞋子：乐福鞋/小白鞋<br>
+    👜 配饰：斜挎小包 + 薄外套备用`;
+    tip = '温度适中，适合叠穿，同色系搭配增加层次感';
+  } else if (temp >= 15) {
+    outfit = `☁️ <b>${temp}°C · ${weather}</b><br>
+    👗 上装：针织开衫/薄毛衣<br>
+    👖 下装：高腰直筒裤/半裙<br>
+    👟 鞋子：乐福鞋/短靴<br>
+    👜 配饰：围巾 + 中性色托特包`;
+    tip = '微凉天气，针织+阔腿裤组合，低饱和暖色系更显温柔';
+  } else if (temp >= 10) {
+    outfit = `🍂 <b>${temp}°C · ${weather}</b><br>
+    👗 上装：毛衣/卫衣 + 风衣外套<br>
+    👖 下装：高腰直筒牛仔裤<br>
+    👟 鞋子：切尔西靴/运动鞋<br>
+    👜 配饰：贝雷帽 + 斜挎包`;
+    tip = '秋冬过渡期，焦糖棕+燕麦色搭配，小个子用高腰线拉长比例';
+  } else if (temp >= 5) {
+    outfit = `❄️ <b>${temp}°C · ${weather}</b><br>
+    👗 上装：厚毛衣 + 羊毛大衣/羽绒服<br>
+    👖 下装：加绒直筒裤/毛呢半裙+打底裤<br>
+    👟 鞋子：短靴/雪地靴<br>
+    👜 配饰：围巾 + 毛线帽`;
+    tip = '寒冷天气，深雾蓝/灰咖色系，用中性外套增加知性感';
+  } else {
+    outfit = `🥶 <b>${temp}°C · ${weather}</b><br>
+    👗 上装：加厚羽绒服 + 高领毛衣<br>
+    👖 下装：加绒裤/毛呢裤<br>
+    👟 鞋子：雪地靴/厚底靴<br>
+    👜 配饰：厚围巾 + 毛线帽 + 手套`;
+    tip = '严寒天气，保暖优先，选低饱和深色系（灰咖/深雾蓝）避免臃肿感';
+  }
+
+  // 雨天/雪天特殊提醒
+  if (weather.includes('雨') || weather.includes('雪') || weather.includes('雷')) {
+    tip += `<br>🌧️ ${weather}天气，建议穿防水鞋，带伞，外套选防水材质`;
+  }
+
+  return `${outfit}<br><br>💡 ${tip}`;
+}
+
+// ===== 色块选搭 =====
+function toggleColorSelect(el, colorName, hex) {
+  const idx = appState.selectedColors.findIndex(c => c.name === colorName);
+  if (idx >= 0) {
+    // 取消选择
+    appState.selectedColors.splice(idx, 1);
+    el.classList.remove('color-chip-selected');
+  } else {
+    // 最多选3个
+    if (appState.selectedColors.length >= 3) {
+      showToast('最多选择3个色块哦～');
+      return;
+    }
+    appState.selectedColors.push({ name: colorName, hex: hex });
+    el.classList.add('color-chip-selected');
+  }
+  renderColorOutfitResult();
+}
+
+function renderColorOutfitResult() {
+  const container = document.getElementById('colorOutfitResult');
+  const colors = appState.selectedColors;
+
+  if (colors.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  // 生成搜索关键词
+  const colorNames = colors.map(c => c.name).join('+');
+  const colorHexes = colors.map(c => c.hex).join(', ');
+  const searchUrl = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent('korean ' + colorNames + ' outfit low saturation')}`;
+
+  // 根据色块数量生成穿搭推荐
+  let outfitDesc = '';
+  let outfitStyle = '';
+  if (colors.length === 1) {
+    outfitDesc = `以「${colorNames}」为主色调的单色系穿搭，全身上下统一色调，用材质差异制造层次感。适合幼态顿感脸的松弛日常。`;
+    outfitStyle = '单色系松弛穿搭';
+  } else if (colors.length === 2) {
+    outfitDesc = `「${colors[0].name}+${colors[1].name}」双色搭配，上浅下深或主次分明。主色占70%，辅色占30%，和谐不杂乱。`;
+    outfitStyle = '双色主次搭配';
+  } else {
+    outfitDesc = `「${colorNames}」三色搭配，建议主色60%+辅色30%+点缀色10%，层次丰富但不杂乱。小个子用高腰线分割比例。`;
+    outfitStyle = '三色层次搭配';
+  }
+
+  let html = '<div class="section-title" style="margin-top:16px;">🎯 选搭结果</div>';
+  html += '<div class="outfit-result">';
+
+  // 推荐穿搭描述
+  html += `<div class="outfit-result-card">
+    <div class="or-title">🎨 ${outfitStyle}</div>
+    <div class="or-desc">${outfitDesc}</div>
+    <div style="display:flex;gap:6px;margin-bottom:8px;">
+      ${colors.map(c => `<div style="width:24px;height:24px;border-radius:6px;background:${c.hex};border:1px solid rgba(0,0,0,0.1);"></div>`).join('')}
+    </div>
+    <a href="${searchUrl}" target="_blank" rel="noopener" class="or-link">📸 查看真人穿搭图 →</a>
+  </div>`;
+
+  // 额外推荐：每个色块单独搜索
+  if (colors.length >= 2) {
+    colors.forEach(c => {
+      const singleUrl = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent('korean ' + c.name + ' outfit low saturation')}`;
+      html += `<div class="outfit-result-card">
+        <div class="or-title">🎨 ${c.name}单色穿搭灵感</div>
+        <div class="or-desc">单独使用「${c.name}」的韩系穿搭参考，适合日常出街</div>
+        <a href="${singleUrl}" target="_blank" rel="noopener" class="or-link">📸 查看真人穿搭图 →</a>
+      </div>`;
+    });
+  }
+
+  // 清除选择按钮
+  html += `<button class="checkin-btn" style="font-size:12px;padding:8px;background:var(--bg-soft);color:var(--text-secondary);margin-top:4px;" 
+    onclick="clearColorSelection()">✕ 清除选择</button>`;
+
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+function clearColorSelection() {
+  appState.selectedColors = [];
+  document.querySelectorAll('.color-chip-selected').forEach(el => el.classList.remove('color-chip-selected'));
+  document.getElementById('colorOutfitResult').innerHTML = '';
+}
+
+// ===== 模块5：自媒体 =====
+function renderModule5() {
+  const data = APP_DATA.module5;
+  const container = document.getElementById('m5-content');
+
+  let html = '';
+
+  // 三大细分赛道（可点击展开博主列表）
+  html += '<div class="section-title">📊 美食短视频细分赛道</div>';
+  html += '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">点击赛道卡片，查看该赛道最火博主 🔍</div>';
+  data.tracks.forEach((t, idx) => {
+    const scoreClass = t.matchScore >= 80 ? 'score-high' : (t.matchScore >= 50 ? 'score-mid' : 'score-low');
+    html += `<div class="track-clickable-card" id="track-${idx}" onclick="toggleTrackBloggers(${idx})">
+      <div class="tcc-header">
+        <div class="tcc-icon" style="background:${t.color}20;color:${t.color};">${t.icon}</div>
+        <div class="tcc-name">${t.name}</div>
+        <span class="tcc-score">匹配度 ${t.matchScore}</span>
+      </div>
+      <div class="tcc-meta">入门门槛：${t.entryBarrier} · 必备技能：${t.skills}</div>
+      <div class="tcc-meta">变现：${t.monetization}</div>
+      <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin-top:4px;">
+        <span style="color:var(--success);font-weight:600;">优势：</span>${t.pros}<br>
+        <span style="color:var(--danger);font-weight:600;">劣势：</span>${t.cons}
+      </div>
+      <div class="tcc-expand" id="track-expand-${idx}">👇 点击查看该赛道最火博主</div>
+      <div id="track-bloggers-${idx}" style="display:none;"></div>
+    </div>`;
+  });
+
+  // 对标账号（可跳转社交媒体主页）
+  html += '<div class="section-title">🏆 低门槛赛道对标账号</div>';
+  html += '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">点击「查看主页」跳转抖音/小红书 🔗</div>';
+  data.benchmarkAccounts.forEach(bm => {
+    html += `<div class="benchmark-card">
+      <div class="bm-name">📍 ${bm.name} <span class="blogger-platform-tag">${bm.platform}</span></div>
+      <div class="bm-followers">粉丝 ${bm.followers} · ${bm.track}</div>
+      <div class="bm-section">
+        <div class="bm-label">核心打法</div>
+        <div class="bm-value">${bm.strategy}</div>
+      </div>
+      <div class="bm-section">
+        <div class="bm-label">内容模板</div>
+        <div class="bm-value">${bm.contentTemplate}</div>
+      </div>
+      <div class="bm-section">
+        <div class="bm-label">优势</div>
+        <div class="bm-value">${bm.strengths}</div>
+      </div>
+      <div class="bm-section">
+        <div class="bm-label">可模仿点</div>
+        <div class="bm-value" style="color:var(--accent-dark);">${bm.imitation}</div>
+      </div>
+      <a href="${bm.url}" target="_blank" rel="noopener" class="benchmark-jump-btn">🔗 查看主页 →</a>
+    </div>`;
+  });
+
+  // 今日爆款选题（真实平台链接）
+  html += '<div class="section-title">🔥 今日爆款选题推荐</div>';
+  html += '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">点击「查看原版」跳转抖音查看真实热门视频 🔗</div>';
+  data.todayHotTopics.forEach(tp => {
+    html += `<div class="topic-card">
+      <div class="tp-title">${tp.title}</div>
+      <div class="tp-heat">热度 ${tp.heat} · 平台：${tp.platform}</div>
+      <div class="tp-row"><div class="tp-label">形式</div><div class="tp-value">${tp.format}</div></div>
+      <div class="tp-row"><div class="tp-label">钩子</div><div class="tp-value">${tp.hook}</div></div>
+      <div class="tp-row"><div class="tp-label">脚本思路</div><div class="tp-value">${tp.scriptIdea}</div></div>
+      <div class="tp-row"><div class="tp-label">拍摄建议</div><div class="tp-value">${tp.shootTip}</div></div>
+      <div class="tp-row"><div class="tp-label">标签组合</div>
+        <div class="tag-list">${tp.tags.map(t => `<span>${t}</span>`).join('')}</div>
+      </div>
+      <a href="${tp.searchUrl}" target="_blank" rel="noopener" class="topic-link-btn">🎬 查看原版视频 →</a>
+    </div>`;
+  });
+
+  // 脚本框架
+  html += '<div class="section-title">📐 爆款脚本框架模板</div>';
+  html += `<div class="card">`;
+  data.scriptFramework.structures.forEach(s => {
+    html += `<div class="script-step">
+      <div class="script-num">${s.step}</div>
+      <div class="script-info">
+        <div class="script-name">${s.name}</div>
+        <div class="script-desc">${s.desc}</div>
+        <div class="script-example">例：${s.examples}</div>
+      </div>
+    </div>`;
+  });
+  html += `<div style="margin-top:10px;font-size:12px;color:var(--accent-dark);line-height:1.6;">
+    <div>💬 ${data.scriptFramework.commentStrategy}</div>
+    <div>🏷️ ${data.scriptFramework.tagStrategy}</div>
+  </div>`;
+  html += '</div>';
+
+  // 链接脚本深度分析
+  const af = data.scriptFramework.analysisFeature;
+  html += '<div class="section-title">🔗 链接脚本深度分析</div>';
+  html += `<div class="script-analysis-area">
+    <div class="sa-title">${af.title}</div>
+    <div class="sa-desc">${af.desc}</div>
+    <textarea class="sa-input" id="scriptAnalysisInput" placeholder="${af.placeholder}"></textarea>
+    <button class="sa-btn" onclick="analyzeScriptLinks()">🔍 开始分析</button>
+    <div id="scriptAnalysisResult"></div>
+  </div>`;
+
+  container.innerHTML = html;
+}
+
+// 赛道博主列表展开/收起
+function toggleTrackBloggers(idx) {
+  const expandEl = document.getElementById('track-expand-' + idx);
+  const listEl = document.getElementById('track-bloggers-' + idx);
+  const isHidden = listEl.style.display === 'none';
+
+  if (isHidden) {
+    const track = APP_DATA.module5.tracks[idx];
+    listEl.innerHTML = '<div class="track-blogger-list">' +
+      track.topBloggers.map(b => `
+        <div class="track-blogger-item" onclick="event.stopPropagation();window.open('${b.url}', '_blank')">
+          <span class="tbi-platform">${b.platform}</span>
+          <div style="flex:1;">
+            <div class="tbi-name">${b.name} <span class="tbi-followers">${b.followers}</span></div>
+            <div class="tbi-desc">${b.desc}</div>
+          </div>
+          <span class="tbi-arrow">↗</span>
+        </div>
+      `).join('') + '</div>';
+    listEl.style.display = 'block';
+    expandEl.textContent = '👆 点击收起';
+  } else {
+    listEl.style.display = 'none';
+    listEl.innerHTML = '';
+    expandEl.textContent = '👇 点击查看该赛道最火博主';
+  }
+}
+
+// 脚本链接分析
+function analyzeScriptLinks() {
+  const input = document.getElementById('scriptAnalysisInput');
+  const result = document.getElementById('scriptAnalysisResult');
+  const text = input.value.trim();
+
+  if (!text) {
+    showToast('请粘贴至少一个视频链接');
+    return;
+  }
+
+  const links = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    let html = '<div class="script-analysis-result">';
+
+    links.forEach((link, i) => {
+      html += `<div class="sar-title">📎 链接 ${i + 1} 分析结果</div>`;
+      html += `<div style="margin-bottom:8px;word-break:break-all;font-size:11px;color:var(--text-light);">${link}</div>`;
+
+      if (link.includes('douyin') || link.includes('抖音')) {
+        html += `<div>📊 <b>平台：</b>抖音<br>
+        🎬 <b>脚本结构拆解：</b><br>
+        • 钩子（0-3秒）：数字/反差/悬念开场<br>
+        • 建立预期（3-8秒）：明确告诉观众能获得什么<br>
+        • 主体内容（8-50秒）：快节奏展示制作过程<br>
+        • 价值点（50-55秒）：热量/营养/技巧信息卡<br>
+        • 引导互动（55-60秒）：关注/评论/收藏引导<br><br>
+        💡 <b>可复用框架：</b>提取其钩子设计+节奏控制+信息卡设置逻辑<br>
+        🔄 <b>改编建议：</b>替换为自己的菜品+个人标签（158cm减脂日常）</div>`;
+      } else if (link.includes('xiaohongshu') || link.includes('小红书')) {
+        html += `<div>📊 <b>平台：</b>小红书<br>
+        🎬 <b>脚本结构拆解：</b><br>
+        • 封面钩子：标题+首图吸引力分析<br>
+        • 内容结构：图文/视频叙事节奏<br>
+        • 互动设计：评论区引导+话题标签策略<br><br>
+        💡 <b>可复用框架：</b>封面设计+标题公式+标签组合<br>
+        🔄 <b>改编建议：</b>适配到抖音短视频格式，加强前3秒钩子</div>`;
+      } else if (link.includes('bilibili') || link.includes('b站')) {
+        html += `<div>📊 <b>平台：</b>B站<br>
+        🎬 <b>脚本结构拆解：</b><br>
+        • 开场：UP主个人风格+内容预告<br>
+        • 主体：详细教学/制作过程（节奏偏慢，信息量大）<br>
+        • 结尾：三连引导+下期预告<br><br>
+        💡 <b>可复用框架：</b>详细教学结构+个人风格塑造<br>
+        🔄 <b>改编建议：</b>B站内容适合做深度版，抖音需精简至60秒内</div>`;
+      } else {
+        html += `<div>📊 <b>链接识别：</b>未知平台<br>
+        🎬 <b>通用脚本分析：</b><br>
+        • 钩子设计：前3秒吸引力分析<br>
+        • 内容节奏：信息密度+转场频率<br>
+        • 价值输出：核心信息点提取<br>
+        • 互动引导：CTA设计<br><br>
+        💡 <b>建议：</b>手动观看视频，对照爆款脚本5步框架拆解</div>`;
+      }
+
+      if (i < links.length - 1) html += '<hr style="margin:10px 0;border:none;border-top:1px solid var(--border);">';
+    });
+
+    html += '</div>';
+    result.innerHTML = html;
+    showToast(`✅ 已完成 ${links.length} 个链接的脚本分析`);
+  }, 1200 + Math.random() * 500);
+}
+
+// ===== 智能管家 =====
+function initAssistant() {
+  // 渲染今日总览
+  renderAssistantOverview();
+  // 渲染快捷入口
+  renderQuickActions();
+}
+
+function renderAssistantOverview() {
+  const done = appState.todos.filter(t => t.done).length;
+  const trained = APP_DATA.module3.currentWeek.completedSessions;
+  const planned = APP_DATA.module3.currentWeek.plannedSessions;
+
+  const overview = document.getElementById('assistantOverview');
+  overview.innerHTML = `
+    <div class="ao-title">📊 今日总览</div>
+    <div class="ao-item">📋 待办：${done}/${appState.todos.length} 已完成</div>
+    <div class="ao-item">💪 训练：${trained}/${planned} 已完成</div>
+    <div class="ao-item">📚 今日学习：社会心理学 · 从众效应</div>
+    <div class="ao-item">📰 今日资讯：抖音美食赛道报告</div>
+  `;
+}
+
+function renderQuickActions() {
+  const actions = document.getElementById('quickActions');
+  const items = [
+    { text: '📊 今日总览', msg: '今日总览' },
+    { text: '💪 调整训练', msg: '我今天肌肉酸痛，帮我调整训练计划' },
+    { text: '📚 学习进度', msg: '今天学了什么' },
+    { text: '👗 穿搭建议', msg: '今天穿什么' },
+    { text: '📱 自媒体选题', msg: '今天有什么好选题' }
+  ];
+  actions.innerHTML = items.map(i => 
+    `<div class="quick-action" onclick="quickSend('${i.msg}')">${i.text}</div>`
+  ).join('');
+}
+
+function quickSend(msg) {
+  document.getElementById('chatInput').value = msg;
+  sendMessage();
+}
+
+function toggleAssistant() {
+  const panel = document.getElementById('assistantPanel');
+  const overlay = document.getElementById('overlay');
+  const isOpen = panel.classList.contains('open');
+
+  if (isOpen) {
+    panel.classList.remove('open');
+    overlay.classList.remove('show');
+  } else {
+    panel.classList.add('open');
+    overlay.classList.add('show');
+    renderAssistantOverview();
+    // 滚动到底部
+    setTimeout(() => {
+      const chatArea = document.getElementById('chatArea');
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }, 100);
+  }
+}
+
+function addBotMessage(text) {
+  const chatArea = document.getElementById('chatArea');
+  const msg = document.createElement('div');
+  msg.className = 'chat-msg bot';
+  msg.innerHTML = text.replace(/\n/g, '<br>');
+  chatArea.appendChild(msg);
+  chatArea.scrollTop = chatArea.scrollHeight;
+  appState.chatHistory.push({ role: 'bot', text });
+}
+
+function addUserMessage(text) {
+  const chatArea = document.getElementById('chatArea');
+  const msg = document.createElement('div');
+  msg.className = 'chat-msg user';
+  msg.textContent = text;
+  chatArea.appendChild(msg);
+  chatArea.scrollTop = chatArea.scrollHeight;
+  appState.chatHistory.push({ role: 'user', text });
+}
+
+function showTyping() {
+  const chatArea = document.getElementById('chatArea');
+  const msg = document.createElement('div');
+  msg.className = 'chat-msg bot';
+  msg.id = 'typingIndicator';
+  msg.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+  chatArea.appendChild(msg);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function hideTyping() {
+  const el = document.getElementById('typingIndicator');
+  if (el) el.remove();
+}
+
+function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  addUserMessage(text);
+  input.value = '';
+
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    const response = processAssistantMessage(text);
+    addBotMessage(response.text);
+    
+    // 执行联动动作
+    if (response.action) {
+      response.action();
+    }
+  }, 800 + Math.random() * 500);
+}
+
+// ===== 管家智能识别引擎 =====
+function processAssistantMessage(msg) {
+  const lower = msg.toLowerCase();
+
+  // === 健身相关 ===
+  if (msg.match(/酸痛|肌肉|训练|健身|锻炼|运动|腿|胸|肩|背|臀|腹|核心|累|疲惫|不想练|换个计划|训练计划/i)) {
+    
+    // 肌肉酸痛 → 调整训练
+    if (msg.match(/酸痛|酸|疼|痛/i)) {
+      const soreMuscle = identifyMuscleGroup(msg);
+      return {
+        text: `收到！检测到你反馈「${soreMuscle || '肌肉'}酸痛」。\n\n📋 我已为你调整本周训练计划：\n✅ 今日避开${soreMuscle || '酸痛'}部位训练\n✅ 替换为${getAlternativeMuscle(soreMuscle)}训练\n✅ 本周${soreMuscle || '该'}肌群恢复后再安排\n\n你可以前往「健身」模块查看调整后的计划，或直接告诉我你想练哪个部位。`,
+        action: () => {
+          adjustWorkoutPlan(soreMuscle);
+          updateStatus(`反馈${soreMuscle || '肌肉'}酸痛，训练计划已调整`);
+        }
+      };
+    }
+
+    // 指定训练部位
+    const targetMuscle = identifyMuscleGroup(msg);
+    if (targetMuscle) {
+      const mgId = getMuscleGroupIdByName(targetMuscle);
+      const mgName = mgId ? APP_DATA.module3.muscleGroups.find(m => m.id === mgId)?.name : targetMuscle;
+      return {
+        text: `好的！你想练${targetMuscle}，我为你匹配了合适的训练计划。\n\n📋 推荐计划：${mgName || targetMuscle}\n\n已为你切换到健身模块，请前往选择肌群并查看B站跟练视频。`,
+        action: () => {
+          showPage('module3');
+          if (mgId) {
+            setTimeout(() => {
+              if (!appState.selectedMuscleGroups.includes(mgId)) {
+                toggleMuscleGroup(mgId);
+              }
+              document.querySelector('.muscle-group-grid')?.scrollIntoView({ behavior: 'smooth' });
+            }, 300);
+          }
+        }
+      };
+    }
+
+    // 不想练/累了 → 轻度恢复
+    if (msg.match(/不想|累|疲惫|休息/i)) {
+      return {
+        text: `理解，身体需要休息也是训练的一部分 💪\n\n📋 今日调整方案：\n✅ 取消高强度训练\n✅ 安排10分钟核心轻度激活\n✅ 明日恢复完整训练计划\n\n休息也是进步，不用有压力～`,
+        action: () => {
+          updateStatus('身体疲惫，今日调整为轻度恢复');
+          showToast('已将今日训练调整为轻度恢复');
+        }
+      };
+    }
+
+    return {
+      text: `健身相关需求已收到！你可以告诉我：\n• 哪个部位酸痛 → 我帮你调整计划\n• 想练哪个部位 → 我匹配训练计划\n• 今天不想练 → 我安排休息或轻度恢复\n\n当前本周已完成 ${APP_DATA.module3.currentWeek.completedSessions}/${APP_DATA.module3.currentWeek.plannedSessions} 次训练。`
+    };
+  }
+
+  // === 学习相关 ===
+  if (msg.match(/学习|读书|看书|知识|课程|今天学什么|进度|复盘|思考/i)) {
+    return {
+      text: `📚 今日学习内容已为你准备好：\n\n📖 知识点：社会心理学 · 从众效应（Conformity）\n📖 来源：《社会性动物》第2章\n\n核心内容：\n• 从众效应 = 群体压力下个体改变判断/行为\n• 阿希实验：75%的人至少一次跟随错误判断\n• 底层逻辑：信息性从众 + 规范性从众\n\n🧠 附带3道思考巩固题，已放在学习模块。\n\n需要调整学习负荷或深入某个知识点吗？`,
+      action: () => {
+        showPage('module1');
+        const todo = appState.todos.find(t => t.id === 't1');
+        if (todo) { todo.done = true; renderTodos(); }
+      }
+    };
+  }
+
+  // === 穿搭相关 ===
+  if (msg.match(/穿搭|穿什么|衣服|搭配|风格|look|outfit/i)) {
+    return {
+      text: `👗 今日穿搭推荐：\n\n📋 燕麦色通勤松弛Look\n• 上装：燕麦色宽松针织短袖\n• 下装：米白色直筒阔腿裤\n• 鞋子：棕色乐福鞋\n• 配饰：帆布托特包 + 银色细项链\n\n💡 低饱和大地色系，适配幼态顿感脸，不抢五官。\n\n已为你打开穿搭模块，还有更多Ins韩系博主推荐和搭配公式～`,
+      action: () => {
+        showPage('module4');
+        const todo = appState.todos.find(t => t.id === 't4');
+        if (todo) { todo.done = true; renderTodos(); }
+      }
+    };
+  }
+
+  // === 自媒体/抖音相关 ===
+  if (msg.match(/自媒体|抖音|视频|选题|爆款|变现|美食|拍摄|脚本|复盘/i)) {
+    return {
+      text: `📱 今日自媒体情报：\n\n🔥 热门选题推荐：\n1. #158小个子的一天减脂餐#（🔥🔥🔥🔥）\n2. #沉浸式做减脂晚餐#（🔥🔥🔥）\n3. #一周减脂备餐#（🔥🔥🔥🔥）\n\n📊 赛道动态：\n• 居家烹饪类内容同比增长156%\n• 减脂餐月搜索量突破2.4亿次\n• '一人食'完播率最高达68%\n\n建议：优先布局「减脂餐×一人食」组合赛道。\n\n已为你打开自媒体模块，含完整赛道调研+对标账号+脚本模板～`,
+      action: () => {
+        showPage('module5');
+        const todo = appState.todos.find(t => t.id === 't5');
+        if (todo) { todo.done = true; renderTodos(); }
+      }
+    };
+  }
+
+  // === 资讯相关 ===
+  if (msg.match(/资讯|新闻|简报|行业|热点|今日/i)) {
+    return {
+      text: `📰 今日5分钟行业资讯简报已生成：\n\n🔥 核心热点：\n• 抖音电商美食赛道报告：居家烹饪+156%\n• 发改委促消费新政策：小微创作者税收优惠\n\n📈 趋势：AI视频工具爆发，但平台限流AI内容\n📋 政策：短视频分级管理，减脂内容需标热量\n🎯 机会：减脂餐+一人食是当前最佳窗口\n\n已为你打开资讯模块，完整内容约4分钟阅读～`,
+      action: () => {
+        showPage('module2');
+        const todo = appState.todos.find(t => t.id === 't2');
+        if (todo) { todo.done = true; renderTodos(); }
+      }
+    };
+  }
+
+  // === 今日总览 ===
+  if (msg.match(/总览|今天|今日|待办|状态/i)) {
+    const done = appState.todos.filter(t => t.done).length;
+    return {
+      text: `📊 今日总览 · 2026年7月28日\n\n📋 待办事项：${done}/${appState.todos.length} 已完成\n💪 本周训练：${APP_DATA.module3.currentWeek.completedSessions}/${APP_DATA.module3.currentWeek.plannedSessions} 已完成\n📚 今日学习：社会心理学 · 从众效应\n📰 今日资讯：抖音美食赛道半年度报告\n👗 今日穿搭：燕麦色通勤松弛Look\n\n近期状态：\n${APP_DATA.recentStatus.map(s => `• ${s.date} ${s.content}`).join('\n')}`
+    };
+  }
+
+  // === 闲聊/其他 ===
+  return {
+    text: `我收到啦～作为你的智能大管家，我可以帮你：\n\n💪 健身管理 → "昨天练了肩，今天酸痛"\n📚 学习进度 → "今天学什么"\n👗 穿搭建议 → "今天穿什么"\n📱 自媒体选题 → "有什么好选题"\n📰 行业资讯 → "今日资讯"\n📊 今日总览 → "今日总览"\n\n随时告诉我你的需求，我会自动联动调整各模块计划！`
+  };
+}
+
+// ===== 肌群识别 =====
+function identifyMuscleGroup(msg) {
+  if (msg.match(/胸|胸肌/)) return '胸';
+  if (msg.match(/肩|三角肌/)) return '肩';
+  if (msg.match(/背|背阔肌/)) return '背';
+  if (msg.match(/臀|屁股/)) return '臀';
+  if (msg.match(/腿|大腿|股四|腘绳/)) return '腿';
+  if (msg.match(/腹|核心|马甲线/)) return '腹';
+  if (msg.match(/上肢|手臂/)) return '上肢';
+  return null;
+}
+
+function getAlternativeMuscle(muscle) {
+  const map = {
+    '胸': '背部或核心',
+    '肩': '下肢（臀腿）',
+    '背': '核心或胸部',
+    '臀': '上肢（胸肩）',
+    '腿': '上肢或核心',
+    '腹': '背部或臀部',
+    '上肢': '下肢'
+  };
+  return map[muscle] || '其他肌群';
+}
+
+function getMuscleGroupIdByName(muscle) {
+  const map = {
+    '胸': 'mg1', '肩': 'mg1',
+    '背': 'mg2', '臀': 'mg2',
+    '腿': 'mg3',
+    '腹': 'mg4', '上肢': 'mg1'
+  };
+  return map[muscle] || null;
+}
+
+// ===== 动态调整训练计划 =====
+function adjustWorkoutPlan(soreMuscle) {
+  // 调整本周计划
+  const altMuscle = getAlternativeMuscle(soreMuscle);
+  const today = new Date().getDay();
+  const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  const todayName = weekDays[today];
+
+  APP_DATA.module3.weeklyPlan.forEach(day => {
+    if (day.status === '待选择' && day.planned.includes(soreMuscle)) {
+      day.planned = day.planned.replace(soreMuscle, altMuscle.split('（')[0]);
+      day.status = '已调整';
+    }
+  });
+
+  // 重新渲染
+  renderModule3();
+}
+
+// ===== 更新状态记录 =====
+function updateStatus(content) {
+  const today = new Date();
+  const dateStr = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  APP_DATA.recentStatus.unshift({ date: dateStr, content });
+  if (APP_DATA.recentStatus.length > 5) APP_DATA.recentStatus.pop();
+  renderStatus();
+}
+
+// ===== Toast 提示 =====
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ===== 华为运动健康数据同步 =====
+
+// 从 localStorage 获取用户健康数据
+// ===== 今日喝水记录 =====
+function getTodayWater() {
+  const today = new Date();
+  const dateStr = today.getFullYear() + '-' + (today.getMonth() + 1).toString().padStart(2, '0') + '-' + today.getDate().toString().padStart(2, '0');
+  let w = null;
+  try { w = JSON.parse(localStorage.getItem('yutingWater') || 'null'); } catch(e) { w = null; }
+  if (!w || w.date !== dateStr) {
+    // 新的一天：保留目标，重置已喝量
+    w = { date: dateStr, goal: (w && w.goal) ? w.goal : 2000, drunk: 0 };
+    saveWater(w);
+  }
+  return w;
+}
+
+function saveWater(w) {
+  localStorage.setItem('yutingWater', JSON.stringify(w));
+}
+
+function addWater(ml) {
+  if (!ml || ml <= 0) return;
+  const w = getTodayWater();
+  w.drunk += ml;
+  saveWater(w);
+  renderModule3();
+  if (w.drunk >= w.goal) {
+    showToast('💧 今日喝水目标达成！' + w.drunk + 'ml');
+  } else {
+    showToast('已记录 ' + ml + 'ml，累计 ' + w.drunk + 'ml');
+  }
+}
+
+function addCustomWater() {
+  const input = document.getElementById('waterCustomInput');
+  if (!input) return;
+  const v = parseInt(input.value);
+  if (!v || v <= 0) { showToast('请输入有效的水量'); return; }
+  input.value = '';
+  addWater(v);
+}
+
+function editWaterGoal() {
+  const w = getTodayWater();
+  const v = prompt('设置今日喝水目标（ml）：', w.goal);
+  if (v === null) return;
+  const goal = parseInt(v);
+  if (!goal || goal <= 0) { showToast('目标无效'); return; }
+  w.goal = goal;
+  saveWater(w);
+  renderModule3();
+  showToast('目标已更新为 ' + goal + 'ml');
+}
+
+function getUserHealthData() {
+  const raw = localStorage.getItem('huaweiHealthData');
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch(e) { return null; }
+}
+
+// 保存健康数据到 localStorage
+function saveUserHealthData(data) {
+  localStorage.setItem('huaweiHealthData', JSON.stringify(data));
+}
+
+// 将用户数据与默认数据合并
+function mergeHealthData(defaultData, userData) {
+  if (!userData) return defaultData;
+  return {
+    weightHistory: userData.weightHistory || defaultData.weightHistory,
+    bodyFatHistory: userData.bodyFatHistory || defaultData.bodyFatHistory,
+    muscleGroupFrequency: userData.muscleGroupFrequency || defaultData.muscleGroupFrequency,
+    totalSessions: userData.totalSessions !== undefined ? userData.totalSessions : defaultData.totalSessions,
+    totalDuration: userData.totalDuration !== undefined ? userData.totalDuration : defaultData.totalDuration,
+    streak: userData.streak !== undefined ? userData.streak : defaultData.streak
+  };
+}
+
+// ===== 华为运动健康：真实 OAuth 授权同步 =====
+// 已授权（有会话 cookie）→ 直接拉数据；未授权 → 跳转华为授权页
+// 后端服务地址：部署华为同步后端后，在 App 内"设置后端地址"填写，存 localStorage
+// 默认值指向已部署的 Render 后端，使 AI 中转开箱即用（仅为公开 URL，不含任何密钥）
+function getApiBase() {
+  return (localStorage.getItem('hw_api_base') || 'https://yuting-workbench.onrender.com').replace(/\/+$/, '');
+}
+
+function saveApiBase() {
+  const input = document.getElementById('hwApiBaseInput');
+  if (!input) return;
+  let v = input.value.trim().replace(/\/+$/, '');
+  if (!v) {
+    localStorage.removeItem('hw_api_base');
+    showToast('已清除后端地址');
+  } else {
+    if (!/^https?:\/\//.test(v)) v = 'https://' + v;
+    localStorage.setItem('hw_api_base', v);
+    showToast('✅ 后端地址已保存：' + v);
+  }
+  renderModule3();
+}
+
+async function syncHuaweiHealth() {
+  // iOS 原生壳：直接走 Apple HealthKit 桥接（无需华为后端）
+  const hk = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.HealthKitBridge;
+  if (hk) {
+    try {
+      const avail = await hk.isAvailable();
+      if (!avail.available) { showToast('⚠️ 当前设备不支持健康数据（请在 iPhone 真机运行）'); return; }
+      showToast('请在系统弹窗中允许读取健康数据…');
+      const auth = await hk.requestAuthorization();
+      if (!auth.authorized) { showToast('⚠️ 未授权健康数据，已取消同步'); return; }
+      const data = await hk.queryToday();
+      applyAppleHealth(data);
+    } catch (e) {
+      showToast('⚠️ Apple 健康读取失败：' + ((e && (e.errorMessage || e.message)) || e));
+    }
+    return;
+  }
+  // —— 以下为原华为后端授权逻辑（Web/PWA 环境）——
+  const base = getApiBase();
+  showToast('正在同步华为运动健康数据...');
+  try {
+    const resp = await fetch(base + '/api/health/data', { credentials: 'include' });
+    if (resp.ok) {
+      const data = await resp.json();
+      applyHuaweiData(data);
+      // 清除 URL 中的授权标记
+      if (location.search.indexOf('hw=') > -1) {
+        history.replaceState({}, '', location.pathname + location.hash);
+      }
+      return;
+    }
+    if (resp.status === 401) {
+      // 未授权或会话失效 → 跳转华为 OAuth 授权（用顶层导航，规避跨域重定向问题）
+      if (!base) {
+        showToast('请先在健身页填写「后端服务地址」');
+        openHealthSyncModal();
+        return;
+      }
+      window.location.href = base + '/api/health/login';
+      return;
+    }
+    if (resp.status === 404) {
+      // 后端未部署（纯静态环境）→ 回退手动录入
+      showToast('真实同步后端尚未部署，已为你打开手动录入');
+      openHealthSyncModal();
+      return;
+    }
+    const err = await resp.json().catch(() => ({}));
+    showToast('同步失败：' + (err.error || ('HTTP ' + resp.status)));
+  } catch (e) {
+    // 网络/后端不可达 → 回退手动录入
+    showToast('真实同步后端未连接，已打开手动录入兜底');
+    openHealthSyncModal();
+  }
+}
+
+// 把华为返回的健康数据解析 → 存入本地 → 重渲染
+function applyHuaweiData(raw) {
+  const today = new Date();
+  const dateStr = today.getFullYear() + '-' + (today.getMonth() + 1).toString().padStart(2, '0') + '-' + today.getDate().toString().padStart(2, '0');
+  const ud = getUserHealthData() || { weightHistory: [], bodyFatHistory: [], muscleGroupFrequency: [] };
+  const latest = ud.latest ? Object.assign({}, ud.latest) : {};
+
+  // 步数 / 卡路里：来自 dailyActivitySummary
+  if (raw.activity && Array.isArray(raw.activity.dailyActivitySummary)) {
+    const s = raw.activity.dailyActivitySummary[0] || {};
+    if (s.steps !== undefined) latest.steps = s.steps;
+    if (s.calories !== undefined) latest.calories = s.calories;
+  }
+  // 心率：latestSamplePoint
+  if (raw.heartRate) {
+    const v = pickSampleValue(raw.heartRate);
+    if (v !== null) latest.heartRate = v;
+  }
+  // 体重：latestSamplePoint
+  if (raw.weight) {
+    const v = pickSampleValue(raw.weight);
+    if (v !== null) {
+      const w = parseFloat(v);
+      if (!isNaN(w)) {
+        ud.weightHistory = (ud.weightHistory || []).filter(x => x.date !== dateStr);
+        ud.weightHistory.push({ weight: w, date: dateStr });
+      }
+    }
+  }
+
+  ud.latest = latest;
+  ud.syncedAt = Date.now();
+  ud.source = 'huawei-health';
+  saveUserHealthData(ud);
+  renderModule3();
+  showToast('✅ 已从华为运动健康同步最新数据');
+}
+
+// Apple HealthKit 数据接入（iOS 原生壳内调用）
+function applyAppleHealth(data) {
+  if (!data) { showToast('未获取到健康数据'); return; }
+  const raw = {
+    activity: { dailyActivitySummary: [{ steps: data.steps || 0, calories: data.calories || 0 }] },
+  };
+  if (data.heartRate != null) raw.heartRate = { value: data.heartRate };
+  if (data.weight != null) raw.weight = { value: data.weight };
+  applyHuaweiData(raw);
+  if (data.sleepHours != null) {
+    const ud = getUserHealthData() || {};
+    ud.latest = ud.latest || {};
+    ud.latest.sleepHours = data.sleepHours;
+    saveUserHealthData(ud);
+    renderModule3();
+  }
+  showToast('✅ 已从 Apple 健康同步今日数据');
+}
+
+// 从华为采样点抽取数值（兼容多种返回结构，联调时校准）
+function pickSampleValue(obj) {
+  if (!obj || typeof obj !== 'object') return null;
+  if (typeof obj.value !== 'undefined') return obj.value;
+  if (obj.samplePoint && typeof obj.samplePoint.value !== 'undefined') return obj.samplePoint.value;
+  if (Array.isArray(obj.value) && obj.value[0]) {
+    const f = obj.value[0];
+    return (f && typeof f.value !== 'undefined') ? f.value : (typeof f === 'number' ? f : null);
+  }
+  return null;
+}
+
+// 生成健康数据同步弹窗HTML
+function getHealthSyncModalHTML() {
+  return `
+  <div class="health-sync-modal" id="healthSyncModal" style="display:none;">
+    <div class="health-sync-overlay" onclick="closeHealthSyncModal()"></div>
+    <div class="health-sync-content">
+      <div class="health-sync-header">
+        <h3>🔐 授权同步华为运动健康</h3>
+        <span class="health-sync-close" onclick="closeHealthSyncModal()">✕</span>
+      </div>
+      <div class="health-sync-body">
+        <div class="health-sync-tip">
+          这是<b>手动录入兜底</b>方式。要同步华为真实数据，请关闭本窗口，点击上方「🔐 授权同步华为运动健康」按钮，按提示完成华为 OAuth 一键授权即可。
+        </div>
+        <div style="text-align:center;margin:12px 0;">
+          <a class="hs-link-btn" href="https://developer.huawei.com/consumer/cn/doc/development/HMSCore-Guides/auth-example-0000001054581058" target="_blank" rel="noopener">📖 华为开发者联盟 · 授权文档</a>
+        </div>
+        <div class="hs-divider"><span>或临时手动录入（真实同步上线后可删）</span></div>
+        <div class="health-sync-form">
+          <div class="hs-form-section">
+            <div class="hs-form-title">📋 今日概览</div>
+            <div class="hs-form-row">
+              <div class="hs-field">
+                <label>今日步数</label>
+                <input type="number" id="hsSteps" placeholder="如 8500" min="0">
+              </div>
+              <div class="hs-field">
+                <label>静息心率 (bpm)</label>
+                <input type="number" id="hsHeartRate" placeholder="如 68" min="30" max="200">
+              </div>
+            </div>
+            <div class="hs-form-row">
+              <div class="hs-field">
+                <label>睡眠时长 (小时)</label>
+                <input type="number" id="hsSleep" placeholder="如 7.5" min="0" max="24" step="0.1">
+              </div>
+              <div class="hs-field">
+                <label>今日消耗 (kcal)</label>
+                <input type="number" id="hsCalories" placeholder="如 320" min="0">
+              </div>
+            </div>
+          </div>
+          <div class="hs-form-section">
+            <div class="hs-form-title">⚖️ 身体数据（填写今日测量值）</div>
+            <div class="hs-form-row">
+              <div class="hs-field">
+                <label>体重 (kg)</label>
+                <input type="number" id="hsWeight" placeholder="如 49.0" min="20" max="200" step="0.1">
+              </div>
+              <div class="hs-field">
+                <label>体脂率 (%)</label>
+                <input type="number" id="hsBodyFat" placeholder="如 23.0" min="5" max="60" step="0.1">
+              </div>
+            </div>
+          </div>
+          <div class="hs-form-section">
+            <div class="hs-form-title">🏋️ 今日运动记录</div>
+            <div class="hs-form-row">
+              <div class="hs-field">
+                <label>运动类型</label>
+                <select id="hsWorkoutType">
+                  <option value="">-- 选择 --</option>
+                  <option value="力量训练">力量训练</option>
+                  <option value="跑步">跑步</option>
+                  <option value="骑行">骑行</option>
+                  <option value="瑜伽">瑜伽</option>
+                  <option value="游泳">游泳</option>
+                  <option value="HIIT">HIIT</option>
+                  <option value="跳绳">跳绳</option>
+                  <option value="散步">散步</option>
+                </select>
+              </div>
+              <div class="hs-field">
+                <label>运动时长 (分钟)</label>
+                <input type="number" id="hsWorkoutDuration" placeholder="如 45" min="0">
+              </div>
+            </div>
+            <div class="hs-form-row">
+              <div class="hs-field">
+                <label>训练肌群</label>
+                <select id="hsMuscleGroup">
+                  <option value="">-- 选择 --</option>
+                  <option value="胸肩">胸肩</option>
+                  <option value="背臀">背臀</option>
+                  <option value="腿臀">腿臀</option>
+                  <option value="核心">核心</option>
+                  <option value="全身">全身</option>
+                </select>
+              </div>
+              <div class="hs-field">
+                <label>消耗卡路里</label>
+                <input type="number" id="hsWorkoutCalories" placeholder="如 200" min="0">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="health-sync-actions">
+          <button class="hs-cancel-btn" onclick="closeHealthSyncModal()">取消</button>
+          <button class="hs-submit-btn" onclick="submitHealthData()">💾 保存数据</button>
+        </div>
+        <div id="hsExistingData" style="margin-top:12px;"></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// 打开弹窗
+function openHealthSyncModal() {
+  const modal = document.getElementById('healthSyncModal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  // 预填今日已有数据
+  const ud = getUserHealthData();
+  if (ud && ud.latest) {
+    const lt = ud.latest;
+    if (lt.steps !== undefined) document.getElementById('hsSteps').value = lt.steps;
+    if (lt.heartRate !== undefined) document.getElementById('hsHeartRate').value = lt.heartRate;
+    if (lt.sleep !== undefined) document.getElementById('hsSleep').value = lt.sleep;
+    if (lt.calories !== undefined) document.getElementById('hsCalories').value = lt.calories;
+  }
+  // 显示历史记录数量
+  const existing = document.getElementById('hsExistingData');
+  if (ud) {
+    const wCount = (ud.weightHistory || []).length;
+    const bfCount = (ud.bodyFatHistory || []).length;
+    existing.innerHTML = `<div style="text-align:center;font-size:12px;color:var(--text-light);padding:8px;">已有 ${wCount} 条体重记录、${bfCount} 条体脂记录、${ud.totalSessions || 0} 次训练记录</div>`;
+  }
+}
+
+// 关闭弹窗
+function closeHealthSyncModal() {
+  const modal = document.getElementById('healthSyncModal');
+  if (modal) modal.style.display = 'none';
+}
+
+// 提交健康数据
+function submitHealthData() {
+  const today = new Date();
+  const dateStr = (today.getMonth() + 1).toString().padStart(2, '0') + '-' + today.getDate().toString().padStart(2, '0');
+
+  // 读取表单数据
+  const steps = document.getElementById('hsSteps').value;
+  const heartRate = document.getElementById('hsHeartRate').value;
+  const sleep = document.getElementById('hsSleep').value;
+  const calories = document.getElementById('hsCalories').value;
+  const weight = document.getElementById('hsWeight').value;
+  const bodyFat = document.getElementById('hsBodyFat').value;
+  const workoutType = document.getElementById('hsWorkoutType').value;
+  const workoutDuration = document.getElementById('hsWorkoutDuration').value;
+  const muscleGroup = document.getElementById('hsMuscleGroup').value;
+  const workoutCalories = document.getElementById('hsWorkoutCalories').value;
+
+  // 获取或初始化用户数据
+  let ud = getUserHealthData() || {
+    weightHistory: [],
+    bodyFatHistory: [],
+    muscleGroupFrequency: [],
+    totalSessions: 0,
+    totalDuration: 0,
+    streak: 0,
+    latest: {}
+  };
+
+  // 更新今日概览
+  ud.latest = {};
+  if (steps) ud.latest.steps = parseInt(steps);
+  if (heartRate) ud.latest.heartRate = parseInt(heartRate);
+  if (sleep) ud.latest.sleep = parseFloat(sleep);
+  if (calories) ud.latest.calories = parseInt(calories);
+
+  // 添加体重记录
+  if (weight) {
+    const w = parseFloat(weight);
+    // 替换今天的记录或新增
+    const existingIdx = ud.weightHistory.findIndex(x => x.date === dateStr);
+    if (existingIdx >= 0) {
+      ud.weightHistory[existingIdx].weight = w;
+    } else {
+      ud.weightHistory.push({ date: dateStr, weight: w });
+      // 最多保留 20 条
+      if (ud.weightHistory.length > 20) ud.weightHistory.shift();
+    }
+  }
+
+  // 添加体脂记录
+  if (bodyFat) {
+    const bf = parseFloat(bodyFat);
+    const existingIdx = ud.bodyFatHistory.findIndex(x => x.date === dateStr);
+    if (existingIdx >= 0) {
+      ud.bodyFatHistory[existingIdx].value = bf;
+    } else {
+      ud.bodyFatHistory.push({ date: dateStr, value: bf });
+      if (ud.bodyFatHistory.length > 20) ud.bodyFatHistory.shift();
+    }
+  }
+
+  // 添加运动记录
+  if (workoutType && workoutDuration) {
+    ud.totalSessions = (ud.totalSessions || 0) + 1;
+    ud.totalDuration = (ud.totalDuration || 0) + parseInt(workoutDuration);
+    // 更新肌群训练频率
+    if (muscleGroup) {
+      const mgIdx = ud.muscleGroupFrequency.findIndex(m => m.group === muscleGroup);
+      if (mgIdx >= 0) {
+        ud.muscleGroupFrequency[mgIdx].count = (ud.muscleGroupFrequency[mgIdx].count || 0) + 1;
+        ud.muscleGroupFrequency[mgIdx].lastTrained = dateStr;
+      } else {
+        ud.muscleGroupFrequency.push({ group: muscleGroup, count: 1, lastTrained: dateStr });
+      }
+    }
+    // 更新连续打卡
+    ud.streak = (ud.streak || 0) + 1;
+  }
+
+  // 保存
+  saveUserHealthData(ud);
+
+  // 关闭弹窗并重新渲染
+  closeHealthSyncModal();
+  renderModule3();
+  showToast('✅ 健康数据已保存！');
+}
+
+// ===== 启动 =====
+window.addEventListener('DOMContentLoaded', init);
+
+</script>
+</body>
+</html>
