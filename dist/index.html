@@ -1239,50 +1239,73 @@ body {
   transform: translateX(-50%);
   width: 100%;
   max-width: 430px;
-  height: 56px;
+  height: 60px;
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border);
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: space-around;
   z-index: 100;
-  padding-top: 8px;
-  padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .nav-item {
+  position: relative;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 3px;
-  padding: 4px 10px;
+  padding: 8px 0;
+  min-width: 0;
   cursor: pointer;
   transition: all 0.2s;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .nav-item .nav-icon {
-  font-size: 22px;
+  font-size: 24px;
   line-height: 1;
   opacity: 0.55;
   transition: all 0.2s;
+  pointer-events: none;
 }
 
 .nav-item .nav-label {
   font-size: 11px;
   color: var(--text-light);
   transition: all 0.2s;
+  pointer-events: none;
 }
 
 .nav-item.active .nav-icon {
   opacity: 1;
-  transform: scale(1.1);
+  transform: scale(1.12);
 }
 
 .nav-item.active .nav-label {
   color: var(--accent-dark);
   font-weight: 600;
+}
+
+.nav-item:active {
+  opacity: 0.75;
+  transform: scale(0.96);
 }
 
 /* ===== 浮动管家按钮 ===== */
@@ -2575,6 +2598,103 @@ body {
   margin-top: 4px;
 }
 
+/* 体重目标卡片 */
+.weight-goal-card {
+  margin-bottom: 4px;
+}
+
+.wg-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.wg-item {
+  flex: 1;
+  text-align: center;
+}
+
+.wg-num {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--accent-dark);
+  line-height: 1.1;
+}
+
+.wg-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.wg-arrow {
+  font-size: 18px;
+  color: var(--text-light);
+  font-weight: 700;
+}
+
+.wg-progress-wrap {
+  height: 8px;
+  background: var(--bg-soft);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.wg-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-light), var(--accent));
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.wg-status {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.wg-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.wg-btn {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.wg-btn.primary {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.wg-chart-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 16px 0 8px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+
+.wg-chart {
+  background: var(--bg-soft);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  margin-top: 4px;
+}
+
 .ps-section-title {
   font-size: 13px;
   font-weight: 700;
@@ -3146,6 +3266,10 @@ body {
 }
 .hs-field {
   flex: 1;
+  min-width: 0;
+}
+.hs-field-full {
+  flex: 1 1 100%;
 }
 .hs-field label {
   display: block;
@@ -3905,20 +4029,10 @@ const APP_DATA = {
       { day: "周六", planned: "腿部+臀部", status: "待选择" },
       { day: "周日", planned: "全身轻度恢复", status: "弹性日" }
     ],
-    // 个人训练数据
+    // 个人训练数据（占位数据已清空，用户通过「记录体重/体脂」手动填入真实数据）
     personalStats: {
-      weightHistory: [
-        { date: "06-01", weight: 50.5 },
-        { date: "06-15", weight: 50.2 },
-        { date: "07-01", weight: 49.8 },
-        { date: "07-15", weight: 49.3 },
-        { date: "07-28", weight: 49.0 }
-      ],
-      bodyFatHistory: [
-        { date: "06-01", value: 24.5 },
-        { date: "07-01", value: 23.8 },
-        { date: "07-28", value: 23.0 }
-      ],
+      weightHistory: [],
+      bodyFatHistory: [],
       muscleGroupFrequency: [
         { group: "胸肩", count: 3, lastTrained: "07-22" },
         { group: "背臀", count: 2, lastTrained: "07-25" },
@@ -4764,12 +4878,12 @@ function closeModal() {
 function openAISettings() {
   const p = appState.aiProvider;
   const html = `<div class="modal-title">🤖 AI 服务</div>
-    <div class="ai-tip">AI 密钥已由后端统一配置，无需在 App 内填写。默认使用智谱 GLM-4-Flash（永久免费）。</div>
+    <div class="ai-tip">AI 密钥已由后端统一配置，无需在 App 内填写。默认使用 <b>Gemini 2.5 Flash</b>。</div>
     <div class="ai-tip" style="margin-top:-6px;color:var(--text-light);">已接入：① 学习模块「问 AI 巩固」② <b>智能大管家</b>对话（关键词未命中时调用）。</div>
     <div class="ai-field">
       <div class="ai-label">优先服务商</div>
       <div class="ai-seg">
-        <button class="ai-seg-btn ${p === 'default' ? 'on' : ''}" onclick="setAIProvider('default')">后端默认</button>
+        <button class="ai-seg-btn ${p === 'default' || p === 'gemini' ? 'on' : ''}" onclick="setAIProvider('gemini')">Gemini</button>
         <button class="ai-seg-btn ${p === 'zhipu' ? 'on' : ''}" onclick="setAIProvider('zhipu')">智谱</button>
         <button class="ai-seg-btn ${p === 'deepseek' ? 'on' : ''}" onclick="setAIProvider('deepseek')">DeepSeek</button>
         <button class="ai-seg-btn ${p === 'doubao' ? 'on' : ''}" onclick="setAIProvider('doubao')">豆包</button>
@@ -4968,110 +5082,73 @@ function renderModule3() {
 
   let html = '';
 
-  // 个人训练数据 — 优先使用用户同步的数据
+  // 体重目标 + 体重变化趋势：只看用户真实填入的数据，不再显示 6.1 占位数据
   const userHealth = getUserHealthData();
-  const ps = userHealth ? mergeHealthData(data.personalStats, userHealth) : data.personalStats;
-  const hasUserData = userHealth !== null;
-  html += '<div class="section-title">📊 个人训练数据' + (hasUserData ? ' <span style="font-size:11px;color:var(--accent);font-weight:400;">✅ 已同步华为运动健康</span>' : '') + '</div>';
-  // 同步按钮（真实 OAuth 授权同步）
-  html += `<div style="text-align:center;margin-bottom:12px;">
-    <button class="health-sync-btn" onclick="syncHuaweiHealth()">${hasUserData ? '🔄 重新同步华为数据' : '🔐 授权同步华为运动健康'}</button>
-    <div style="margin-top:8px;font-size:11px;color:var(--text-light);">
-      <a href="javascript:void(0)" onclick="openHealthSyncModal()" style="color:var(--text-light);text-decoration:underline;">或手动录入</a>
-    </div>
-  </div>`;
-  // 后端服务地址设置（真实同步需要独立后端，部署后在此填写）
-  const apiBase = getApiBase();
-  html += `<div class="hw-base-box">
-    <div class="hw-base-label">🔧 后端服务地址（部署华为同步后端后填写）</div>
-    <div class="hw-base-row">
-      <input id="hwApiBaseInput" class="hw-base-input" placeholder="https://你的后端.onrender.com" value="${apiBase}" />
-      <button class="hw-base-save" onclick="saveApiBase()">保存</button>
-    </div>
-    <div class="hw-base-tip">当前：${apiBase ? apiBase : '未设置（只能手动录入）'}</div>
-  </div>`;
-  // 今日喝水记录
-  const water = getTodayWater();
-  const wGoal = water.goal;
-  const wDrunk = water.drunk;
-  const wPct = Math.min(Math.round(wDrunk / wGoal * 100), 100);
-  html += `<div class="water-card">
-    <div class="water-head">
-      <div class="water-title">💧 今日喝水</div>
-      <div class="water-goal-edit" onclick="editWaterGoal()">目标 ${wGoal}ml ✎</div>
-    </div>
-    <div class="water-progress-wrap">
-      <div class="water-progress-bar" style="width:${wPct}%;"></div>
-    </div>
-    <div class="water-nums">
-      <span class="water-drunk">${wDrunk}</span><span class="water-unit">ml</span>
-      <span class="water-sep">/</span>
-      <span class="water-goal">${wGoal}</span><span class="water-unit">ml</span>
-      <span class="water-pct">${wPct}%</span>
-    </div>
-    <div class="water-btns">
-      <button class="water-add-btn" onclick="addWater(200)">+200</button>
-      <button class="water-add-btn" onclick="addWater(250)">+250</button>
-      <button class="water-add-btn" onclick="addWater(350)">+350</button>
-      <button class="water-add-btn" onclick="addWater(500)">+500</button>
-    </div>
-    <div class="water-custom">
-      <input id="waterCustomInput" type="number" placeholder="自定义ml" class="water-input" inputmode="numeric" />
-      <button class="water-custom-btn" onclick="addCustomWater()">添加</button>
-    </div>
-  </div>`;
-  html += `<div class="personal-stats-card">
-    <div class="ps-grid">
-      <div class="ps-item">
-        <div class="ps-num">${ps.totalSessions || 0}</div>
-        <div class="ps-label">累计训练次数</div>
-      </div>
-      <div class="ps-item">
-        <div class="ps-num">${ps.totalDuration ? Math.round(ps.totalDuration/60*10)/10 : 0}<span style="font-size:12px;">h</span></div>
-        <div class="ps-label">累计训练时长</div>
-      </div>
-      <div class="ps-item">
-        <div class="ps-num">${ps.streak || 0}</div>
-        <div class="ps-label">连续打卡天数</div>
-      </div>
-    </div>`;
-  // 今日健康概览（步数、心率、睡眠）— 来自华为运动健康
-  if (hasUserData && userHealth.latest) {
-    const lt = userHealth.latest;
-    html += `<div class="ps-today-health">
-      <div class="ps-section-title">📋 今日健康概览</div>
-      <div class="ps-today-grid">`;
-    if (lt.steps !== undefined) html += `<div class="ps-today-item"><div class="ps-today-num">🏃 ${lt.steps}</div><div class="ps-today-label">步数</div></div>`;
-    if (lt.heartRate !== undefined) html += `<div class="ps-today-item"><div class="ps-today-num">❤️ ${lt.heartRate}</div><div class="ps-today-label">静息心率 bpm</div></div>`;
-    if (lt.sleep !== undefined) html += `<div class="ps-today-item"><div class="ps-today-num">😴 ${lt.sleep}<span style="font-size:11px;">h</span></div><div class="ps-today-label">睡眠时长</div></div>`;
-    if (lt.calories !== undefined) html += `<div class="ps-today-item"><div class="ps-today-num">🔥 ${lt.calories}</div><div class="ps-today-label">消耗 kcal</div></div>`;
-    html += `</div></div>`;
+  const weightHistory = (userHealth && userHealth.weightHistory) ? userHealth.weightHistory : [];
+  const bodyFatHistory = (userHealth && userHealth.bodyFatHistory) ? userHealth.bodyFatHistory : data.personalStats.bodyFatHistory;
+  const muscleGroupFrequency = (userHealth && userHealth.muscleGroupFrequency) ? userHealth.muscleGroupFrequency : data.personalStats.muscleGroupFrequency;
+
+  // 目标体重：用户设置过就用，否则默认 47kg
+  const weightGoal = (userHealth && userHealth.weightGoal) ? userHealth.weightGoal : 47;
+  const currentWeight = weightHistory.length > 0
+    ? weightHistory[weightHistory.length - 1].weight
+    : (parseFloat(APP_DATA.profile.weight) || 0);
+  const firstWeight = weightHistory.length > 0 ? weightHistory[0].weight : currentWeight;
+
+  let weightProgress = 0;
+  if (currentWeight && currentWeight <= weightGoal) {
+    weightProgress = 100;
+  } else if (firstWeight > weightGoal && currentWeight) {
+    weightProgress = Math.min(100, Math.max(0, Math.round((firstWeight - currentWeight) / (firstWeight - weightGoal) * 100)));
   }
-  // 体重变化趋势
-  html += `<div class="ps-section-title">📈 体重变化趋势</div>
-    <div class="ps-weight-chart">`;
-  if (ps.weightHistory && ps.weightHistory.length > 0) {
-    const minW = Math.min(...ps.weightHistory.map(w => w.weight)) - 0.5;
-    const maxW = Math.max(...ps.weightHistory.map(w => w.weight)) + 0.5;
-    const range = maxW - minW;
-    ps.weightHistory.forEach((w, i) => {
-      const h = 20 + ((w.weight - minW) / range) * 60;
-      const isLast = i === ps.weightHistory.length - 1;
-      html += `<div class="ps-weight-point">
-        <div class="ps-weight-val" style="color:${isLast ? 'var(--accent)' : 'var(--text-light)'};font-weight:${isLast ? '700' : '400'};">${w.weight}</div>
-        <div class="ps-weight-bar" style="height:${h}px;background:${isLast ? 'var(--accent)' : 'var(--accent-light)'};"></div>
-        <div class="ps-weight-date">${w.date}</div>
-      </div>`;
-    });
-  } else {
-    html += '<div style="color:var(--text-light);font-size:13px;padding:20px 0;">暂无体重数据，点击上方按钮同步</div>';
-  }
-  html += `</div>`;
+  const diff = currentWeight ? Math.abs(currentWeight - weightGoal).toFixed(1) : '0.0';
+
+  const weightChartHtml = weightHistory.length > 0
+    ? (() => {
+      const minW = Math.min(...weightHistory.map(w => w.weight)) - 0.5;
+      const maxW = Math.max(...weightHistory.map(w => w.weight)) + 0.5;
+      const range = maxW - minW;
+      return weightHistory.map((w, i) => {
+        const h = 20 + ((w.weight - minW) / range) * 60;
+        const isLast = i === weightHistory.length - 1;
+        return `<div class="ps-weight-point">
+          <div class="ps-weight-val" style="color:${isLast ? 'var(--accent)' : 'var(--text-light)'};font-weight:${isLast ? '700' : '400'};">${w.weight}</div>
+          <div class="ps-weight-bar" style="height:${h}px;background:${isLast ? 'var(--accent)' : 'var(--accent-light)'};"></div>
+          <div class="ps-weight-date">${w.date}</div>
+        </div>`;
+      }).join('');
+    })()
+    : '<div style="color:var(--text-light);font-size:13px;padding:20px 0;width:100%;text-align:center;">暂无体重数据，点击「记录体重」添加</div>';
+
+  html += `<div class="section-title">🎯 体重目标 & 变化趋势</div>
+  <div class="personal-stats-card weight-goal-card">
+    <div class="wg-row">
+      <div class="wg-item">
+        <div class="wg-num">${currentWeight ? currentWeight.toFixed(1) : '--'}</div>
+        <div class="wg-label">当前体重 kg</div>
+      </div>
+      <div class="wg-arrow">→</div>
+      <div class="wg-item">
+        <div class="wg-num">${weightGoal.toFixed(1)}</div>
+        <div class="wg-label">目标体重 kg</div>
+      </div>
+    </div>
+    <div class="wg-progress-wrap">
+      <div class="wg-progress-bar" style="width:${weightProgress}%;"></div>
+    </div>
+    <div class="wg-status">${currentWeight ? (currentWeight > weightGoal ? '还差 ' + diff + ' kg，继续加油 💪' : '已达成目标 🎉') : '还没有记录体重，点击右下角记录'}</div>
+    <div class="wg-actions">
+      <button class="wg-btn primary" onclick="openHealthSyncModal()">📝 记录体重</button>
+      <button class="wg-btn" onclick="editWeightGoal()">⚙️ 修改目标</button>
+    </div>
+    <div class="wg-chart-title">📈 体重变化趋势</div>
+    <div class="ps-weight-chart wg-chart">${weightChartHtml}</div>
+  </div>`;
   // 体脂率
   html += `<div class="ps-section-title">🔥 体脂率变化</div>`;
   html += `<div class="ps-bodyfat-row">`;
-  if (ps.bodyFatHistory && ps.bodyFatHistory.length > 0) {
-    ps.bodyFatHistory.forEach(bf => {
+  if (bodyFatHistory && bodyFatHistory.length > 0) {
+    bodyFatHistory.forEach(bf => {
       html += `<div class="ps-bf-item">
         <div class="ps-bf-val">${bf.value}%</div>
         <div class="ps-bf-date">${bf.date}</div>
@@ -5084,9 +5161,9 @@ function renderModule3() {
   // 肌群训练频率
   html += `<div class="ps-section-title">💪 各肌群训练频率</div>`;
   html += `<div class="ps-muscle-freq">`;
-  if (ps.muscleGroupFrequency && ps.muscleGroupFrequency.length > 0) {
-    ps.muscleGroupFrequency.forEach(mg => {
-      const maxCount = Math.max(...ps.muscleGroupFrequency.map(m => m.count));
+  if (muscleGroupFrequency && muscleGroupFrequency.length > 0) {
+    const maxCount = Math.max(...muscleGroupFrequency.map(m => m.count));
+    muscleGroupFrequency.forEach(mg => {
       const w = (mg.count / maxCount) * 100;
       html += `<div class="ps-mf-row">
         <div class="ps-mf-name">${mg.group}</div>
@@ -5097,7 +5174,7 @@ function renderModule3() {
   } else {
     html += '<div style="color:var(--text-light);font-size:13px;">暂无训练频率数据</div>';
   }
-  html += `</div></div>`;
+  html += `</div>`;
   // 健康数据同步弹窗
   html += getHealthSyncModalHTML();
 
@@ -5151,6 +5228,32 @@ function renderModule3() {
   // 打卡按钮
   html += `<div style="text-align:center;margin-top:16px;">
     <button class="checkin-btn ${isCheckedInToday() ? 'done' : ''}" id="checkinBtn3" onclick="checkinMuscleTraining()">${isCheckedInToday() ? '✅ 今日已打卡' : '✅ 完成训练打卡'}</button>
+  </div>`;
+
+  // 今日喝水记录（挪到健身页底部）
+  const water = getTodayWater();
+  const wGoal = water.goal;
+  const wDrunk = water.drunk;
+  const wPct = Math.min(Math.round(wDrunk / wGoal * 100), 100);
+  html += `<div class="section-title" style="margin-top:20px;">💧 今日喝水</div>
+  <div class="water-card">
+    <div class="water-head">
+      <div class="water-title">${wDrunk} / ${wGoal} ml</div>
+      <div class="water-goal-edit" onclick="editWaterGoal()">目标 ${wGoal}ml ✎</div>
+    </div>
+    <div class="water-progress-wrap">
+      <div class="water-progress-bar" style="width:${wPct}%;"></div>
+    </div>
+    <div class="water-btns">
+      <button class="water-add-btn" onclick="addWater(200)">+200</button>
+      <button class="water-add-btn" onclick="addWater(250)">+250</button>
+      <button class="water-add-btn" onclick="addWater(350)">+350</button>
+      <button class="water-add-btn" onclick="addWater(500)">+500</button>
+    </div>
+    <div class="water-custom">
+      <input id="waterCustomInput" type="number" placeholder="自定义ml" class="water-input" inputmode="numeric" />
+      <button class="water-custom-btn" onclick="addCustomWater()">添加</button>
+    </div>
   </div>`;
 
   container.innerHTML = html;
@@ -6087,12 +6190,19 @@ function buildButlerSystemPrompt() {
     '• 第二人称称呼用户为「雨婷」',
     '• 用 emoji 但不超过 5 个',
     '• 不重复工作台里已有的内容，除非用户主动问',
+    '• 当用户表达疲惫、没动力、焦虑、学不下去时，先温柔共情，再给 1-2 个具体、立刻能做的小建议，不要硬塞知识点',
   ].join('\n');
 }
 
 // 关键词快速匹配：命中返回结构化结果；不命中返回 null（交给 AI）
 function processAssistantMessage(msg) {
   const lower = msg.toLowerCase();
+
+  // === 情绪/求助/状态倾诉 → 优先交给 AI，避免被下面的 topic 关键词生硬拦截 ===
+  // 只要用户在表达困难、情绪、求建议，就让 AI（带完整工作台上下文）给出有温度的回应
+  if (msg.match(/坚持不下去|难以坚持|没动力|不想动|好累|好难|怎么办|怎么.*办|怎么坚持|怎么办才好|很迷茫|焦虑|压力大|情绪低落|心情不好|很难受|有点丧|坚持不住|提不起劲|学不下去|做不下去/i)) {
+    return null;
+  }
 
   // === 健身相关 ===
   if (msg.match(/酸痛|肌肉|训练|健身|锻炼|运动|腿|胸|肩|背|臀|腹|核心|累|疲惫|不想练|换个计划|训练计划/i)) {
@@ -6146,8 +6256,8 @@ function processAssistantMessage(msg) {
     };
   }
 
-  // === 学习相关 ===
-  if (msg.match(/学习|读书|看书|知识|课程|今天学什么|进度|复盘|思考/i)) {
+  // === 学习相关（收窄：只有明确询问学习内容/进度时才给硬编码总结） ===
+  if (msg.match(/今天学什么|今天学习|学了什么|学习内容|学习进度|学习情况|读书笔记|看书|读书|课程|知识点/i)) {
     return {
       text: `📚 今日学习内容已为你准备好：\n\n📖 知识点：社会心理学 · 从众效应（Conformity）\n📖 来源：《社会性动物》第2章\n\n核心内容：\n• 从众效应 = 群体压力下个体改变判断/行为\n• 阿希实验：75%的人至少一次跟随错误判断\n• 底层逻辑：信息性从众 + 规范性从众\n\n🧠 附带3道思考巩固题，已放在学习模块。\n\n需要调整学习负荷或深入某个知识点吗？`,
       action: () => {
@@ -6332,6 +6442,19 @@ function editWaterGoal() {
   showToast('目标已更新为 ' + goal + 'ml');
 }
 
+function editWeightGoal() {
+  const ud = getUserHealthData() || {};
+  const cur = ud.weightGoal || 47;
+  const v = prompt('设置目标体重（kg）：', cur);
+  if (v === null) return;
+  const goal = parseFloat(v);
+  if (!goal || goal <= 0) { showToast('目标体重无效'); return; }
+  ud.weightGoal = goal;
+  saveUserHealthData(ud);
+  renderModule3();
+  showToast('目标体重已更新为 ' + goal + 'kg');
+}
+
 function getUserHealthData() {
   const raw = localStorage.getItem('huaweiHealthData');
   if (!raw) return null;
@@ -6511,43 +6634,13 @@ function getHealthSyncModalHTML() {
     <div class="health-sync-overlay" onclick="closeHealthSyncModal()"></div>
     <div class="health-sync-content">
       <div class="health-sync-header">
-        <h3>🔐 授权同步华为运动健康</h3>
+        <h3>📝 记录今日数据</h3>
         <span class="health-sync-close" onclick="closeHealthSyncModal()">✕</span>
       </div>
       <div class="health-sync-body">
-        <div class="health-sync-tip">
-          这是<b>手动录入兜底</b>方式。要同步华为真实数据，请关闭本窗口，点击上方「🔐 授权同步华为运动健康」按钮，按提示完成华为 OAuth 一键授权即可。
-        </div>
-        <div style="text-align:center;margin:12px 0;">
-          <a class="hs-link-btn" href="https://developer.huawei.com/consumer/cn/doc/development/HMSCore-Guides/auth-example-0000001054581058" target="_blank" rel="noopener">📖 华为开发者联盟 · 授权文档</a>
-        </div>
-        <div class="hs-divider"><span>或临时手动录入（真实同步上线后可删）</span></div>
         <div class="health-sync-form">
           <div class="hs-form-section">
-            <div class="hs-form-title">📋 今日概览</div>
-            <div class="hs-form-row">
-              <div class="hs-field">
-                <label>今日步数</label>
-                <input type="number" id="hsSteps" placeholder="如 8500" min="0">
-              </div>
-              <div class="hs-field">
-                <label>静息心率 (bpm)</label>
-                <input type="number" id="hsHeartRate" placeholder="如 68" min="30" max="200">
-              </div>
-            </div>
-            <div class="hs-form-row">
-              <div class="hs-field">
-                <label>睡眠时长 (小时)</label>
-                <input type="number" id="hsSleep" placeholder="如 7.5" min="0" max="24" step="0.1">
-              </div>
-              <div class="hs-field">
-                <label>今日消耗 (kcal)</label>
-                <input type="number" id="hsCalories" placeholder="如 320" min="0">
-              </div>
-            </div>
-          </div>
-          <div class="hs-form-section">
-            <div class="hs-form-title">⚖️ 身体数据（填写今日测量值）</div>
+            <div class="hs-form-title">⚖️ 身体数据</div>
             <div class="hs-form-row">
               <div class="hs-field">
                 <label>体重 (kg)</label>
@@ -6582,7 +6675,7 @@ function getHealthSyncModalHTML() {
               </div>
             </div>
             <div class="hs-form-row">
-              <div class="hs-field">
+              <div class="hs-field hs-field-full">
                 <label>训练肌群</label>
                 <select id="hsMuscleGroup">
                   <option value="">-- 选择 --</option>
@@ -6592,10 +6685,6 @@ function getHealthSyncModalHTML() {
                   <option value="核心">核心</option>
                   <option value="全身">全身</option>
                 </select>
-              </div>
-              <div class="hs-field">
-                <label>消耗卡路里</label>
-                <input type="number" id="hsWorkoutCalories" placeholder="如 200" min="0">
               </div>
             </div>
           </div>
@@ -6617,12 +6706,15 @@ function openHealthSyncModal() {
   modal.style.display = 'flex';
   // 预填今日已有数据
   const ud = getUserHealthData();
-  if (ud && ud.latest) {
-    const lt = ud.latest;
-    if (lt.steps !== undefined) document.getElementById('hsSteps').value = lt.steps;
-    if (lt.heartRate !== undefined) document.getElementById('hsHeartRate').value = lt.heartRate;
-    if (lt.sleep !== undefined) document.getElementById('hsSleep').value = lt.sleep;
-    if (lt.calories !== undefined) document.getElementById('hsCalories').value = lt.calories;
+  const today = new Date();
+  const dateStr = (today.getMonth() + 1).toString().padStart(2, '0') + '-' + today.getDate().toString().padStart(2, '0');
+  if (ud && ud.weightHistory) {
+    const todayWeight = ud.weightHistory.find(w => w.date === dateStr);
+    if (todayWeight) document.getElementById('hsWeight').value = todayWeight.weight;
+  }
+  if (ud && ud.bodyFatHistory) {
+    const todayBf = ud.bodyFatHistory.find(b => b.date === dateStr);
+    if (todayBf) document.getElementById('hsBodyFat').value = todayBf.value;
   }
   // 显示历史记录数量
   const existing = document.getElementById('hsExistingData');
@@ -6645,16 +6737,11 @@ function submitHealthData() {
   const dateStr = (today.getMonth() + 1).toString().padStart(2, '0') + '-' + today.getDate().toString().padStart(2, '0');
 
   // 读取表单数据
-  const steps = document.getElementById('hsSteps').value;
-  const heartRate = document.getElementById('hsHeartRate').value;
-  const sleep = document.getElementById('hsSleep').value;
-  const calories = document.getElementById('hsCalories').value;
   const weight = document.getElementById('hsWeight').value;
   const bodyFat = document.getElementById('hsBodyFat').value;
   const workoutType = document.getElementById('hsWorkoutType').value;
   const workoutDuration = document.getElementById('hsWorkoutDuration').value;
   const muscleGroup = document.getElementById('hsMuscleGroup').value;
-  const workoutCalories = document.getElementById('hsWorkoutCalories').value;
 
   // 获取或初始化用户数据
   let ud = getUserHealthData() || {
@@ -6664,15 +6751,9 @@ function submitHealthData() {
     totalSessions: 0,
     totalDuration: 0,
     streak: 0,
+    weightGoal: 47,
     latest: {}
   };
-
-  // 更新今日概览
-  ud.latest = {};
-  if (steps) ud.latest.steps = parseInt(steps);
-  if (heartRate) ud.latest.heartRate = parseInt(heartRate);
-  if (sleep) ud.latest.sleep = parseFloat(sleep);
-  if (calories) ud.latest.calories = parseInt(calories);
 
   // 添加体重记录
   if (weight) {

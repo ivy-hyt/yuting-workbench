@@ -37,8 +37,10 @@ const CFG = {
   frontendOrigin: process.env.HW_FRONTEND_ORIGIN || '',
   corsOrigin: process.env.HW_CORS_ORIGIN || (process.env.HW_FRONTEND_ORIGIN || ''),
   // AI 配置：密钥仅在后端环境变量，前端不再触碰
-  // 默认走智谱 GLM-4-Flash（永久免费）；deepseek/doubao 保留为备选
-  aiProvider: process.env.AI_PROVIDER || 'zhipu',
+  // 默认走 Gemini（GEMINI_MODEL 可配，默认 gemini-2.5-flash）；zhipu/deepseek/doubao 保留为备选
+  aiProvider: process.env.AI_PROVIDER || 'gemini',
+  geminiKey: process.env.GEMINI_API_KEY || '',
+  geminiModel: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
   zhipuKey: process.env.ZHIPU_API_KEY || '',
   zhipuModel: process.env.ZHIPU_MODEL || 'glm-4-flash',
   deepseekKey: process.env.DEEPSEEK_API_KEY || '',
@@ -268,7 +270,8 @@ const server = http.createServer(async (req, res) => {
   const p = parsed.pathname;
 
   // ===== AI 中转代理（密钥仅在后端环境变量，前端不再触碰）=====
-  // 用户无需在 App 内填写任何密钥；后端默认用智谱 GLM-4-Flash（免费），也可切 DeepSeek / 豆包。
+  // 默认走 Gemini（GEMINI_MODEL 可配）；zhipu/deepseek/doubao 保留为备选。
+  // 所有厂商响应统一映射成 OpenAI 兼容结构 { choices:[{ message:{ content } }] }，前端无需改动。
   if (p === '/api/ai/chat') {
     applyCors(res, req);
     // AI 网关是公开代理（不依赖 Cookie），允许任何网页/iOS/本地文件来源访问，避免 CloudStudio 等动态域名被 CORS 拦截
@@ -286,8 +289,42 @@ const server = http.createServer(async (req, res) => {
       const { provider, model, system, user } = reqBody;
       if (!user) return sendJson(res, 400, { error: '缺少 user 内容' });
 
-      // 默认智谱 GLM-4-Flash（免费）；前端可指定 provider 覆盖
+      // 默认 Gemini；前端可指定 provider 覆盖
       const prov = provider || CFG.aiProvider;
+
+      // ===== Gemini 分支（Google 原生格式，key 走 query 参数，无 Bearer 头）=====
+      if (prov === 'gemini') {
+        if (!CFG.geminiKey) return sendJson(res, 503, { error: '后端未配置 Gemini API Key (GEMINI_API_KEY)' });
+        const mdl = model || CFG.geminiModel;
+        try {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 40000);
+          const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(mdl)}:generateContent?key=${encodeURIComponent(CFG.geminiKey)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{ role: 'user', parts: [{ text: user }] }],
+              ...(system ? { systemInstruction: { parts: [{ text: system }] } } : {}),
+              generationConfig: { temperature: 0.7 },
+            }),
+            signal: ctrl.signal,
+          });
+          clearTimeout(timer);
+          const gJson = await gRes.json().catch(() => ({}));
+          if (!gRes.ok) {
+            const msg = (gJson.error && (gJson.error.message || JSON.stringify(gJson.error))) || ('Gemini ' + gRes.status);
+            return sendJson(res, 502, { error: 'Gemini 调用失败: ' + String(msg).slice(0, 220) });
+          }
+          const text = gJson.candidates && gJson.candidates[0] && gJson.candidates[0].content && gJson.candidates[0].content.parts && gJson.candidates[0].content.parts[0] && gJson.candidates[0].content.parts[0].text;
+          if (!text) return sendJson(res, 502, { error: 'Gemini 返回为空（可能触发了安全过滤或无候选结果）' });
+          // 映射成 OpenAI 兼容结构，前端 callAI 无需改动
+          return sendJson(res, 200, { choices: [{ message: { content: text } }], model: mdl });
+        } catch (e) {
+          const msg = (e && e.name === 'AbortError') ? 'Gemini 调用超时（>40s）' : ('Gemini 网关调用失败: ' + (e.message || e));
+          return sendJson(res, 502, { error: msg });
+        }
+      }
+
       let url, key, mdl;
       if (prov === 'zhipu') {
         if (!CFG.zhipuKey) return sendJson(res, 503, { error: '后端未配置智谱 API Key (ZHIPU_API_KEY)' });
