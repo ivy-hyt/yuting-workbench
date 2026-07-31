@@ -1,0 +1,94 @@
+# 雨婷工作台 · iOS 自动打包
+#
+# 作用：在 GitHub 的 macOS  runner 上把前端资源同步进 Capacitor iOS 工程，
+#       用 Xcode 编译并把 App 打成 .ipa 安装包，作为 Action 产物(artifact)下载。
+#
+# 为什么是「未签名」的 IPA？
+#   你用的是【免费 Apple ID】，免费账号不能在 CI 里完成签名（需要 Apple ID 交互登录、
+#   真机、两步验证，且免费账号无法导出分发证书/描述文件）。所以这里只负责「编译 + 打包」，
+#   最重的活都在云端干完，最后一步「签名安装」在你自己电脑上用免费账号完成，二选一：
+#     A. Sideloadly（Mac / Windows 都行）：导入本 IPA，填你的 Apple ID，自动签名侧载到 iPhone。
+#        ⚠️ 免费账号经 Sideloadly 侧载时，HealthKit 健康读取可能拿不到权限
+#           （免费开发描述文件默认不含 HealthKit 授权）。
+#     B. 想要 HealthKit 读数（步数/心率/体重/睡眠）：在你 Mac 上 clone 本仓库，
+#        用 Xcode 打开 ios/App/App.xcodeproj，Signing 里选你的免费 Apple ID 并开启 HealthKit，
+#        连 iPhone 点 ▶ 运行即可（Xcode 自动生成的开发描述文件包含 HealthKit 授权）。
+#
+# 如何运行：
+#   1) 把本文件随代码 push 到 GitHub（仓库默认私有也行，见下方「重要提醒」）。
+#   2) 打开仓库 → Actions → 左侧 “Build iOS IPA” → Run workflow（或 push 到 main 自动触发）。
+#   3) 跑完后在 Action 详情页底部下载 yuting-workbench-ipa 产物（压缩包里的 .ipa）。
+#
+# 重要提醒（私有仓库 + 免费 GitHub 计划）：
+#   GitHub 的 macOS runner 对【私有仓库 + 免费计划】可能不可用（需升级付费计划或把仓库设为公开）。
+#   若点击 Run 后一直排队/报错 “macOS minutes not included”，请把仓库设为 Public，
+#   或在仓库 Settings → Actions → Runners 添加一台你自己的 Mac 作为 self-hosted runner。
+
+name: Build iOS IPA
+
+on:
+  workflow_dispatch:               # 在 Actions 页面手动点一下即可打包
+  push:
+    branches: [main]
+    paths:
+      - 'dist/**'
+      - 'plugins/**'
+      - 'ios/**'
+      - 'package*.json'
+      - 'build-dist.mjs'
+      - '.github/workflows/build-ios.yml'
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 安装依赖
+        run: npm ci --no-audit --no-fund
+
+      - name: 同步 Capacitor iOS（拷贝前端资源 + 链接 HealthKit 插件）
+        run: npx cap sync ios
+
+      - name: 编译 iOS App（禁用签名，适配免费 Apple ID）
+        run: |
+          cd ios/App
+          xcodebuild build \
+            -project App.xcodeproj \
+            -target App \
+            -configuration Debug \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM=""
+
+      - name: 打包成未签名 IPA
+        run: |
+          cd ios/App
+          APP_PATH=$(find build/Build/Products/Debug-iphoneos -maxdepth 1 -name "App.app" | head -n1)
+          if [ -z "$APP_PATH" ]; then
+            echo "❌ 未找到 App.app，编译可能失败，请查看上方 xcodebuild 日志"
+            exit 1
+          fi
+          echo "✅ 找到编译产物：$APP_PATH"
+          mkdir -p Payload
+          cp -R "$APP_PATH" Payload/
+          zip -r yuting-workbench.ipa Payload
+          rm -rf Payload
+          echo "📦 生成 IPA：$(du -h yuting-workbench.ipa | cut -f1)"
+
+      - name: 上传 IPA 产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: yuting-workbench-ipa
+          path: ios/App/yuting-workbench.ipa
+          retention-days: 30
