@@ -7,5 +7,6 @@ node_modules/
 *.log
 
 # 本地源码（部署只需 server/ + dist/，无需上传 app 源码与工具目录）
-app/
+# 注意：必须是 /app/（仓库根），否则会误伤 ios/App/ 原生工程
+/app/
 .workbuddy/
