@@ -271,6 +271,9 @@ const server = http.createServer(async (req, res) => {
   // 用户无需在 App 内填写任何密钥；后端默认用智谱 GLM-4-Flash（免费），也可切 DeepSeek / 豆包。
   if (p === '/api/ai/chat') {
     applyCors(res, req);
+    // AI 网关是公开代理（不依赖 Cookie），允许任何网页/iOS/本地文件来源访问，避免 CloudStudio 等动态域名被 CORS 拦截
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
