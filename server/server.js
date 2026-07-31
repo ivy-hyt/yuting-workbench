@@ -47,9 +47,10 @@ const CFG = {
 };
 
 // 允许跨域的来源（Web 前端 + iOS Capacitor 壳）
-const ALLOWED_ORIGINS = new Set(
-  [CFG.frontendOrigin, CFG.corsOrigin, 'capacitor://localhost', 'ionic://localhost'].filter(Boolean)
-);
+// 未显式配置前端域名时，动态放行任意网页来源（适配 CloudStudio 等动态域名部署）
+const EXPLICIT_ORIGINS = [CFG.frontendOrigin, CFG.corsOrigin, 'capacitor://localhost', 'ionic://localhost'].filter(Boolean);
+const ALLOWED_ORIGINS = new Set(EXPLICIT_ORIGINS);
+const CORS_OPEN_MODE = EXPLICIT_ORIGINS.length === 0;
 
 // 按请求域名推导回调地址（部署到任何平台都无需手工改）
 function resolveRedirectUri(req) {
@@ -95,7 +96,8 @@ function setCookie(res, name, value, maxAge = 2592000) {
 // CORS：允许 Web 前端与 iOS Capacitor 壳，并支持携带凭据
 function applyCors(res, req) {
   const origin = req.headers.origin;
-  if (!origin || ALLOWED_ORIGINS.has(origin)) {
+  if (!origin || ALLOWED_ORIGINS.has(origin) || CORS_OPEN_MODE) {
+    // 未显式配置来源时，回退为请求来源本身（支持任意网页前端）
     res.setHeader('Access-Control-Allow-Origin', origin || '*');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
