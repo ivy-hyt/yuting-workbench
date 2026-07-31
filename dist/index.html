@@ -4713,11 +4713,12 @@ function closeModal() {
 function openAISettings() {
   const p = appState.aiProvider;
   const html = `<div class="modal-title">🤖 AI 服务</div>
-    <div class="ai-tip">AI 密钥已由后端统一配置，无需在 App 内填写。你可以选择优先使用哪个服务商，或交给后端自动选择。</div>
+    <div class="ai-tip">AI 密钥已由后端统一配置，无需在 App 内填写。默认使用智谱 GLM-4-Flash（永久免费）。你也可以指定其他已配置的服务商。</div>
     <div class="ai-field">
       <div class="ai-label">优先服务商</div>
       <div class="ai-seg">
         <button class="ai-seg-btn ${p === 'default' ? 'on' : ''}" onclick="setAIProvider('default')">后端默认</button>
+        <button class="ai-seg-btn ${p === 'zhipu' ? 'on' : ''}" onclick="setAIProvider('zhipu')">智谱</button>
         <button class="ai-seg-btn ${p === 'deepseek' ? 'on' : ''}" onclick="setAIProvider('deepseek')">DeepSeek</button>
         <button class="ai-seg-btn ${p === 'doubao' ? 'on' : ''}" onclick="setAIProvider('doubao')">豆包</button>
       </div>

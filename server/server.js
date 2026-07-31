@@ -37,7 +37,10 @@ const CFG = {
   frontendOrigin: process.env.HW_FRONTEND_ORIGIN || '',
   corsOrigin: process.env.HW_CORS_ORIGIN || (process.env.HW_FRONTEND_ORIGIN || ''),
   // AI 配置：密钥仅在后端环境变量，前端不再触碰
-  aiProvider: process.env.AI_PROVIDER || 'deepseek',
+  // 默认走智谱 GLM-4-Flash（永久免费）；deepseek/doubao 保留为备选
+  aiProvider: process.env.AI_PROVIDER || 'zhipu',
+  zhipuKey: process.env.ZHIPU_API_KEY || '',
+  zhipuModel: process.env.ZHIPU_MODEL || 'glm-4-flash',
   deepseekKey: process.env.DEEPSEEK_API_KEY || '',
   doubaoKey: process.env.DOUBAO_API_KEY || '',
   doubaoEndpoint: process.env.DOUBAO_ENDPOINT || '',
@@ -263,7 +266,7 @@ const server = http.createServer(async (req, res) => {
   const p = parsed.pathname;
 
   // ===== AI 中转代理（密钥仅在后端环境变量，前端不再触碰）=====
-  // 用户无需在 App 内填写任何密钥；后端读取 DEEPSEEK_API_KEY / DOUBAO_API_KEY 转发请求。
+  // 用户无需在 App 内填写任何密钥；后端默认用智谱 GLM-4-Flash（免费），也可切 DeepSeek / 豆包。
   if (p === '/api/ai/chat') {
     applyCors(res, req);
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -278,9 +281,15 @@ const server = http.createServer(async (req, res) => {
       const { provider, model, system, user } = reqBody;
       if (!user) return sendJson(res, 400, { error: '缺少 user 内容' });
 
-      const useDoubao = (provider === 'doubao') || (!provider && CFG.aiProvider === 'doubao');
+      // 默认智谱 GLM-4-Flash（免费）；前端可指定 provider 覆盖
+      const prov = provider || CFG.aiProvider;
       let url, key, mdl;
-      if (useDoubao) {
+      if (prov === 'zhipu') {
+        if (!CFG.zhipuKey) return sendJson(res, 503, { error: '后端未配置智谱 API Key (ZHIPU_API_KEY)' });
+        url = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+        key = CFG.zhipuKey;
+        mdl = model || CFG.zhipuModel;
+      } else if (prov === 'doubao') {
         if (!CFG.doubaoKey) return sendJson(res, 503, { error: '后端未配置豆包 API Key' });
         url = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
         key = CFG.doubaoKey;
@@ -424,8 +433,9 @@ server.listen(PORT, () => {
   console.log('[回调地址] 自动按部署域名生成: /api/health/callback（需在华为开发者联盟登记为该应用的回调地址）');
   if (CFG.frontendOrigin) console.log('[前端来源]', CFG.frontendOrigin);
   const aiStatus = [];
+  if (CFG.zhipuKey) aiStatus.push('智谱');
   if (CFG.deepseekKey) aiStatus.push('DeepSeek');
   if (CFG.doubaoKey) aiStatus.push('豆包');
   if (aiStatus.length) console.log('[AI 服务] 已配置：' + aiStatus.join('、') + '（默认 ' + CFG.aiProvider + '）');
-  else console.warn('[警告] 未检测到 DEEPSEEK_API_KEY / DOUBAO_API_KEY，AI 功能不可用');
+  else console.warn('[警告] 未检测到 ZHIPU_API_KEY / DEEPSEEK_API_KEY / DOUBAO_API_KEY，AI 功能不可用');
 });
