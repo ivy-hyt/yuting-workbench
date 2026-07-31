@@ -1,5 +1,5 @@
 // 雨婷工作台 Service Worker — 离线缓存
-const CACHE_NAME = 'yuting-workbench-v2';
+const CACHE_NAME = 'yuting-workbench-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -31,20 +31,21 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 抓取：缓存优先，回退网络，再回退离线页
+// 抓取：API 永远透传（不吞错误）；静态资源 network-first
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
-  // API 请求：始终走网络，不缓存，保证华为健康数据实时
+
+  // ===== API：永远直接走网络，不拦截、不吞错误 =====
+  // 旧版本会 catch 所有 fetch 错误返 503 offline，把 AI 调用失败的
+  // 真实原因（CORS / 后端错误 / 超时）全吞了，让用户看不到诊断。
+  // 这里改为：完全透传给前端，AI 失败时前端能拿到真实状态码与响应体。
   if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(event.request).catch(() => new Response(
-        JSON.stringify({ error: 'offline', message: '网络不可用，无法同步数据' }),
-        { status: 503, headers: { 'Content-Type': 'application/json' } }
-      ))
-    );
+    // 不调用 event.respondWith，让浏览器按默认行为走网络
     return;
   }
+
   if (event.request.method !== 'GET') return;
+
   // HTML 导航请求：network-first，保证部署新版本后内容及时生效
   const isNav = event.request.mode === 'navigate' || url.pathname === '/' || url.pathname.endsWith('.html');
   if (isNav) {

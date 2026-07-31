@@ -276,7 +276,7 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
     if (req.method !== 'POST') return sendJson(res, 405, { error: 'method not allowed' });
     let buf = '';
-    req.on('data', c => { buf += c; if (buf.length > 1e6) req.destroy(); });
+    req.on('data', c => { buf += c; if (buf.length > 5e6) req.destroy(); }); // 5MB 上限，足够带大段上下文的 systemPrompt
     req.on('end', async () => {
       let reqBody;
       try { reqBody = JSON.parse(buf); } catch (e) { return sendJson(res, 400, { error: '请求体不是合法 JSON' }); }
@@ -304,6 +304,9 @@ const server = http.createServer(async (req, res) => {
       }
 
       try {
+        // 后端→AI 厂商的 fetch 加 40s 超时（AI cold start 慢）
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 40000);
         const r = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
@@ -314,13 +317,24 @@ const server = http.createServer(async (req, res) => {
               { role: 'user', content: user }
             ],
             stream: false, temperature: 0.7
-          })
+          }),
+          signal: ctrl.signal,
         });
+        clearTimeout(timer);
         const txt = await r.text();
+        // 把厂商响应透传，但保证 Content-Type 是 JSON（即使厂商返 5xx HTML 也包装成 JSON 让前端能解析诊断）
         res.writeHead(r.status, { 'Content-Type': 'application/json; charset=utf-8' });
-        res.end(txt);
+        if (r.ok) {
+          res.end(txt);
+        } else {
+          // 包装错误：让前端能看到真实状态码 + 厂商错误信息
+          let parsed = txt;
+          try { parsed = JSON.parse(txt); } catch (_) {}
+          res.end(JSON.stringify({ error: 'AI 厂商 ' + r.status + '：' + (typeof parsed === 'string' ? parsed.slice(0, 200) : (parsed.error || parsed.message || JSON.stringify(parsed).slice(0, 200))) }));
+        }
       } catch (e) {
-        return sendJson(res, 502, { error: 'AI 网关调用失败: ' + (e.message || e) });
+        const msg = (e && e.name === 'AbortError') ? 'AI 厂商调用超时（>40s）' : ('AI 网关调用失败: ' + (e.message || e));
+        return sendJson(res, 502, { error: msg });
       }
     });
     return;

@@ -4670,33 +4670,84 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
 }
 
-async function callAI(systemPrompt, userPrompt) {
+// ===== AI 调用：内置超时与一次自动重试（应对 Render cold start）=====
+async function callAI(systemPrompt, userPrompt, opts) {
+  opts = opts || {};
   const base = getApiBase();
   const payload = {
     provider: appState.aiProvider === 'default' ? null : appState.aiProvider,
     system: systemPrompt,
     user: userPrompt,
   };
-  try {
-    const r = await fetch(base + '/api/ai/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    const isJson = (r.headers.get('content-type') || '').includes('application/json');
-    if (!r.ok) {
-      const t = isJson ? await r.text() : '后端返回 HTML（通常是旧版本未部署 /api/ai/chat）';
-      return { error: 'AI 网关 ' + r.status + '：' + t.slice(0, 160) };
+  const timeoutMs = opts.timeoutMs || 45000; // 45s，留足 Render cold start
+  const maxAttempts = opts.maxAttempts || 2;
+
+  const doFetch = async () => {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      const r = await fetch(base + '/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: ctrl.signal,
+        cache: 'no-store',
+        credentials: 'omit',
+        mode: 'cors',
+      });
+      clearTimeout(t);
+      return r;
+    } catch (e) {
+      clearTimeout(t);
+      throw e;
     }
-    if (!isJson) return { error: '后端返回非 JSON（可能是旧版本或未部署 /api/ai/chat），请重新部署后端' };
-    const j = await r.json();
-    if (j.error) return { error: j.error };
-    const text = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
-    if (text) return { text };
-    return { error: 'AI 返回格式异常：' + JSON.stringify(j).slice(0, 140) };
-  } catch (e) {
-    return { error: '调用失败（可能未配置后端或网络问题）：' + (e.message || e) };
+  };
+
+  let lastErr = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const r = await doFetch();
+      const isJson = (r.headers.get('content-type') || '').includes('application/json');
+      if (!r.ok) {
+        const t = isJson ? await r.text() : '后端返回 HTML（通常是旧版本未部署 /api/ai/chat）';
+        // 5xx 才重试；4xx 是参数错误，重试无意义
+        if (r.status >= 500 && attempt < maxAttempts) {
+          lastErr = 'AI 网关 ' + r.status + '：' + t.slice(0, 160);
+          await new Promise(res => setTimeout(res, 1500));
+          continue;
+        }
+        return { error: 'AI 网关 ' + r.status + '：' + t.slice(0, 160) };
+      }
+      if (!isJson) return { error: '后端返回非 JSON（可能是旧版本或未部署 /api/ai/chat），请重新部署后端' };
+      const j = await r.json();
+      if (j.error) return { error: j.error };
+      const text = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+      if (text) return { text };
+      return { error: 'AI 返回格式异常：' + JSON.stringify(j).slice(0, 140) };
+    } catch (e) {
+      lastErr = e;
+      if (e && e.name === 'AbortError') {
+        // 超时：还剩次数就重试
+        if (attempt < maxAttempts) { await new Promise(res => setTimeout(res, 1500)); continue; }
+        return { error: 'AI 调用超时（>' + Math.round(timeoutMs / 1000) + 's）。Render 免费实例首次唤醒可能需要 30s，请稍后再试。后端地址：' + base };
+      }
+      // 网络错误：重试一次
+      if (attempt < maxAttempts) { await new Promise(res => setTimeout(res, 1500)); continue; }
+    }
   }
+  // 全部重试失败
+  const protocol = (typeof location !== 'undefined' && location.protocol) || '';
+  const online = (typeof navigator !== 'undefined' && 'onLine' in navigator) ? navigator.onLine : null;
+  console.error('[AI 调用失败]', { protocol, base, online, error: lastErr && lastErr.message });
+  let hint = '';
+  if (protocol === 'file:') {
+    hint = '⚠️ 检测到当前是 file:// 本地文件协议，浏览器很可能拦截了对外站 https:// 的 fetch。请改用部署好的 HTTPS 链接打开（不要双击本地 HTML）。';
+  } else if (online === false) {
+    hint = '⚠️ 浏览器报告当前离线。';
+  } else {
+    hint = '⚠️ 网络/拦截器/后端不可达，请检查后端地址、防火墙、广告拦截器。';
+  }
+  return { error: '调用失败：' + ((lastErr && lastErr.message) || lastErr) + '\n' + hint + '\n后端地址：' + base };
 }
 
 // 通用底部弹窗
@@ -4713,7 +4764,8 @@ function closeModal() {
 function openAISettings() {
   const p = appState.aiProvider;
   const html = `<div class="modal-title">🤖 AI 服务</div>
-    <div class="ai-tip">AI 密钥已由后端统一配置，无需在 App 内填写。默认使用智谱 GLM-4-Flash（永久免费）。你也可以指定其他已配置的服务商。</div>
+    <div class="ai-tip">AI 密钥已由后端统一配置，无需在 App 内填写。默认使用智谱 GLM-4-Flash（永久免费）。</div>
+    <div class="ai-tip" style="margin-top:-6px;color:var(--text-light);">已接入：① 学习模块「问 AI 巩固」② <b>智能大管家</b>对话（关键词未命中时调用）。</div>
     <div class="ai-field">
       <div class="ai-label">优先服务商</div>
       <div class="ai-seg">
@@ -4722,6 +4774,10 @@ function openAISettings() {
         <button class="ai-seg-btn ${p === 'deepseek' ? 'on' : ''}" onclick="setAIProvider('deepseek')">DeepSeek</button>
         <button class="ai-seg-btn ${p === 'doubao' ? 'on' : ''}" onclick="setAIProvider('doubao')">豆包</button>
       </div>
+    </div>
+    <div class="ai-field">
+      <div class="ai-label">当前后端地址</div>
+      <div style="font-size:12px;color:var(--text-light);word-break:break-all;">${escapeHtml(getApiBase())}</div>
     </div>
     <div class="modal-actions">
       <button class="modal-btn" onclick="closeModal()">知道了</button>
@@ -5972,19 +6028,69 @@ function sendMessage() {
   input.value = '';
 
   showTyping();
-  setTimeout(() => {
+  // 异步处理：先做关键词快速匹配，未命中再问 AI
+  (async () => {
+    const response = await processUserMessage(text);
     hideTyping();
-    const response = processAssistantMessage(text);
     addBotMessage(response.text);
-    
     // 执行联动动作
-    if (response.action) {
-      response.action();
-    }
-  }, 800 + Math.random() * 500);
+    if (response.action) response.action();
+  })();
 }
 
-// ===== 管家智能识别引擎 =====
+// ===== 用户消息处理：关键词硬匹配 → 命中即答；未命中走 AI =====
+async function processUserMessage(msg) {
+  const quick = processAssistantMessage(msg);
+  if (quick) return quick;
+  // 关键词未命中：调用 AI（带超时+重试，封装在 callAI 里）
+  const sys = buildButlerSystemPrompt();
+  const res = await callAI(sys, msg);
+  if (res.error) {
+    return { text: '🤖 AI 大管家暂时联系不上：' + res.error + '\n\n你可以试试直接问我："今日总览"、"今天学什么"、"穿搭建议"、"训练计划"、"自媒体选题"。' };
+  }
+  return { text: '🤖 ' + res.text };
+}
+
+// 把管家能调用的本地数据打包给 AI（让 AI 真正"懂"工作台）
+function buildButlerSystemPrompt() {
+  const todos = appState.todos || [];
+  const done = todos.filter(t => t.done).length;
+  const trained = (APP_DATA.module3 && APP_DATA.module3.currentWeek) ?
+    APP_DATA.module3.currentWeek.completedSessions + '/' + APP_DATA.module3.currentWeek.plannedSessions : '?';
+  const lesson = (APP_DATA.module1 && APP_DATA.module1.lessons) ?
+    APP_DATA.module1.lessons[(APP_DATA.module1.currentLesson || 0) % APP_DATA.module1.lessons.length] : null;
+  const reading = (appState.reading || []).slice(0, 3);
+  const recentStatus = (APP_DATA.recentStatus || []).slice(0, 5);
+  const outfit = (APP_DATA.module4 && APP_DATA.module4.outfits) ?
+    APP_DATA.module4.outfits[(APP_DATA.module4.currentOutfitIdx || 0) % APP_DATA.module4.outfits.length] : null;
+
+  return [
+    '你是雨婷的「智能大管家」，一个温柔、简洁、有条理的个人助理。回答简短（≤200 字），必要时给出行动建议。',
+    '',
+    '【当前工作台状态】',
+    `📋 待办：${done}/${todos.length} 已完成`,
+    `💪 本周训练：${trained} 次`,
+    `📚 今日学习：${lesson ? lesson.title + '（' + lesson.book + '）' : '未知'}`,
+    `👗 今日穿搭：${outfit ? outfit.title : '未知'}`,
+    `📖 正在读：${reading.map(r => r.title || r).join('、') || '无'}`,
+    `🗒 最近动态：${recentStatus.map(s => s.date + ' ' + s.content).join(' / ') || '无'}`,
+    '',
+    '【可用联动】',
+    '当用户说"酸痛/累了" → 调用 adjustWorkoutPlan(肌群)',
+    '当用户说"今天学什么" → 打开学习模块（showPage("module1")）',
+    '当用户说"今天穿什么" → 打开穿搭模块（showPage("module4")）',
+    '当用户说"自媒体/选题" → 打开自媒体模块（showPage("module5")）',
+    '当用户说"资讯/新闻" → 打开资讯模块（showPage("module2")）',
+    '当用户说"今日总览/状态" → 给出当前所有维度的进度',
+    '',
+    '【风格】',
+    '• 第二人称称呼用户为「雨婷」',
+    '• 用 emoji 但不超过 5 个',
+    '• 不重复工作台里已有的内容，除非用户主动问',
+  ].join('\n');
+}
+
+// 关键词快速匹配：命中返回结构化结果；不命中返回 null（交给 AI）
 function processAssistantMessage(msg) {
   const lower = msg.toLowerCase();
 
@@ -6096,10 +6202,8 @@ function processAssistantMessage(msg) {
     };
   }
 
-  // === 闲聊/其他 ===
-  return {
-    text: `我收到啦～作为你的智能大管家，我可以帮你：\n\n💪 健身管理 → "昨天练了肩，今天酸痛"\n📚 学习进度 → "今天学什么"\n👗 穿搭建议 → "今天穿什么"\n📱 自媒体选题 → "有什么好选题"\n📰 行业资讯 → "今日资讯"\n📊 今日总览 → "今日总览"\n\n随时告诉我你的需求，我会自动联动调整各模块计划！`
-  };
+  // === 闲聊/未识别关键词 → 交给 AI 大管家处理（不再硬编码敷衍回复） ===
+  return null;
 }
 
 // ===== 肌群识别 =====
