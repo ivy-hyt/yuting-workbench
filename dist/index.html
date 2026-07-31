@@ -1239,7 +1239,8 @@ body {
   transform: translateX(-50%);
   width: 100%;
   max-width: 430px;
-  height: 60px;
+  min-height: 60px;
+  height: auto;
   background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -1248,7 +1249,8 @@ body {
   align-items: stretch;
   justify-content: space-around;
   z-index: 100;
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+  box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -4354,6 +4356,16 @@ function saveReadingFreq(f) { saveJSON('yutingReadingFreq', f); }
 // ---- AI 服务商偏好 ----
 function loadAIProvider() { return loadJSON('yutingAIProvider', 'default'); }
 function saveAIProvider(p) { saveJSON('yutingAIProvider', p); }
+function loadWeightUnit() { return loadJSON('yutingWeightUnit', 'kg'); }
+function saveWeightUnit(u) { saveJSON('yutingWeightUnit', u); }
+function toDisplayWeight(kg, unit) {
+  if (!kg) return kg;
+  return unit === 'lb' ? Math.round(kg * 2.20462 * 10) / 10 : kg;
+}
+function toKg(value, unit) {
+  if (!value) return value;
+  return unit === 'lb' ? Math.round(parseFloat(value) / 2.20462 * 10) / 10 : parseFloat(value);
+}
 
 // 按日期种子的知识点索引（每天不同，跨年不重复）
 function getDailyKnowledgeIdx() {
@@ -5086,33 +5098,40 @@ function renderModule3() {
   const userHealth = getUserHealthData();
   const weightHistory = (userHealth && userHealth.weightHistory) ? userHealth.weightHistory : [];
   const bodyFatHistory = (userHealth && userHealth.bodyFatHistory) ? userHealth.bodyFatHistory : data.personalStats.bodyFatHistory;
-  const muscleGroupFrequency = (userHealth && userHealth.muscleGroupFrequency) ? userHealth.muscleGroupFrequency : data.personalStats.muscleGroupFrequency;
+
+  // 体重单位：kg / lb，用户可点单位切换（存储始终用 kg）
+  const weightUnit = loadWeightUnit();
 
   // 目标体重：用户设置过就用，否则默认 47kg
-  const weightGoal = (userHealth && userHealth.weightGoal) ? userHealth.weightGoal : 47;
-  const currentWeight = weightHistory.length > 0
+  const weightGoalKg = (userHealth && userHealth.weightGoal) ? userHealth.weightGoal : 47;
+  const currentWeightKg = weightHistory.length > 0
     ? weightHistory[weightHistory.length - 1].weight
     : (parseFloat(APP_DATA.profile.weight) || 0);
-  const firstWeight = weightHistory.length > 0 ? weightHistory[0].weight : currentWeight;
+  const firstWeightKg = weightHistory.length > 0 ? weightHistory[0].weight : currentWeightKg;
 
   let weightProgress = 0;
-  if (currentWeight && currentWeight <= weightGoal) {
+  if (currentWeightKg && currentWeightKg <= weightGoalKg) {
     weightProgress = 100;
-  } else if (firstWeight > weightGoal && currentWeight) {
-    weightProgress = Math.min(100, Math.max(0, Math.round((firstWeight - currentWeight) / (firstWeight - weightGoal) * 100)));
+  } else if (firstWeightKg > weightGoalKg && currentWeightKg) {
+    weightProgress = Math.min(100, Math.max(0, Math.round((firstWeightKg - currentWeightKg) / (firstWeightKg - weightGoalKg) * 100)));
   }
-  const diff = currentWeight ? Math.abs(currentWeight - weightGoal).toFixed(1) : '0.0';
+  const diffKg = currentWeightKg ? Math.abs(currentWeightKg - weightGoalKg) : 0;
+  const currentWeightDisp = currentWeightKg ? toDisplayWeight(currentWeightKg, weightUnit) : 0;
+  const weightGoalDisp = toDisplayWeight(weightGoalKg, weightUnit);
+  const diffDisp = toDisplayWeight(diffKg, weightUnit);
 
   const weightChartHtml = weightHistory.length > 0
     ? (() => {
-      const minW = Math.min(...weightHistory.map(w => w.weight)) - 0.5;
-      const maxW = Math.max(...weightHistory.map(w => w.weight)) + 0.5;
+      const weightsDisp = weightHistory.map(w => toDisplayWeight(w.weight, weightUnit));
+      const minW = Math.min(...weightsDisp) - 0.5;
+      const maxW = Math.max(...weightsDisp) + 0.5;
       const range = maxW - minW;
       return weightHistory.map((w, i) => {
-        const h = 20 + ((w.weight - minW) / range) * 60;
+        const disp = weightsDisp[i];
+        const h = 20 + ((disp - minW) / range) * 60;
         const isLast = i === weightHistory.length - 1;
         return `<div class="ps-weight-point">
-          <div class="ps-weight-val" style="color:${isLast ? 'var(--accent)' : 'var(--text-light)'};font-weight:${isLast ? '700' : '400'};">${w.weight}</div>
+          <div class="ps-weight-val" style="color:${isLast ? 'var(--accent)' : 'var(--text-light)'};font-weight:${isLast ? '700' : '400'};">${disp.toFixed(1)}</div>
           <div class="ps-weight-bar" style="height:${h}px;background:${isLast ? 'var(--accent)' : 'var(--accent-light)'};"></div>
           <div class="ps-weight-date">${w.date}</div>
         </div>`;
@@ -5124,24 +5143,24 @@ function renderModule3() {
   <div class="personal-stats-card weight-goal-card">
     <div class="wg-row">
       <div class="wg-item">
-        <div class="wg-num">${currentWeight ? currentWeight.toFixed(1) : '--'}</div>
-        <div class="wg-label">当前体重 kg</div>
+        <div class="wg-num">${currentWeightKg ? currentWeightDisp.toFixed(1) : '--'}</div>
+        <div class="wg-label" onclick="toggleWeightUnit()" style="cursor:pointer;text-decoration:underline;color:var(--accent-dark);">当前体重 ${weightUnit}</div>
       </div>
       <div class="wg-arrow">→</div>
       <div class="wg-item">
-        <div class="wg-num">${weightGoal.toFixed(1)}</div>
-        <div class="wg-label">目标体重 kg</div>
+        <div class="wg-num">${weightGoalDisp.toFixed(1)}</div>
+        <div class="wg-label" onclick="toggleWeightUnit()" style="cursor:pointer;text-decoration:underline;color:var(--accent-dark);">目标体重 ${weightUnit}</div>
       </div>
     </div>
     <div class="wg-progress-wrap">
       <div class="wg-progress-bar" style="width:${weightProgress}%;"></div>
     </div>
-    <div class="wg-status">${currentWeight ? (currentWeight > weightGoal ? '还差 ' + diff + ' kg，继续加油 💪' : '已达成目标 🎉') : '还没有记录体重，点击右下角记录'}</div>
+    <div class="wg-status">${currentWeightKg ? (currentWeightKg > weightGoalKg ? '还差 ' + diffDisp.toFixed(1) + ' ' + weightUnit + '，继续加油 💪' : '已达成目标 🎉') : '还没有记录体重，点击右下角记录'}</div>
     <div class="wg-actions">
       <button class="wg-btn primary" onclick="openHealthSyncModal()">📝 记录体重</button>
       <button class="wg-btn" onclick="editWeightGoal()">⚙️ 修改目标</button>
     </div>
-    <div class="wg-chart-title">📈 体重变化趋势</div>
+    <div class="wg-chart-title">📈 体重变化趋势（${weightUnit}）</div>
     <div class="ps-weight-chart wg-chart">${weightChartHtml}</div>
   </div>`;
   // 体脂率
@@ -5156,23 +5175,6 @@ function renderModule3() {
     });
   } else {
     html += '<div style="color:var(--text-light);font-size:13px;">暂无体脂数据</div>';
-  }
-  html += `</div>`;
-  // 肌群训练频率
-  html += `<div class="ps-section-title">💪 各肌群训练频率</div>`;
-  html += `<div class="ps-muscle-freq">`;
-  if (muscleGroupFrequency && muscleGroupFrequency.length > 0) {
-    const maxCount = Math.max(...muscleGroupFrequency.map(m => m.count));
-    muscleGroupFrequency.forEach(mg => {
-      const w = (mg.count / maxCount) * 100;
-      html += `<div class="ps-mf-row">
-        <div class="ps-mf-name">${mg.group}</div>
-        <div class="ps-mf-bar-wrap"><div class="ps-mf-bar" style="width:${w}%;">${mg.count}次</div></div>
-        <div class="ps-mf-last">上次：${mg.lastTrained}</div>
-      </div>`;
-    });
-  } else {
-    html += '<div style="color:var(--text-light);font-size:13px;">暂无训练频率数据</div>';
   }
   html += `</div>`;
   // 健康数据同步弹窗
@@ -6442,17 +6444,28 @@ function editWaterGoal() {
   showToast('目标已更新为 ' + goal + 'ml');
 }
 
+function toggleWeightUnit() {
+  const cur = loadWeightUnit();
+  const next = cur === 'kg' ? 'lb' : 'kg';
+  saveWeightUnit(next);
+  renderModule3();
+  showToast('已切换为 ' + next + ' 显示');
+}
+
 function editWeightGoal() {
   const ud = getUserHealthData() || {};
-  const cur = ud.weightGoal || 47;
-  const v = prompt('设置目标体重（kg）：', cur);
+  const curKg = ud.weightGoal || 47;
+  const unit = loadWeightUnit();
+  const curDisp = toDisplayWeight(curKg, unit);
+  const v = prompt('设置目标体重（' + unit + '）：', curDisp);
   if (v === null) return;
-  const goal = parseFloat(v);
-  if (!goal || goal <= 0) { showToast('目标体重无效'); return; }
-  ud.weightGoal = goal;
+  const goalDisp = parseFloat(v);
+  if (!goalDisp || goalDisp <= 0) { showToast('目标体重无效'); return; }
+  const goalKg = toKg(goalDisp, unit);
+  ud.weightGoal = goalKg;
   saveUserHealthData(ud);
   renderModule3();
-  showToast('目标体重已更新为 ' + goal + 'kg');
+  showToast('目标体重已更新为 ' + goalDisp.toFixed(1) + unit);
 }
 
 function getUserHealthData() {
@@ -6643,7 +6656,7 @@ function getHealthSyncModalHTML() {
             <div class="hs-form-title">⚖️ 身体数据</div>
             <div class="hs-form-row">
               <div class="hs-field">
-                <label>体重 (kg)</label>
+                <label>体重 (<span id="hsWeightUnit">kg</span>)</label>
                 <input type="number" id="hsWeight" placeholder="如 49.0" min="20" max="200" step="0.1">
               </div>
               <div class="hs-field">
@@ -6704,13 +6717,17 @@ function openHealthSyncModal() {
   const modal = document.getElementById('healthSyncModal');
   if (!modal) return;
   modal.style.display = 'flex';
+  // 同步单位显示
+  const unit = loadWeightUnit();
+  const unitEl = document.getElementById('hsWeightUnit');
+  if (unitEl) unitEl.textContent = unit;
   // 预填今日已有数据
   const ud = getUserHealthData();
   const today = new Date();
   const dateStr = (today.getMonth() + 1).toString().padStart(2, '0') + '-' + today.getDate().toString().padStart(2, '0');
   if (ud && ud.weightHistory) {
     const todayWeight = ud.weightHistory.find(w => w.date === dateStr);
-    if (todayWeight) document.getElementById('hsWeight').value = todayWeight.weight;
+    if (todayWeight) document.getElementById('hsWeight').value = toDisplayWeight(todayWeight.weight, unit).toFixed(1);
   }
   if (ud && ud.bodyFatHistory) {
     const todayBf = ud.bodyFatHistory.find(b => b.date === dateStr);
@@ -6735,6 +6752,7 @@ function closeHealthSyncModal() {
 function submitHealthData() {
   const today = new Date();
   const dateStr = (today.getMonth() + 1).toString().padStart(2, '0') + '-' + today.getDate().toString().padStart(2, '0');
+  const unit = loadWeightUnit();
 
   // 读取表单数据
   const weight = document.getElementById('hsWeight').value;
@@ -6747,7 +6765,6 @@ function submitHealthData() {
   let ud = getUserHealthData() || {
     weightHistory: [],
     bodyFatHistory: [],
-    muscleGroupFrequency: [],
     totalSessions: 0,
     totalDuration: 0,
     streak: 0,
@@ -6755,9 +6772,9 @@ function submitHealthData() {
     latest: {}
   };
 
-  // 添加体重记录
+  // 添加体重记录（按当前显示单位输入，统一存 kg）
   if (weight) {
-    const w = parseFloat(weight);
+    const w = toKg(weight, unit);
     // 替换今天的记录或新增
     const existingIdx = ud.weightHistory.findIndex(x => x.date === dateStr);
     if (existingIdx >= 0) {
@@ -6781,20 +6798,10 @@ function submitHealthData() {
     }
   }
 
-  // 添加运动记录
-  if (workoutType && workoutDuration) {
+  // 添加运动记录：支持只填一项也能保存
+  if (workoutType || workoutDuration) {
     ud.totalSessions = (ud.totalSessions || 0) + 1;
-    ud.totalDuration = (ud.totalDuration || 0) + parseInt(workoutDuration);
-    // 更新肌群训练频率
-    if (muscleGroup) {
-      const mgIdx = ud.muscleGroupFrequency.findIndex(m => m.group === muscleGroup);
-      if (mgIdx >= 0) {
-        ud.muscleGroupFrequency[mgIdx].count = (ud.muscleGroupFrequency[mgIdx].count || 0) + 1;
-        ud.muscleGroupFrequency[mgIdx].lastTrained = dateStr;
-      } else {
-        ud.muscleGroupFrequency.push({ group: muscleGroup, count: 1, lastTrained: dateStr });
-      }
-    }
+    ud.totalDuration = (ud.totalDuration || 0) + (parseInt(workoutDuration) || 0);
     // 更新连续打卡
     ud.streak = (ud.streak || 0) + 1;
   }
