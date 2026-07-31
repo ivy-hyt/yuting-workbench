@@ -66,7 +66,7 @@ jobs:
             -configuration Debug \
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
-            -derivedDataPath build \
+            CONFIGURATION_BUILD_DIR=build/Products/Debug-iphoneos \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_IDENTITY="" \
             DEVELOPMENT_TEAM=""
@@ -74,7 +74,7 @@ jobs:
       - name: 打包成未签名 IPA
         run: |
           cd ios/App
-          APP_PATH=$(find build/Build/Products/Debug-iphoneos -maxdepth 1 -name "App.app" | head -n1)
+          APP_PATH=$(find build/Products/Debug-iphoneos -maxdepth 1 -name "App.app" | head -n1)
           if [ -z "$APP_PATH" ]; then
             echo "❌ 未找到 App.app，编译可能失败，请查看上方 xcodebuild 日志"
             exit 1
