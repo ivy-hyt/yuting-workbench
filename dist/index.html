@@ -4356,16 +4356,17 @@ function saveReadingFreq(f) { saveJSON('yutingReadingFreq', f); }
 // ---- AI 服务商偏好 ----
 function loadAIProvider() { return loadJSON('yutingAIProvider', 'default'); }
 function saveAIProvider(p) { saveJSON('yutingAIProvider', p); }
-function loadWeightUnit() { return loadJSON('yutingWeightUnit', 'kg'); }
+function loadWeightUnit() { const u = loadJSON('yutingWeightUnit', 'kg'); return (u === 'kg' || u === 'jin') ? u : 'kg'; }
 function saveWeightUnit(u) { saveJSON('yutingWeightUnit', u); }
 function toDisplayWeight(kg, unit) {
   if (!kg) return kg;
-  return unit === 'lb' ? Math.round(kg * 2.20462 * 10) / 10 : kg;
+  return unit === 'jin' ? Math.round(kg * 2 * 10) / 10 : kg;
 }
 function toKg(value, unit) {
   if (!value) return value;
-  return unit === 'lb' ? Math.round(parseFloat(value) / 2.20462 * 10) / 10 : parseFloat(value);
+  return unit === 'jin' ? Math.round(parseFloat(value) / 2 * 10) / 10 : parseFloat(value);
 }
+function weightUnitLabel(u) { return u === 'jin' ? '斤' : 'kg'; }
 
 // 按日期种子的知识点索引（每天不同，跨年不重复）
 function getDailyKnowledgeIdx() {
@@ -5144,23 +5145,23 @@ function renderModule3() {
     <div class="wg-row">
       <div class="wg-item">
         <div class="wg-num">${currentWeightKg ? currentWeightDisp.toFixed(1) : '--'}</div>
-        <div class="wg-label" onclick="toggleWeightUnit()" style="cursor:pointer;text-decoration:underline;color:var(--accent-dark);">当前体重 ${weightUnit}</div>
+        <div class="wg-label" onclick="toggleWeightUnit()" style="cursor:pointer;text-decoration:underline;color:var(--accent-dark);">当前体重 ${weightUnitLabel(weightUnit)}</div>
       </div>
       <div class="wg-arrow">→</div>
       <div class="wg-item">
         <div class="wg-num">${weightGoalDisp.toFixed(1)}</div>
-        <div class="wg-label" onclick="toggleWeightUnit()" style="cursor:pointer;text-decoration:underline;color:var(--accent-dark);">目标体重 ${weightUnit}</div>
+        <div class="wg-label" onclick="toggleWeightUnit()" style="cursor:pointer;text-decoration:underline;color:var(--accent-dark);">目标体重 ${weightUnitLabel(weightUnit)}</div>
       </div>
     </div>
     <div class="wg-progress-wrap">
       <div class="wg-progress-bar" style="width:${weightProgress}%;"></div>
     </div>
-    <div class="wg-status">${currentWeightKg ? (currentWeightKg > weightGoalKg ? '还差 ' + diffDisp.toFixed(1) + ' ' + weightUnit + '，继续加油 💪' : '已达成目标 🎉') : '还没有记录体重，点击右下角记录'}</div>
+    <div class="wg-status">${currentWeightKg ? (currentWeightKg > weightGoalKg ? '还差 ' + diffDisp.toFixed(1) + ' ' + weightUnitLabel(weightUnit) + '，继续加油 💪' : '已达成目标 🎉') : '还没有记录体重，点击右下角记录'}</div>
     <div class="wg-actions">
       <button class="wg-btn primary" onclick="openHealthSyncModal()">📝 记录体重</button>
       <button class="wg-btn" onclick="editWeightGoal()">⚙️ 修改目标</button>
     </div>
-    <div class="wg-chart-title">📈 体重变化趋势（${weightUnit}）</div>
+    <div class="wg-chart-title">📈 体重变化趋势（${weightUnitLabel(weightUnit)}）</div>
     <div class="ps-weight-chart wg-chart">${weightChartHtml}</div>
   </div>`;
   // 体脂率
@@ -6446,10 +6447,10 @@ function editWaterGoal() {
 
 function toggleWeightUnit() {
   const cur = loadWeightUnit();
-  const next = cur === 'kg' ? 'lb' : 'kg';
+  const next = cur === 'kg' ? 'jin' : 'kg';
   saveWeightUnit(next);
   renderModule3();
-  showToast('已切换为 ' + next + ' 显示');
+  showToast('已切换为 ' + weightUnitLabel(next) + ' 显示');
 }
 
 function editWeightGoal() {
@@ -6457,7 +6458,7 @@ function editWeightGoal() {
   const curKg = ud.weightGoal || 47;
   const unit = loadWeightUnit();
   const curDisp = toDisplayWeight(curKg, unit);
-  const v = prompt('设置目标体重（' + unit + '）：', curDisp);
+  const v = prompt('设置目标体重（' + weightUnitLabel(unit) + '）：', curDisp);
   if (v === null) return;
   const goalDisp = parseFloat(v);
   if (!goalDisp || goalDisp <= 0) { showToast('目标体重无效'); return; }
@@ -6720,7 +6721,7 @@ function openHealthSyncModal() {
   // 同步单位显示
   const unit = loadWeightUnit();
   const unitEl = document.getElementById('hsWeightUnit');
-  if (unitEl) unitEl.textContent = unit;
+  if (unitEl) unitEl.textContent = weightUnitLabel(unit);
   // 预填今日已有数据
   const ud = getUserHealthData();
   const today = new Date();
