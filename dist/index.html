@@ -5060,16 +5060,105 @@ function computeReadingStats() {
 }
 
 // ===== 模块2：资讯简报 =====
-function renderModule2() {
-  const data = APP_DATA.module2;
+function getNewsFocus() { return loadJSON('yutingNewsFocus', '美食自媒体'); }
+function saveNewsFocus(f) { saveJSON('yutingNewsFocus', f); }
+function getTodayNewsKey() { return 'yutingNews_' + getTodayKey(); }
+function loadTodayNews() { return loadJSON(getTodayNewsKey(), null); }
+function saveTodayNews(data) { saveJSON(getTodayNewsKey(), data); }
+function clearTodayNews() { localStorage.removeItem(getTodayNewsKey()); }
+
+function getWeekdayCN(d) {
+  return ['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
+}
+function formatNewsDate(d) {
+  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 · ${getWeekdayCN(d)}`;
+}
+
+async function generateTodayNews() {
+  const container = document.getElementById('m2-content');
+  const dateObj = new Date();
+  const dateStr = formatNewsDate(dateObj);
+  const focus = getNewsFocus();
+
+  container.innerHTML = `<div class="news-loading" style="text-align:center;padding:40px 20px;color:var(--text-light);">
+    <div style="font-size:32px;margin-bottom:12px;">⏳</div>
+    <div>正在生成 ${dateStr} 的${focus}简报…</div>
+    <div style="font-size:12px;margin-top:8px;opacity:.7;">首次生成约需 5–15 秒</div>
+  </div>`;
+
+  const sys = `你是一位熟悉中国短视频/自媒体行业的内容研究员。请根据用户指定的日期和关注领域，生成一份"每日5分钟行业资讯简报"。
+要求：
+1. 内容要聚焦中国大陆当下的短视频、直播电商、内容创作行业，结合真实可考的趋势与政策动态（可基于公开信息合理推演）。
+2. 输出必须是严格合法的 JSON，不要 markdown 代码块，不要任何解释文字。
+3. JSON 结构如下：
+{
+  "subtitle": "今日 · 2026年8月3日 · 周一",
+  "readTime": "约4分钟",
+  "sections": [
+    {
+      "category": "🔥 核心热点",
+      "items": [
+        {"title": "标题（15字内）", "brief": "简要描述（50字内）", "insight": "对自媒体创作者的 actionable 洞察（60字内）"}
+      ]
+    },
+    {"category": "📈 趋势变化", ...},
+    {"category": "📋 政策/平台", ...},
+    {"category": "🎯 个人机会/风险", ...}
+  ]
+}
+4. 每个 category 必须保持上述 4 个标签（核心热点、趋势变化、政策/平台、个人机会/风险）。
+5. "个人机会/风险" 要直接给出针对该领域创作者的具体建议，避免空泛。
+6. 语言自然、专业，避免夸张标题党。`;
+
+  const user = `请生成 ${dateStr} 的"${focus}"行业资讯简报。当前关注领域：${focus}。`;
+
+  const res = await callAI(sys, user);
+  if (res.error) {
+    showToast('AI 生成失败：' + res.error);
+    renderModule2Fallback();
+    return;
+  }
+
+  let json;
+  try {
+    let text = res.text || '';
+    text = text.replace(/```json\s*/gi, '').replace(/```\s*$/gi, '').trim();
+    json = JSON.parse(text);
+  } catch (e) {
+    console.error('news parse error', e, res.text);
+    showToast('简报格式解析失败，已显示默认内容');
+    renderModule2Fallback();
+    return;
+  }
+
+  if (!json.sections || !Array.isArray(json.sections) || json.sections.length === 0) {
+    renderModule2Fallback();
+    return;
+  }
+
+  const colorMap = {
+    '🔥 核心热点': '#FF6B6B',
+    '📈 趋势变化': '#4ECDC4',
+    '📋 政策/平台': '#95E1D3',
+    '📋 政策要点': '#95E1D3',
+    '🎯 个人机会/风险': '#F38181'
+  };
+  json.sections.forEach(s => { s.color = colorMap[s.category] || '#999'; });
+  json.subtitle = json.subtitle || `今日 · ${dateStr}`;
+  json.readTime = json.readTime || '约4分钟';
+
+  saveTodayNews(json);
+  renderModule2Data(json);
+}
+
+function renderModule2Data(data) {
   const container = document.getElementById('m2-content');
   document.getElementById('m2-subtitle').textContent = `${data.subtitle} · 阅读时长${data.readTime}`;
-
   let html = '';
   data.sections.forEach(section => {
     html += `<div class="news-section">
       <span class="news-cat" style="background:${section.color}">${section.category}</span>`;
-    section.items.forEach(item => {
+    (section.items || []).forEach(item => {
       html += `<div class="news-item">
         <div class="news-title">${item.title}</div>
         <div class="news-brief">${item.brief}</div>
@@ -5078,14 +5167,45 @@ function renderModule2() {
     });
     html += '</div>';
   });
-
-  // 调整按钮
   html += `<div style="text-align:center;margin-top:8px;">
-    <button class="checkin-btn" style="background:var(--bg-soft);color:var(--text-secondary);font-size:13px;padding:10px;" 
-            onclick="showToast('已记录偏好，明日简报将侧重美食赛道方向')">⚙️ 调整资讯侧重点</button>
+    <button class="checkin-btn" style="background:var(--bg-soft);color:var(--text-secondary);font-size:13px;padding:10px;" onclick="regenerateTodayNews()">🔄 重新生成今日简报</button>
+    <button class="checkin-btn" style="background:var(--bg-soft);color:var(--text-secondary);font-size:13px;padding:10px;margin-left:8px;" onclick="showNewsFocusDialog()">⚙️ 调整资讯侧重点</button>
   </div>`;
-
   container.innerHTML = html;
+}
+
+function renderModule2Fallback() {
+  const data = JSON.parse(JSON.stringify(APP_DATA.module2));
+  data.subtitle = `今日 · ${formatNewsDate(new Date())}`;
+  renderModule2Data(data);
+}
+
+function renderModule2() {
+  const cached = loadTodayNews();
+  if (cached) {
+    renderModule2Data(cached);
+  } else {
+    generateTodayNews();
+  }
+}
+
+function regenerateTodayNews() {
+  clearTodayNews();
+  generateTodayNews();
+}
+
+function showNewsFocusDialog() {
+  const cur = getNewsFocus();
+  const opts = ['美食自媒体', '健身塑形', '穿搭时尚', '综合'];
+  const list = opts.map(o => `${o === cur ? '✓ ' : ''}${o}`).join('\n');
+  const v = prompt(`选择资讯侧重点（当前：${cur}）：\n${list}\n\n也可以直接输入其他方向：`, cur);
+  if (!v) return;
+  const focus = v.replace(/^[✓\s]+/, '').trim();
+  if (!focus) return;
+  saveNewsFocus(focus);
+  clearTodayNews();
+  generateTodayNews();
+  showToast('侧重点已更新为：' + focus);
 }
 
 // ===== 模块3：健身 =====
