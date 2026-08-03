@@ -5060,7 +5060,7 @@ function computeReadingStats() {
 }
 
 // ===== 模块2：资讯简报 =====
-function getNewsFocus() { return loadJSON('yutingNewsFocus', '美食自媒体'); }
+function getNewsFocus() { return loadJSON('yutingNewsFocus', '全行业综合'); }
 function saveNewsFocus(f) { saveJSON('yutingNewsFocus', f); }
 function getTodayNewsKey() { return 'yutingNews_' + getTodayKey(); }
 function loadTodayNews() { return loadJSON(getTodayNewsKey(), null); }
@@ -5086,31 +5086,34 @@ async function generateTodayNews() {
     <div style="font-size:12px;margin-top:8px;opacity:.7;">首次生成约需 5–15 秒</div>
   </div>`;
 
-  const sys = `你是一位熟悉中国短视频/自媒体行业的内容研究员。请根据用户指定的日期和关注领域，生成一份"每日5分钟行业资讯简报"。
+  const isAll = focus === '全行业综合';
+  const sys = `你是一位熟悉中国大陆宏观与产业动态的内容研究员。请根据用户指定的日期和关注的行业范围，生成一份"每日行业资讯简报"。
 要求：
-1. 内容要聚焦中国大陆当下的短视频、直播电商、内容创作行业，结合真实可考的趋势与政策动态（可基于公开信息合理推演）。
+1. 内容要聚焦中国大陆当下的真实产业动态、政策变化、市场趋势与公司大事（可基于公开信息合理推演，避免编造具体未发生的事件）。
 2. 输出必须是严格合法的 JSON，不要 markdown 代码块，不要任何解释文字。
 3. JSON 结构如下：
 {
   "subtitle": "今日 · 2026年8月3日 · 周一",
-  "readTime": "约4分钟",
+  "readTime": "约5分钟",
   "sections": [
     {
-      "category": "🔥 核心热点",
+      "category": "💻 科技与AI",
       "items": [
-        {"title": "标题（15字内）", "brief": "简要描述（50字内）", "insight": "对自媒体创作者的 actionable 洞察（60字内）"}
+        {"title": "标题（15字内）", "brief": "简要描述（50字内）", "insight": "对普通人的 actionable 启发（60字内）"}
       ]
-    },
-    {"category": "📈 趋势变化", ...},
-    {"category": "📋 政策/平台", ...},
-    {"category": "🎯 个人机会/风险", ...}
+    }
   ]
 }
-4. 每个 category 必须保持上述 4 个标签（核心热点、趋势变化、政策/平台、个人机会/风险）。
-5. "个人机会/风险" 要直接给出针对该领域创作者的具体建议，避免空泛。
-6. 语言自然、专业，避免夸张标题党。`;
+4. 每个 section 的 category 必须是「emoji + 行业名」形式，每个 section 含 2-3 条 items。
+5. ${isAll
+    ? '请覆盖以下主要行业，每个行业一个 section（顺序尽量一致）：💻 科技与AI、🛒 大消费与零售、🏥 医疗健康、💰 金融与宏观、🎬 文娱与自媒体、🏛️ 政策与监管。'
+    : `请只围绕「${focus}」这一个行业生成 3-4 条 items，category 写为「相关emoji + ${focus}」即可（可拆成 1-2 个相关 section）。`}
+6. "insight" 要直接给出对普通人/从业者的具体启发或风险提醒，避免空泛。
+7. 语言自然、专业，避免夸张标题党。`;
 
-  const user = `请生成 ${dateStr} 的"${focus}"行业资讯简报。当前关注领域：${focus}。`;
+  const user = isAll
+    ? `请生成 ${dateStr} 的"全行业每日资讯简报"，覆盖科技、消费、医疗、金融、文娱、政策等多个行业。`
+    : `请生成 ${dateStr} 的"${focus}"行业资讯简报。当前关注行业：${focus}。`;
 
   const res = await callAI(sys, user);
   if (res.error) {
@@ -5136,16 +5139,10 @@ async function generateTodayNews() {
     return;
   }
 
-  const colorMap = {
-    '🔥 核心热点': '#FF6B6B',
-    '📈 趋势变化': '#4ECDC4',
-    '📋 政策/平台': '#95E1D3',
-    '📋 政策要点': '#95E1D3',
-    '🎯 个人机会/风险': '#F38181'
-  };
-  json.sections.forEach(s => { s.color = colorMap[s.category] || '#999'; });
+  const palette = ['#FF6B6B', '#4ECDC4', '#95E1D3', '#FFD93D', '#6C5CE7', '#F38181', '#54A0FF', '#1DD1A1'];
+  json.sections.forEach((s, i) => { s.color = palette[i % palette.length]; });
   json.subtitle = json.subtitle || `今日 · ${dateStr}`;
-  json.readTime = json.readTime || '约4分钟';
+  json.readTime = json.readTime || '约5分钟';
 
   saveTodayNews(json);
   renderModule2Data(json);
@@ -5196,16 +5193,16 @@ function regenerateTodayNews() {
 
 function showNewsFocusDialog() {
   const cur = getNewsFocus();
-  const opts = ['美食自媒体', '健身塑形', '穿搭时尚', '综合'];
+  const opts = ['全行业综合', '科技与AI', '大消费与零售', '医疗健康', '金融与宏观', '文娱与自媒体', '政策与监管'];
   const list = opts.map(o => `${o === cur ? '✓ ' : ''}${o}`).join('\n');
-  const v = prompt(`选择资讯侧重点（当前：${cur}）：\n${list}\n\n也可以直接输入其他方向：`, cur);
+  const v = prompt(`选择资讯行业范围（当前：${cur}）：\n${list}\n\n也可以直接输入其他行业名：`, cur);
   if (!v) return;
   const focus = v.replace(/^[✓\s]+/, '').trim();
   if (!focus) return;
   saveNewsFocus(focus);
   clearTodayNews();
   generateTodayNews();
-  showToast('侧重点已更新为：' + focus);
+  showToast('行业范围已更新为：' + focus);
 }
 
 // ===== 模块3：健身 =====
