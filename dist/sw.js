@@ -1,5 +1,5 @@
 // 雨婷工作台 Service Worker — 离线缓存
-const CACHE_NAME = 'yuting-workbench-v13';
+const CACHE_NAME = 'yuting-workbench-v14';
 const ASSETS = [
   './',
   './index.html',

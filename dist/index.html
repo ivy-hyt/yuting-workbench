@@ -5066,6 +5066,8 @@ function getTodayNewsKey() { return 'yutingNews_' + getTodayKey(); }
 function loadTodayNews() { return loadJSON(getTodayNewsKey(), null); }
 function saveTodayNews(data) { saveJSON(getTodayNewsKey(), data); }
 function clearTodayNews() { localStorage.removeItem(getTodayNewsKey()); }
+// 简报结构版本：代码/ prompt 有重大调整时 +1，使当天旧缓存自动失效、强制重生成
+const NEWS_SCHEMA_VERSION = 2;
 
 function getWeekdayCN(d) {
   return ['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
@@ -5144,6 +5146,8 @@ async function generateTodayNews() {
   json.subtitle = json.subtitle || `今日 · ${dateStr}`;
   json.readTime = json.readTime || '约5分钟';
 
+  json.version = NEWS_SCHEMA_VERSION;
+  json.generatedAt = Date.now();
   saveTodayNews(json);
   renderModule2Data(json);
 }
@@ -5168,6 +5172,8 @@ function renderModule2Data(data) {
     <button class="checkin-btn" style="background:var(--bg-soft);color:var(--text-secondary);font-size:13px;padding:10px;" onclick="regenerateTodayNews()">🔄 重新生成今日简报</button>
     <button class="checkin-btn" style="background:var(--bg-soft);color:var(--text-secondary);font-size:13px;padding:10px;margin-left:8px;" onclick="showNewsFocusDialog()">⚙️ 调整资讯侧重点</button>
   </div>`;
+  const genTime = data.generatedAt ? new Date(data.generatedAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : '';
+  html += `<div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text-light);">🕒 ${genTime ? '生成于 ' + genTime + ' · ' : ''}每天自动更新，可点上方按钮手动刷新</div>`;
   container.innerHTML = html;
 }
 
@@ -5179,7 +5185,7 @@ function renderModule2Fallback() {
 
 function renderModule2() {
   const cached = loadTodayNews();
-  if (cached) {
+  if (cached && cached.version === NEWS_SCHEMA_VERSION) {
     renderModule2Data(cached);
   } else {
     generateTodayNews();
