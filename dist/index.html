@@ -4263,7 +4263,8 @@ let appState = {
   chatHistory: [],
   trainedMuscles: [],
   currentKnowledgeIdx: 0,
-  weightChartRange: '1m', // 体重趋势图时间范围：'7d' | '1m' | '1y'
+  weightChartRange: '1m',
+  todayKnowledge: null, // AI每日生成的新知识点（优先显示）
   selectedColors: [],
   weatherData: null,
   // 模块3：肌群多选
@@ -4396,6 +4397,35 @@ function getDailyKnowledgeIdx() {
   return dayOfYear % pool.length;
 }
 
+// ===== 每日知识点缓存（AI生成，按日期） =====
+const KNOWLEDGE_SCHEMA_VERSION = 1;
+function getTodayKnowledgeKey() { return 'yutingKnowledge_' + getTodayKey(); }
+function loadTodayKnowledge() {
+  const cached = loadJSON(getTodayKnowledgeKey(), null);
+  if (cached && cached.version === KNOWLEDGE_SCHEMA_VERSION) return cached.data;
+  return null;
+}
+function saveTodayKnowledge(data) {
+  saveJSON(getTodayKnowledgeKey(), { version: KNOWLEDGE_SCHEMA_VERSION, data });
+}
+
+async function generateTodayKnowledge() {
+  const sys = '你是中文社科知识编辑。请生成一个"今日知识点"，覆盖社会心理学、人性规律、沟通逻辑、社会学等方向。只输出合法JSON，不要markdown代码块，不要任何额外文字：';
+  const user = '{"topic":"主题名（带emoji）","source":"来源书名第X章","content":["【核心概念】...","【底层逻辑】...","【现实映射】...","【行动启示】..."],"questions":["...","...","..."]}\n\n要求：\n1. 面向25岁女性职场人，结合自媒体运营场景\n2. 每天不同主题，避免重复常见概念（如不从众效应、旁观者效应、互惠原理、非暴力沟通、差序格局、沉没成本中选取）\n3. 内容有深度且实用，300字左右\n4. 思考题要与自媒体/职场/社交相关\n5. 必须输出合法JSON';
+  try {
+    const text = await callAI(sys, user);
+    const json = JSON.parse(text);
+    if (!json.topic || !json.source || !Array.isArray(json.content) || !Array.isArray(json.questions)) {
+      throw new Error('格式不完整');
+    }
+    saveTodayKnowledge(json);
+    return json;
+  } catch (e) {
+    console.error('generateTodayKnowledge failed:', e);
+    return null;
+  }
+}
+
 // ===== 初始化 =====
 function init() {
   initDate();
@@ -4406,6 +4436,7 @@ function init() {
   appState.readingFreq = loadReadingFreq();
   appState.aiProvider = loadAIProvider();
   appState.currentKnowledgeIdx = getDailyKnowledgeIdx();
+  appState.todayKnowledge = loadTodayKnowledge();
   renderQuickStats();
   renderModuleGrid();
   renderTodos();
@@ -4462,13 +4493,21 @@ function renderQuickStats() {
   const weekCount = getWeekCheckinCount();
   const planned = APP_DATA.module3.currentWeek.plannedSessions;
   const checked = isCheckedInToday();
+  // 从健康数据读取最新体脂率和体重
+  const health = getUserHealthData();
+  const latestBodyFat = health.bodyFat || null;
+  const latestWeight = health.weightHistory && health.weightHistory.length > 0
+    ? health.weightHistory[health.weightHistory.length - 1].weight
+    : null;
+  const weightUnit = loadWeightUnit();
+  const weightDisp = latestWeight ? toDisplayWeight(latestWeight, weightUnit) : null;
   stats.innerHTML = `
     <div class="quick-stat">
-      <div class="stat-num">23%</div>
+      <div class="stat-num">${latestBodyFat !== null ? latestBodyFat + '%' : '--'}</div>
       <div class="stat-label">体脂率</div>
     </div>
     <div class="quick-stat">
-      <div class="stat-num">49kg</div>
+      <div class="stat-num">${weightDisp !== null ? weightDisp.toFixed(1) + weightUnitLabel(weightUnit) : '--'}</div>
       <div class="stat-label">体重</div>
     </div>
     <div class="quick-stat">
@@ -4622,17 +4661,28 @@ function renderModule1() {
   const data = APP_DATA.module1;
   const container = document.getElementById('m1-content');
 
+  // 如果今天还没有AI生成的知识点，后台异步生成
+  if (!appState.todayKnowledge) {
+    generateTodayKnowledge().then(k => {
+      if (k) {
+        appState.todayKnowledge = k;
+        renderModule1();
+      }
+    });
+  }
+
   let html = '';
 
-  // 今日课程（从知识点池中取当前索引）
+  // 今日课程：优先用AI每日生成的新知识点，没有则回退到硬编码池子
   const pool = data.knowledgePool;
-  const lesson = pool[appState.currentKnowledgeIdx];
+  const lesson = appState.todayKnowledge || pool[appState.currentKnowledgeIdx];
+  const isAIGenerated = !!appState.todayKnowledge;
 
   html += `
     <div class="lesson-card">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
         <div style="flex:1;">
-          <div class="lesson-topic">📖 今日知识点：${lesson.topic}</div>
+          <div class="lesson-topic">📖 今日知识点：${lesson.topic} ${isAIGenerated ? '<span style="font-size:11px;background:var(--accent-light);color:var(--accent-dark);padding:1px 6px;border-radius:8px;margin-left:4px;">AI生成</span>' : ''}</div>
           <div class="lesson-source">来源：${lesson.source}</div>
         </div>
         <button class="change-btn" onclick="changeKnowledgePoint()">
@@ -4659,7 +4709,7 @@ function renderModule1() {
           </div>
         </div>
       </div>
-      <div class="lesson-hint">💡 今日知识点第 ${appState.currentKnowledgeIdx + 1}/${pool.length} 个（每天自动轮换），点"换一下"可看其它</div>
+      <div class="lesson-hint">💡 ${isAIGenerated ? '今日知识点由 AI 实时生成，每天不重样' : `今日知识点第 ${appState.currentKnowledgeIdx + 1}/${pool.length} 个（每天自动轮换），点"换一下"可看其它`}</div>
     </div>
   `;
 
@@ -4808,10 +4858,18 @@ function refreshReadingAnalysis() {
 
 function changeKnowledgePoint() {
   const pool = APP_DATA.module1.knowledgePool;
-  appState.currentKnowledgeIdx = (appState.currentKnowledgeIdx + 1) % pool.length;
-  appState.knowledgeManual = true;
-  renderModule1();
-  showToast(`已切换至：${pool[appState.currentKnowledgeIdx].topic}`);
+  // 如果当前是AI生成的，切回硬编码池子；否则在池子里轮播
+  if (appState.todayKnowledge) {
+    appState.todayKnowledge = null;
+    appState.knowledgeManual = true;
+    renderModule1();
+    showToast('已切换至经典知识点池');
+  } else {
+    appState.currentKnowledgeIdx = (appState.currentKnowledgeIdx + 1) % pool.length;
+    appState.knowledgeManual = true;
+    renderModule1();
+    showToast(`已切换至：${pool[appState.currentKnowledgeIdx].topic}`);
+  }
   document.getElementById('m1-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -4938,7 +4996,8 @@ function setAIProvider(p) { appState.aiProvider = p; saveAIProvider(p); openAISe
 
 // 思考巩固题 → AI
 function askAIQuestion(i) {
-  const lesson = APP_DATA.module1.knowledgePool[appState.currentKnowledgeIdx];
+  const pool = APP_DATA.module1.knowledgePool;
+  const lesson = appState.todayKnowledge || pool[appState.currentKnowledgeIdx];
   const q = lesson.questions[i];
   sendAIMessage(`请结合知识点《${lesson.topic}》（来源：${lesson.source}），帮我深入拆解这个问题：${q}`);
 }
