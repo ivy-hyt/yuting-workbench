@@ -5067,7 +5067,7 @@ function loadTodayNews() { return loadJSON(getTodayNewsKey(), null); }
 function saveTodayNews(data) { saveJSON(getTodayNewsKey(), data); }
 function clearTodayNews() { localStorage.removeItem(getTodayNewsKey()); }
 // 简报结构版本：代码/ prompt 有重大调整时 +1，使当天旧缓存自动失效、强制重生成
-const NEWS_SCHEMA_VERSION = 2;
+const NEWS_SCHEMA_VERSION = 3;
 
 function getWeekdayCN(d) {
   return ['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
@@ -5089,35 +5089,18 @@ async function generateTodayNews() {
   </div>`;
 
   const isAll = focus === '全行业综合';
-  const sys = `你是一位熟悉中国大陆宏观与产业动态的内容研究员。请根据用户指定的日期和关注的行业范围，生成一份"每日行业资讯简报"。
-要求：
-1. 内容要聚焦中国大陆当下的真实产业动态、政策变化、市场趋势与公司大事（可基于公开信息合理推演，避免编造具体未发生的事件）。
-2. 输出必须是严格合法的 JSON，不要 markdown 代码块，不要任何解释文字。
-3. JSON 结构如下：
-{
-  "subtitle": "今日 · 2026年8月3日 · 周一",
-  "readTime": "约5分钟",
-  "sections": [
-    {
-      "category": "💻 科技与AI",
-      "items": [
-        {"title": "标题（15字内）", "brief": "简要描述（50字内）", "insight": "对普通人的 actionable 启发（60字内）"}
-      ]
-    }
-  ]
-}
-4. 每个 section 的 category 必须是「emoji + 行业名」形式，每个 section 含 2-3 条 items。
-5. ${isAll
-    ? '请覆盖以下主要行业，每个行业一个 section（顺序尽量一致）：💻 科技与AI、🛒 大消费与零售、🏥 医疗健康、💰 金融与宏观、🎬 文娱与自媒体、🏛️ 政策与监管。'
-    : `请只围绕「${focus}」这一个行业生成 3-4 条 items，category 写为「相关emoji + ${focus}」即可（可拆成 1-2 个相关 section）。`}
-6. "insight" 要直接给出对普通人/从业者的具体启发或风险提醒，避免空泛。
-7. 语言自然、专业，避免夸张标题党。`;
+  const sys = `你是中文产业资讯编辑。生成"每日行业资讯简报"，只输出合法JSON，不要markdown代码块，不要任何解释文字。
+JSON结构：{"subtitle":"今日 · 日期 · 周X","readTime":"约5分钟","sections":[{"category":"emoji+行业名","items":[{"title":"15字内标题","brief":"50字内简述","insight":"60字内对普通人的启发"}]}]}
+${isAll
+    ? '覆盖6个行业，每行业2条items，顺序一致：💻科技与AI、🛒大消费与零售、🏥医疗健康、💰金融与宏观、🎬文娱与自媒体、🏛️政策与监管。'
+    : `只围绕「${focus}」生成，2-3条items，category为「emoji+${focus}」。`}
+内容基于中国大陆近期真实产业/政策动态合理推演，专业自然，不标题党。`;
 
   const user = isAll
-    ? `请生成 ${dateStr} 的"全行业每日资讯简报"，覆盖科技、消费、医疗、金融、文娱、政策等多个行业。`
-    : `请生成 ${dateStr} 的"${focus}"行业资讯简报。当前关注行业：${focus}。`;
+    ? `生成 ${dateStr} 的全行业每日资讯简报，6个行业各2条。`
+    : `生成 ${dateStr} 的"${focus}"行业资讯简报。`;
 
-  const res = await callAI(sys, user);
+  const res = await callAI(sys, user, { timeoutMs: 50000, maxAttempts: 2 });
   if (res.error) {
     showToast('AI 生成失败：' + res.error);
     renderModule2Fallback();
