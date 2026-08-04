@@ -4264,7 +4264,7 @@ let appState = {
   trainedMuscles: [],
   currentKnowledgeIdx: 0,
   weightChartRange: '1m',
-  todayKnowledge: null, // AI每日生成的新知识点（优先显示）
+  todayKnowledgeList: null, // AI每日生成的3条知识点数组 [{topic,source,content,questions},...]
   selectedColors: [],
   weatherData: null,
   // 模块3：肌群多选
@@ -4397,29 +4397,39 @@ function getDailyKnowledgeIdx() {
   return dayOfYear % pool.length;
 }
 
-// ===== 每日知识点缓存（AI生成，按日期） =====
-const KNOWLEDGE_SCHEMA_VERSION = 1;
+// ===== 每日知识点缓存（AI生成3条，按日期） =====
+const KNOWLEDGE_SCHEMA_VERSION = 2;
 function getTodayKnowledgeKey() { return 'yutingKnowledge_' + getTodayKey(); }
 function loadTodayKnowledge() {
   const cached = loadJSON(getTodayKnowledgeKey(), null);
-  if (cached && cached.version === KNOWLEDGE_SCHEMA_VERSION) return cached.data;
+  if (cached && cached.version === KNOWLEDGE_SCHEMA_VERSION && Array.isArray(cached.data) && cached.data.length > 0) return cached.data;
   return null;
 }
-function saveTodayKnowledge(data) {
-  saveJSON(getTodayKnowledgeKey(), { version: KNOWLEDGE_SCHEMA_VERSION, data });
+function saveTodayKnowledge(list) {
+  if (!Array.isArray(list)) return;
+  saveJSON(getTodayKnowledgeKey(), { version: KNOWLEDGE_SCHEMA_VERSION, data: list });
 }
 
 async function generateTodayKnowledge() {
-  const sys = '你是中文社科知识编辑。请生成一个"今日知识点"，覆盖社会心理学、人性规律、沟通逻辑、社会学等方向。只输出合法JSON，不要markdown代码块，不要任何额外文字：';
-  const user = '{"topic":"主题名（带emoji）","source":"来源书名第X章","content":["【核心概念】...","【底层逻辑】...","【现实映射】...","【行动启示】..."],"questions":["...","...","..."]}\n\n要求：\n1. 面向25岁女性职场人，结合自媒体运营场景\n2. 每天不同主题，避免重复常见概念（如不从众效应、旁观者效应、互惠原理、非暴力沟通、差序格局、沉没成本中选取）\n3. 内容有深度且实用，300字左右\n4. 思考题要与自媒体/职场/社交相关\n5. 必须输出合法JSON';
+  const sys = '你是中文社科知识编辑。请生成今日3条知识点，覆盖社会心理学、人性规律、沟通逻辑、社会学等方向。只输出合法JSON，不要markdown代码块，不要任何额外文字：';
+  const user = '{"knowledge":[{"topic":"主题名（带emoji）","source":"来源书名第X章","content":["【核心概念】...","【底层逻辑】...","【现实映射】...","【行动启示】..."],"questions":["...","...","..."]},{"topic":"...",...},{"topic":"...",...}]}\n\n要求：\n1. 面向25岁女性职场人，结合自媒体运营场景\n2. 每天3条不同主题，避免重复常见概念（如不从众效应、旁观者效应、互惠原理、非暴力沟通、差序格局、沉没成本中选取）\n3. 每条内容有深度且实用，250-350字\n4. 思考题要与自媒体/职场/社交相关\n5. 必须输出合法JSON，knowledge数组长度严格为3';
   try {
-    const text = await callAI(sys, user);
+    const res = await callAI(sys, user, { timeoutMs: 50000, maxAttempts: 2 });
+    if (res.error) throw new Error(res.error);
+    let text = res.text || '';
+    text = text.replace(/```json\s*/gi, '').replace(/```\s*$/gi, '').trim();
     const json = JSON.parse(text);
-    if (!json.topic || !json.source || !Array.isArray(json.content) || !Array.isArray(json.questions)) {
+    if (!json.knowledge || !Array.isArray(json.knowledge) || json.knowledge.length < 1) {
       throw new Error('格式不完整');
     }
-    saveTodayKnowledge(json);
-    return json;
+    const list = json.knowledge.slice(0, 3);
+    for (const k of list) {
+      if (!k.topic || !k.source || !Array.isArray(k.content) || !Array.isArray(k.questions)) {
+        throw new Error('单条格式不完整');
+      }
+    }
+    saveTodayKnowledge(list);
+    return list;
   } catch (e) {
     console.error('generateTodayKnowledge failed:', e);
     return null;
@@ -4435,8 +4445,8 @@ function init() {
   appState.reading = loadReading();
   appState.readingFreq = loadReadingFreq();
   appState.aiProvider = loadAIProvider();
-  appState.currentKnowledgeIdx = getDailyKnowledgeIdx();
-  appState.todayKnowledge = loadTodayKnowledge();
+  appState.currentKnowledgeIdx = 0;
+  appState.todayKnowledgeList = loadTodayKnowledge();
   renderQuickStats();
   renderModuleGrid();
   renderTodos();
@@ -4452,9 +4462,12 @@ function init() {
   addBotMessage('雨婷你好，工作台已就绪 ✅\n\n我是你的智能大管家，可以随时和我沟通。试试告诉我：\n• "昨日上肢训练后肌肉酸痛"\n• "今天不想练腿，换个计划"\n• "今天学了什么新内容"\n\n我会自动调整各模块计划！');
   // PWA：注册离线缓存
   registerServiceWorker();
-  // 从云端同步健康数据（跨设备），有变化则重新渲染健身模块
+  // 从云端同步健康数据（跨设备），有变化则重新渲染
   syncHealthFromCloud().then(changed => {
-    if (changed) renderModule3();
+    if (changed) {
+      renderModule3();
+      renderQuickStats();
+    }
   });
 
   // 华为运动健康授权回调（?hw=authorized）→ 自动拉取数据
@@ -4494,9 +4507,13 @@ function renderQuickStats() {
   const planned = APP_DATA.module3.currentWeek.plannedSessions;
   const checked = isCheckedInToday();
   // 从健康数据读取最新体脂率和体重
-  const health = getUserHealthData();
-  const latestBodyFat = health.bodyFat || null;
-  const latestWeight = health.weightHistory && health.weightHistory.length > 0
+  const health = getUserHealthData() || {};
+  // 体脂率从 bodyFatHistory 数组读取最新值
+  const latestBodyFat = (health.bodyFatHistory && health.bodyFatHistory.length > 0)
+    ? health.bodyFatHistory[health.bodyFatHistory.length - 1].value
+    : (health.bodyFat || null);
+  // 体重从 weightHistory 数组读取最新值
+  const latestWeight = (health.weightHistory && health.weightHistory.length > 0)
     ? health.weightHistory[health.weightHistory.length - 1].weight
     : null;
   const weightUnit = loadWeightUnit();
@@ -4661,11 +4678,12 @@ function renderModule1() {
   const data = APP_DATA.module1;
   const container = document.getElementById('m1-content');
 
-  // 如果今天还没有AI生成的知识点，后台异步生成
-  if (!appState.todayKnowledge) {
-    generateTodayKnowledge().then(k => {
-      if (k) {
-        appState.todayKnowledge = k;
+  // 如果今天还没有AI生成的知识点列表，后台异步生成
+  if (!appState.todayKnowledgeList) {
+    generateTodayKnowledge().then(list => {
+      if (list && list.length > 0) {
+        appState.todayKnowledgeList = list;
+        appState.currentKnowledgeIdx = 0;
         renderModule1();
       }
     });
@@ -4673,10 +4691,12 @@ function renderModule1() {
 
   let html = '';
 
-  // 今日课程：优先用AI每日生成的新知识点，没有则回退到硬编码池子
+  // 今日课程：优先用AI每日生成的3条知识点，没有则回退到硬编码池子
   const pool = data.knowledgePool;
-  const lesson = appState.todayKnowledge || pool[appState.currentKnowledgeIdx];
-  const isAIGenerated = !!appState.todayKnowledge;
+  const list = appState.todayKnowledgeList;
+  const lesson = (list && list[appState.currentKnowledgeIdx]) || pool[appState.currentKnowledgeIdx % pool.length];
+  const isAIGenerated = !!(list && list.length > 0);
+  const total = isAIGenerated ? list.length : pool.length;
 
   html += `
     <div class="lesson-card">
@@ -4709,7 +4729,7 @@ function renderModule1() {
           </div>
         </div>
       </div>
-      <div class="lesson-hint">💡 ${isAIGenerated ? '今日知识点由 AI 实时生成，每天不重样' : `今日知识点第 ${appState.currentKnowledgeIdx + 1}/${pool.length} 个（每天自动轮换），点"换一下"可看其它`}</div>
+      <div class="lesson-hint">💡 ${isAIGenerated ? `今日第 ${appState.currentKnowledgeIdx + 1}/${total} 条知识点（每天3条不重样）` : `今日知识点第 ${appState.currentKnowledgeIdx + 1}/${total} 个（每天自动轮换），点"换一下"可看其它`}</div>
     </div>
   `;
 
@@ -4858,18 +4878,13 @@ function refreshReadingAnalysis() {
 
 function changeKnowledgePoint() {
   const pool = APP_DATA.module1.knowledgePool;
-  // 如果当前是AI生成的，切回硬编码池子；否则在池子里轮播
-  if (appState.todayKnowledge) {
-    appState.todayKnowledge = null;
-    appState.knowledgeManual = true;
-    renderModule1();
-    showToast('已切换至经典知识点池');
-  } else {
-    appState.currentKnowledgeIdx = (appState.currentKnowledgeIdx + 1) % pool.length;
-    appState.knowledgeManual = true;
-    renderModule1();
-    showToast(`已切换至：${pool[appState.currentKnowledgeIdx].topic}`);
-  }
+  const list = appState.todayKnowledgeList;
+  const total = (list && list.length > 0) ? list.length : pool.length;
+  appState.currentKnowledgeIdx = (appState.currentKnowledgeIdx + 1) % total;
+  appState.knowledgeManual = true;
+  renderModule1();
+  const lesson = (list && list[appState.currentKnowledgeIdx]) || pool[appState.currentKnowledgeIdx % pool.length];
+  showToast(`已切换至：${lesson.topic}`);
   document.getElementById('m1-content').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
@@ -4997,7 +5012,8 @@ function setAIProvider(p) { appState.aiProvider = p; saveAIProvider(p); openAISe
 // 思考巩固题 → AI
 function askAIQuestion(i) {
   const pool = APP_DATA.module1.knowledgePool;
-  const lesson = appState.todayKnowledge || pool[appState.currentKnowledgeIdx];
+  const list = appState.todayKnowledgeList;
+  const lesson = (list && list[appState.currentKnowledgeIdx]) || pool[appState.currentKnowledgeIdx % pool.length];
   const q = lesson.questions[i];
   sendAIMessage(`请结合知识点《${lesson.topic}》（来源：${lesson.source}），帮我深入拆解这个问题：${q}`);
 }
@@ -7113,6 +7129,7 @@ function submitHealthData() {
   // 关闭弹窗并重新渲染
   closeHealthSyncModal();
   renderModule3();
+  renderQuickStats(); // 刷新首页数据
   showToast('✅ 健康数据已保存！');
 }
 
