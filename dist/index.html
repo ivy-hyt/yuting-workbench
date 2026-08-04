@@ -4264,6 +4264,7 @@ let appState = {
   chatHistory: [],
   trainedMuscles: [],
   currentKnowledgeIdx: 0,
+  weightChartRange: '1m', // 体重趋势图时间范围：'7d' | '1m' | '1y'
   selectedColors: [],
   weatherData: null,
   // 模块3：肌群多选
@@ -4368,6 +4369,25 @@ function toKg(value, unit) {
 }
 function weightUnitLabel(u) { return u === 'jin' ? '斤' : 'kg'; }
 
+// 解析体重记录日期（兼容 MM-DD 和 YYYY-MM-DD 格式）
+function parseWeightDate(dateStr) {
+  if (!dateStr) return new Date(0);
+  const parts = dateStr.split('-');
+  const now = new Date();
+  if (parts.length === 2) {
+    return new Date(now.getFullYear(), parseInt(parts[0]) - 1, parseInt(parts[1]));
+  } else if (parts.length === 3) {
+    return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+  }
+  return new Date(0);
+}
+
+// 切换体重趋势图时间范围
+function setWeightChartRange(range) {
+  appState.weightChartRange = range;
+  renderModule3();
+}
+
 // 按日期种子的知识点索引（每天不同，跨年不重复）
 function getDailyKnowledgeIdx() {
   const pool = APP_DATA.module1.knowledgePool;
@@ -4402,6 +4422,10 @@ function init() {
   addBotMessage('雨婷你好，工作台已就绪 ✅\n\n我是你的智能大管家，可以随时和我沟通。试试告诉我：\n• "昨日上肢训练后肌肉酸痛"\n• "今天不想练腿，换个计划"\n• "今天学了什么新内容"\n\n我会自动调整各模块计划！');
   // PWA：注册离线缓存
   registerServiceWorker();
+  // 从云端同步健康数据（跨设备），有变化则重新渲染健身模块
+  syncHealthFromCloud().then(changed => {
+    if (changed) renderModule3();
+  });
 
   // 华为运动健康授权回调（?hw=authorized）→ 自动拉取数据
   if (location.search.indexOf('hw=authorized') > -1) {
@@ -5137,7 +5161,9 @@ ${isAll
 
 function renderModule2Data(data) {
   const container = document.getElementById('m2-content');
-  document.getElementById('m2-subtitle').textContent = `${data.subtitle} · 阅读时长${data.readTime}`;
+  // 始终显示实时当前日期，不用缓存里的旧日期
+  const liveSubtitle = `今日 · ${formatNewsDate(new Date())}`;
+  document.getElementById('m2-subtitle').textContent = `${liveSubtitle} · 阅读时长${data.readTime}`;
   let html = '';
   data.sections.forEach(section => {
     html += `<div class="news-section">
@@ -5229,14 +5255,29 @@ function renderModule3() {
 
   const weightChartHtml = weightHistory.length > 0
     ? (() => {
-      const weightsDisp = weightHistory.map(w => toDisplayWeight(w.weight, weightUnit));
+      // 按时间范围筛选数据
+      const now = new Date();
+      let filtered = [...weightHistory];
+      if (appState.weightChartRange === '7d') {
+        const cutoff = new Date(now); cutoff.setDate(cutoff.getDate() - 7);
+        filtered = filtered.filter(w => parseWeightDate(w.date) >= cutoff);
+      } else if (appState.weightChartRange === '1m') {
+        const cutoff = new Date(now); cutoff.setMonth(cutoff.getMonth() - 1);
+        filtered = filtered.filter(w => parseWeightDate(w.date) >= cutoff);
+      } else if (appState.weightChartRange === '1y') {
+        const cutoff = new Date(now); cutoff.setFullYear(cutoff.getFullYear() - 1);
+        filtered = filtered.filter(w => parseWeightDate(w.date) >= cutoff);
+      }
+      if (filtered.length === 0) filtered = [...weightHistory];
+
+      const weightsDisp = filtered.map(w => toDisplayWeight(w.weight, weightUnit));
       const minW = Math.min(...weightsDisp) - 0.5;
       const maxW = Math.max(...weightsDisp) + 0.5;
       const range = maxW - minW;
-      return weightHistory.map((w, i) => {
+      return filtered.map((w, i) => {
         const disp = weightsDisp[i];
         const h = 20 + ((disp - minW) / range) * 60;
-        const isLast = i === weightHistory.length - 1;
+        const isLast = i === filtered.length - 1;
         return `<div class="ps-weight-point">
           <div class="ps-weight-val" style="color:${isLast ? 'var(--accent)' : 'var(--text-light)'};font-weight:${isLast ? '700' : '400'};">${disp.toFixed(1)}</div>
           <div class="ps-weight-bar" style="height:${h}px;background:${isLast ? 'var(--accent)' : 'var(--accent-light)'};"></div>
@@ -5245,6 +5286,13 @@ function renderModule3() {
       }).join('');
     })()
     : '<div style="color:var(--text-light);font-size:13px;padding:20px 0;width:100%;text-align:center;">暂无体重数据，点击「记录体重」添加</div>';
+
+  // 时间范围选择按钮
+  const rangeBtns = ['7d', '1m', '1y'].map(r => {
+    const labels = { '7d': '7天', '1m': '1个月', '1y': '1年' };
+    const isActive = appState.weightChartRange === r;
+    return `<button onclick="setWeightChartRange('${r}')" style="font-size:11px;padding:4px 10px;border-radius:12px;border:1px solid ${isActive ? 'var(--accent)' : 'var(--border)'};background:${isActive ? 'var(--accent)' : 'transparent'};color:${isActive ? '#fff' : 'var(--text-secondary)'};cursor:pointer;margin-right:4px;">${labels[r]}</button>`;
+  }).join('');
 
   html += `<div class="section-title">🎯 体重目标 & 变化趋势</div>
   <div class="personal-stats-card weight-goal-card">
@@ -5267,7 +5315,10 @@ function renderModule3() {
       <button class="wg-btn primary" onclick="openHealthSyncModal()">📝 记录体重</button>
       <button class="wg-btn" onclick="editWeightGoal()">⚙️ 修改目标</button>
     </div>
-    <div class="wg-chart-title">📈 体重变化趋势（${weightUnitLabel(weightUnit)}）</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">
+      <div class="wg-chart-title" style="margin:0;">📈 体重变化趋势（${weightUnitLabel(weightUnit)}）</div>
+      <div>${rangeBtns}</div>
+    </div>
     <div class="ps-weight-chart wg-chart">${weightChartHtml}</div>
   </div>`;
   // 体脂率
@@ -6584,6 +6635,91 @@ function getUserHealthData() {
 // 保存健康数据到 localStorage
 function saveUserHealthData(data) {
   localStorage.setItem('huaweiHealthData', JSON.stringify(data));
+  // 同步到云端（异步，不阻塞UI）
+  syncHealthToCloud(data);
+}
+
+// ===== 跨设备数据同步 =====
+// 上传本地健康数据到云端
+async function syncHealthToCloud(data) {
+  try {
+    const resp = await fetch(getApiBase() + '/api/userdata', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (resp.ok) {
+      const r = await resp.json();
+      console.log('[sync] 云端同步成功', r.cloudSyncedAt);
+    }
+  } catch (e) {
+    console.warn('[sync] 云端同步失败（不影响本地保存）:', e.message);
+  }
+}
+
+// 从云端拉取健康数据并合并到本地
+async function syncHealthFromCloud() {
+  try {
+    const resp = await fetch(getApiBase() + '/api/userdata', {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!resp.ok) return null;
+    const cloud = await resp.json();
+    if (!cloud || !cloud.weightHistory) return null;
+
+    const local = getUserHealthData() || {};
+    // 合并体重记录：按日期去重，云端+本地合并取并集
+    const localWH = local.weightHistory || [];
+    const cloudWH = cloud.weightHistory || [];
+    const mergedWH = [...cloudWH];
+    localWH.forEach(lw => {
+      if (!mergedWH.find(cw => cw.date === lw.date)) {
+        mergedWH.push(lw);
+      }
+    });
+    mergedWH.sort((a, b) => parseWeightDate(a.date) - parseWeightDate(b.date));
+
+    // 合并体脂记录
+    const localBF = local.bodyFatHistory || [];
+    const cloudBF = cloud.bodyFatHistory || [];
+    const mergedBF = [...cloudBF];
+    localBF.forEach(lb => {
+      if (!mergedBF.find(cb => cb.date === lb.date)) {
+        mergedBF.push(lb);
+      }
+    });
+    mergedBF.sort((a, b) => parseWeightDate(a.date) - parseWeightDate(b.date));
+
+    // 合并其他字段：优先取较新数据
+    const localSyncedAt = local.cloudSyncedAt || '1970';
+    const cloudSyncedAt = cloud.cloudSyncedAt || '1970';
+    const cloudNewer = cloudSyncedAt > localSyncedAt;
+
+    const merged = {
+      weightHistory: mergedWH,
+      bodyFatHistory: mergedBF,
+      totalSessions: Math.max(local.totalSessions || 0, cloud.totalSessions || 0),
+      totalDuration: Math.max(local.totalDuration || 0, cloud.totalDuration || 0),
+      streak: Math.max(local.streak || 0, cloud.streak || 0),
+      weightGoal: cloudNewer ? (cloud.weightGoal || local.weightGoal) : (local.weightGoal || cloud.weightGoal),
+      latest: cloudNewer ? (cloud.latest || local.latest) : (local.latest || cloud.latest),
+      cloudSyncedAt: new Date().toISOString(),
+    };
+    if (merged.weightHistory.length > 100) merged.weightHistory = merged.weightHistory.slice(-100);
+    if (merged.bodyFatHistory.length > 100) merged.bodyFatHistory = merged.bodyFatHistory.slice(-100);
+
+    const oldStr = JSON.stringify(local);
+    const newStr = JSON.stringify(merged);
+    if (oldStr !== newStr) {
+      localStorage.setItem('huaweiHealthData', JSON.stringify(merged));
+      return true;
+    }
+    return false;
+  } catch (e) {
+    console.warn('[sync] 从云端拉取失败:', e.message);
+    return null;
+  }
 }
 
 // 将用户数据与默认数据合并

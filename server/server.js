@@ -475,6 +475,48 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true });
     }
 
+    // 5) 用户健康数据云端存取（跨设备同步，文件存储）
+    //    GET  /api/userdata        → 返回云端数据
+    //    POST /api/userdata        → 保存云端数据（整体覆盖）
+    if (p === '/api/userdata') {
+      applyCors(res, req);
+      res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+
+      const dataFile = path.join(__dirname, 'userdata.json');
+
+      if (req.method === 'GET') {
+        try {
+          if (fs.existsSync(dataFile)) {
+            const raw = fs.readFileSync(dataFile, 'utf-8');
+            return sendJson(res, 200, JSON.parse(raw));
+          }
+          return sendJson(res, 200, { ok: true, data: null, message: '暂无云端数据' });
+        } catch (e) {
+          return sendJson(res, 500, { error: '读取云端数据失败: ' + e.message });
+        }
+      }
+
+      if (req.method === 'POST') {
+        let buf = '';
+        req.on('data', c => { buf += c; if (buf.length > 2e6) req.destroy(); });
+        req.on('end', () => {
+          try {
+            const parsed = JSON.parse(buf);
+            // 加上最后同步时间
+            parsed.cloudSyncedAt = new Date().toISOString();
+            fs.writeFileSync(dataFile, JSON.stringify(parsed, null, 2), 'utf-8');
+            return sendJson(res, 200, { ok: true, cloudSyncedAt: parsed.cloudSyncedAt });
+          } catch (e) {
+            return sendJson(res, 400, { error: '保存失败: ' + e.message });
+          }
+        });
+        return;
+      }
+    }
+
     // 其余 → 静态文件
     return serveStatic(req, res, p);
   } catch (e) {
