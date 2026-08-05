@@ -5175,7 +5175,7 @@ function loadTodayNews() { return loadJSON(getTodayNewsKey(), null); }
 function saveTodayNews(data) { saveJSON(getTodayNewsKey(), data); }
 function clearTodayNews() { localStorage.removeItem(getTodayNewsKey()); }
 // 简报结构版本：代码/ prompt 有重大调整时 +1，使当天旧缓存自动失效、强制重生成
-const NEWS_SCHEMA_VERSION = 4;
+const NEWS_SCHEMA_VERSION = 5;
 
 function getWeekdayCN(d) {
   return ['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
@@ -5202,15 +5202,15 @@ async function generateTodayNews() {
 
   const isAll = focus === '全行业综合';
   const sys = `你是中文产业资讯编辑。生成"每日行业资讯简报"，只输出合法JSON，不要markdown代码块，不要任何解释文字。
-JSON结构：{"subtitle":"今日 · 日期 · 周X","readTime":"约5分钟","sections":[{"category":"emoji+行业名","items":[{"title":"15字内标题","brief":"30字内AI智能简要总结（一句话概括核心要点）","insight":"40字内对普通人的启发/行动建议","url":"该资讯对应的原文链接（权威新闻源URL，如36kr/财新/界面/第一财经/人民日报等）"}]}]}
+JSON结构：{"subtitle":"今日 · 日期 · 周X","readTime":"约5分钟","sections":[{"category":"emoji+行业名","items":[{"title":"15字内标题","brief":"30字内AI智能简要总结（一句话概括核心要点）","insight":"40字内对普通人的启发/行动建议","keyword":"用于搜索该资讯的关键词（2-6个字，如'芯片升级''电商促销'）"}]}]}
 ${isAll
     ? '覆盖6个行业，每行业2条items，顺序一致：💻科技与AI、🛒大消费与零售、🏥医疗健康、💰金融与宏观、🎬文娱与自媒体、🏛️政策与监管。'
     : `只围绕「${focus}」生成，2-3条items，category为「emoji+${focus}」。`}
 要求：
-1. 基于中国大陆近期真实产业/政策动态（今天或近3天内），必须提供真实可访问的原文链接
+1. 基于中国大陆近期真实产业/政策动态（今天或近3天内）
 2. brief必须是AI智能摘要风格——精炼、有信息密度、一句话说清"发生了什么+意味着什么"
 3. insight给普通人 actionable 的启发，不要空话套话
-4. url必须是真实新闻源链接，格式为 https://...`;
+4. keyword是2-6个字的搜索关键词，用户点击后跳转到搜索引擎查看相关真实新闻`;
 
   const user = isAll
     ? `生成 ${dateStr} 的全行业每日资讯简报，6个行业各2条。`
@@ -5261,13 +5261,12 @@ function renderModule2Data(data) {
     html += `<div class="news-section">
       <span class="news-cat" style="background:${section.color}">${section.category}</span>`;
     (section.items || []).forEach(item => {
-      const linkHtml = item.url
-        ? `<a href="${item.url}" target="_blank" rel="noopener" class="news-link">🔗 查看原文 →</a>`
-        : '';
+      const kw = item.keyword || item.title;
+      const searchUrl = 'https://www.bing.com/news/search?q=' + encodeURIComponent(kw);
       html += `<div class="news-item">
         <div class="news-title">${item.title}</div>
         <div class="news-brief">${item.brief}</div>
-        ${linkHtml}
+        <a href="${searchUrl}" target="_blank" rel="noopener" class="news-link">🔗 搜索相关新闻 →</a>
         <div class="news-insight">💡 ${item.insight}</div>
       </div>`;
     });
