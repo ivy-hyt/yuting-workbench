@@ -3544,7 +3544,7 @@ body {
     <div class="module-header">
       <div class="back-btn" onclick="showPage('home')">← 返回首页</div>
       <div class="m-title">📰 每日5分钟行业资讯简报</div>
-      <div class="m-sub" id="m2-subtitle">今日 · 2026年7月28日 · 周二</div>
+      <div class="m-sub" id="m2-subtitle">今日 · 加载中...</div>
     </div>
     <div class="section" id="m2-content"></div>
     <div class="spacer"></div>
@@ -5179,6 +5179,10 @@ async function generateTodayNews() {
   const dateObj = new Date();
   const dateStr = formatNewsDate(dateObj);
   const focus = getNewsFocus();
+
+  // 同步更新标题日期为当前实时日期
+  const subEl = document.getElementById('m2-subtitle');
+  if (subEl) subEl.textContent = `今日 · ${dateStr}`;
 
   container.innerHTML = `<div class="news-loading" style="text-align:center;padding:40px 20px;color:var(--text-light);">
     <div style="font-size:32px;margin-bottom:12px;">⏳</div>
