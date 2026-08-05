@@ -267,52 +267,90 @@ function serveStatic(req, res, pathname) {
 
 // ========== 每日资讯简报：真实热点新闻 + AI摘要 ==========
 
-// 新闻源配置：多个免费中文新闻API/RSS
+// 新闻源配置：Google News RSS（中文，全球可访问）+ Hacker News（科技）
 const NEWS_SOURCES = {
-  // 新浪热点（综合）
-  sinaHot: {
-    url: 'https://feed.mix.sina.com.cn/api/roll/get?pageid=155&lid=2509&num=30&versionNumber=1.2.4',
-    parser: parseSinaRoll,
+  // Google News 中文综合热点
+  googleGeneral: {
+    url: 'https://news.google.com/rss?hl=zh-CN&gl=CN&ceid=CN:zh-Hans',
+    parser: parseGoogleNewsRSS,
     category: 'general',
   },
-  // 新浪科技
-  sinaTech: {
-    url: 'https://feed.mix.sina.com.cn/api/roll/get?pageid=155&lid=2514&num=20&versionNumber=1.2.4',
-    parser: parseSinaRoll,
+  // Google News 科技
+  googleTech: {
+    url: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx1YlY4U0FucG9HZ0pEVGlnQVAB?hl=zh-CN&gl=CN&ceid=CN:zh-Hans',
+    parser: parseGoogleNewsRSS,
     category: 'tech',
   },
-  // 新浪财经
-  sinaFinance: {
-    url: 'https://feed.mix.sina.com.cn/api/roll/get?pageid=155&lid=2515&num=20&versionNumber=1.2.4',
-    parser: parseSinaRoll,
-    category: 'finance',
+  // Google News 商业
+  googleBusiness: {
+    url: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGRqTVhZU0FucG9HZ0pEVGlnQVAB?hl=zh-CN&gl=CN&ceid=CN:zh-Hans',
+    parser: parseGoogleNewsRSS,
+    category: 'business',
   },
-  // 新浪体育
-  sinaSports: {
-    url: 'https://feed.mix.sina.com.cn/api/roll/get?pageid=155&lid=2512&num=15&versionNumber=1.2.4',
-    parser: parseSinaRoll,
-    category: 'sports',
-  },
-  // 新浪娱乐
-  sinaEnt: {
-    url: 'https://feed.mix.sina.com.cn/api/roll/get?pageid=155&lid=2513&num=15&versionNumber=1.2.4',
-    parser: parseSinaRoll,
-    category: 'ent',
+  // Hacker News 热门（科技/开发者视角）
+  hackernews: {
+    url: null, // 特殊处理：使用 HN API
+    parser: null, // 特殊处理
+    category: 'tech',
+    special: 'hackernews',
   },
 };
 
-// 解析新浪 roll 接口返回的 JSON
-function parseSinaRoll(json) {
+// 解析 Google News RSS XML
+function parseGoogleNewsRSS(xmlText) {
   const out = [];
   try {
-    const list = json.result && json.result.data;
-    if (!Array.isArray(list)) return out;
-    for (const item of list) {
-      if (item.title && item.url) {
+    // 简单的 XML 解析（不依赖库）
+    const items = xmlText.match(/<item>[\s\S]*?<\/item>/g) || [];
+    for (const itemXml of items) {
+      const titleM = itemXml.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>|<title>(.*?)<\/title>/s);
+      const linkM = itemXml.match(/<link>(.*?)<\/link>/);
+      const srcM = itemXml.match(/<source.*?>(.*?)<\/source>/);
+      if (titleM && linkM) {
+        const title = (titleM[1] || titleM[2] || '').replace(/<[^>]*>/g, '').trim();
+        const link = linkM[1].trim();
+        const source = srcM ? srcM[1].trim() : 'Google News';
+        if (title && link) {
+          out.push({ title, url: link, source });
+        }
+      }
+    }
+  } catch (e) { /* ignore */ }
+  return out;
+}
+
+// 获取 Hacker News 热门（前15条）
+async function fetchHackerNews() {
+  const out = [];
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    // 1. 获取 top stories IDs
+    const resp = await fetch('https://hacker-news.firebaseio.com/v0/topstories.json', {
+      signal: ctrl.signal,
+    });
+    clearTimeout(timer);
+    if (!resp.ok) return out;
+    const ids = await resp.json();
+    const topIds = ids.slice(0, 15);
+
+    // 2. 并行获取每条详情
+    const results = await Promise.allSettled(
+      topIds.map(id =>
+        fetch(`https://hacker-news.firebaseio.com/v0/item/${id}.json`)
+          .then(r => r.json())
+          .catch(() => null)
+      )
+    );
+
+    for (const result of results) {
+      if (result.status !== 'fulfilled' || !result.value) continue;
+      const item = result.value;
+      if (item.title && (item.url || item.id)) {
         out.push({
-          title: item.title.replace(/<[^>]*>/g, '').trim(),
-          url: item.url,
-          source: item.source || item.media_name || '新浪新闻',
+          title: item.title,
+          url: item.url || `https://news.ycombinator.com/item?id=${item.id}`,
+          source: 'Hacker News',
         });
       }
     }
@@ -348,18 +386,24 @@ function categorizeNews(title) {
 // 用 fetch 抓取单个新闻源，带超时
 async function fetchNewsSource(srcConfig) {
   try {
+    // Hacker News 特殊处理
+    if (srcConfig.special === 'hackernews') {
+      return await fetchHackerNews();
+    }
+
+    // Google News RSS：fetch XML 文本
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 8000);
+    const timer = setTimeout(() => ctrl.abort(), 10000);
     const resp = await fetch(srcConfig.url + '&_t=' + Date.now(), {
       signal: ctrl.signal,
-      headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' },
+      headers: { 'Accept': 'application/rss+xml, application/xml, text/xml, */*', 'User-Agent': 'Mozilla/5.0 (compatible; NewsReader/1.0)' },
     });
     clearTimeout(timer);
     if (!resp.ok) return [];
-    const json = await resp.json().catch(() => ({}));
-    return srcConfig.parser(json);
+    const xmlText = await resp.text();
+    return srcConfig.parser(xmlText);
   } catch (e) {
-    console.log('[news] source fetch failed:', srcConfig.url.slice(0, 50), e.message);
+    console.log('[news] source fetch failed:', (srcConfig.url || srcConfig.special).slice(0, 50), e.message);
     return [];
   }
 }
