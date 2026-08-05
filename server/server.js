@@ -265,6 +265,334 @@ function serveStatic(req, res, pathname) {
   });
 }
 
+// ========== 每日资讯简报：真实热点新闻 + AI摘要 ==========
+
+// 新闻源配置：多个免费中文新闻API/RSS
+const NEWS_SOURCES = {
+  // 新浪热点（综合）
+  sinaHot: {
+    url: 'https://feed.mix.sina.com.cn/api/roll/get?pageid=155&lid=2509&num=30&versionNumber=1.2.4',
+    parser: parseSinaRoll,
+    category: 'general',
+  },
+  // 新浪科技
+  sinaTech: {
+    url: 'https://feed.mix.sina.com.cn/api/roll/get?pageid=155&lid=2514&num=20&versionNumber=1.2.4',
+    parser: parseSinaRoll,
+    category: 'tech',
+  },
+  // 新浪财经
+  sinaFinance: {
+    url: 'https://feed.mix.sina.com.cn/api/roll/get?pageid=155&lid=2515&num=20&versionNumber=1.2.4',
+    parser: parseSinaRoll,
+    category: 'finance',
+  },
+  // 新浪体育
+  sinaSports: {
+    url: 'https://feed.mix.sina.com.cn/api/roll/get?pageid=155&lid=2512&num=15&versionNumber=1.2.4',
+    parser: parseSinaRoll,
+    category: 'sports',
+  },
+  // 新浪娱乐
+  sinaEnt: {
+    url: 'https://feed.mix.sina.com.cn/api/roll/get?pageid=155&lid=2513&num=15&versionNumber=1.2.4',
+    parser: parseSinaRoll,
+    category: 'ent',
+  },
+};
+
+// 解析新浪 roll 接口返回的 JSON
+function parseSinaRoll(json) {
+  const out = [];
+  try {
+    const list = json.result && json.result.data;
+    if (!Array.isArray(list)) return out;
+    for (const item of list) {
+      if (item.title && item.url) {
+        out.push({
+          title: item.title.replace(/<[^>]*>/g, '').trim(),
+          url: item.url,
+          source: item.source || item.media_name || '新浪新闻',
+        });
+      }
+    }
+  } catch (e) { /* ignore */ }
+  return out;
+}
+
+// 行业分类关键词映射（用于将通用热点归类到6大行业）
+const CATEGORY_KEYWORDS = {
+  '💻科技与AI': ['AI','人工智能','芯片','半导体','华为','小米','苹果','谷歌','微软','OpenAI','GPT','大模型','算力','5G','6G','手机','智能','科技','互联网','平台','算法','数据','云计算','区块链','元宇宙','机器人','自动驾驶','特斯拉','电动车','新能源车','电池','光伏','航天','卫星','量子'],
+  '🛒大消费与零售': ['消费','零售','电商','淘宝','京东','拼多多','直播带货','奶茶','餐饮','食品','饮料','白酒','啤酒','化妆品','奢侈品','旅游','酒店','航空','电影','票房','游戏','快递','物流','外卖','美团','滴滴','出行','买房','房价','楼市','汽车','销量','促销','打折','免税','跨境电商'],
+  '🏥医疗健康': ['医疗','医药','医院','疫苗','新冠','病毒','健康','医保','药品','中药','创新药','生物','基因','体检','养老','生育','三胎','辅助生殖','医美','康养','保险','疾控'],
+  '💰金融与宏观': ['A股','港股','美股','股市','央行','利率','降息','加息','通胀','CPI','GDP','经济','财政','税收','人民币','汇率','外汇','债券','基金','银行','贷款','房贷','社保','养老金','失业','就业','薪资','收入','贸易','出口','进口','一带一路','美联储','比特币','数字货币','黄金','原油','期货'],
+  '🎬文娱与自媒体': ['综艺','电视剧','偶像','明星','网红','抖音','快手','B站','视频','短视频','直播','热搜','微博','社交','网文','IP','影视','音乐','演唱会','动漫','电竞','游戏','网易游戏','腾讯游戏','Steam'],
+  '🏛️政策与监管': ['政策','法规','监管','法律','国务院','部委','发改委','工信部','教育部','住建部','公安部','最高法','最高检','人大','政协','两会','提案','法案','反垄断','处罚','约谈','整改','安全','国安','环保','碳达峰','碳中和','教育改革','房产税','数字'],
+};
+
+// 根据标题关键词判断行业分类
+function categorizeNews(title) {
+  const t = title.toLowerCase();
+  let bestCat = '💻科技与AI'; // 默认
+  let bestScore = 0;
+  for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+    let score = 0;
+    for (const kw of keywords) {
+      if (t.includes(kw.toLowerCase())) score += kw.length; // 长关键词权重更高
+    }
+    if (score > bestScore) { bestScore = score; bestCat = cat; }
+  }
+  return bestCat;
+}
+
+// 用 fetch 抓取单个新闻源，带超时
+async function fetchNewsSource(srcConfig) {
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    const resp = await fetch(srcConfig.url + '&_t=' + Date.now(), {
+      signal: ctrl.signal,
+      headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' },
+    });
+    clearTimeout(timer);
+    if (!resp.ok) return [];
+    const json = await resp.json().catch(() => ({}));
+    return srcConfig.parser(json);
+  } catch (e) {
+    console.log('[news] source fetch failed:', srcConfig.url.slice(0, 50), e.message);
+    return [];
+  }
+}
+
+// 调用 AI 生成摘要（复用已有 AI 网关逻辑）
+async function aiSummarize(newsItems) {
+  // 构建新闻文本供 AI 摘要
+  const newsText = newsItems.map((item, i) =>
+    `${i + 1}. 【${item.title}】(来源: ${item.source})`
+  ).join('\n');
+
+  const sysPrompt = `你是专业的中文新闻编辑。用户会给你一组真实的当日热点新闻标题和来源。
+请为每条新闻生成：
+1. brief：一句话AI智能摘要（15-35字），精炼概括核心要点，要有信息密度
+2. insight：给普通人的启发或行动建议（20-40字）
+
+只输出合法JSON数组，不要markdown代码块，格式：
+[{"brief":"...","insight":"..."}]
+数组长度必须和输入新闻条数一致，一一对应。`;
+
+  // 选择可用的 AI 提供商
+  let prov = CFG.aiProvider;
+  let key = '', url = '', mdl = '';
+
+  if (prov === 'zhipu' && CFG.zhipuKey) {
+    url = 'https://open.bigmodel.cn/api/paas/v4/chat/completions';
+    key = CFG.zhipuKey;
+    mdl = CFG.zhipuModel;
+  } else if (CFG.deepseekKey) {
+    prov = 'deepseek';
+    url = 'https://api.deepseek.com/chat/completions';
+    key = CFG.deepseekKey;
+    mdl = 'deepseek-chat';
+  } else if (CFG.doubaoKey) {
+    prov = 'doubao';
+    url = 'https://ark.cn-beijing.volces.com/api/v3/chat/completions';
+    key = CFG.doubaoKey;
+    mdl = CFG.doubaoEndpoint || 'doubao-seed-1-6-250615';
+  } else if (CFG.geminiKey) {
+    prov = 'gemini';
+  } else {
+    throw new Error('未配置任何 AI API Key，无法生成摘要');
+  }
+
+  // Gemini 分支
+  if (prov === 'gemini') {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 35000);
+    const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(CFG.geminiModel)}:generateContent?key=${encodeURIComponent(CFG.geminiKey)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: `${sysPrompt}\n\n以下是需要摘要的新闻：\n${newsText}` }] }],
+        generationConfig: { temperature: 0.5 },
+      }),
+      signal: ctrl.signal,
+    });
+    clearTimeout(timer);
+    const gJson = await gRes.json().catch(() => ({}));
+    if (!gJson.ok) throw new Error('Gemini 摘要失败');
+    const text = gJson.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    return parseAiSummary(text, newsItems.length);
+  }
+
+  // OpenAI 兼容接口分支（智谱/DeepSeek/豆包）
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 35000);
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+    body: JSON.stringify({
+      model: mdl,
+      messages: [
+        { role: 'system', content: sysPrompt },
+        { role: 'user', content: `以下是需要摘要的新闻：\n${newsText}` }
+      ],
+      stream: false, temperature: 0.5,
+    }),
+    signal: ctrl.signal,
+  });
+  clearTimeout(timer);
+
+  if (!r.ok) {
+    const errText = await r.text().catch(() => '');
+    throw new Error('AI摘要API返回 ' + r.status);
+  }
+  const aiJson = await r.json().catch(() => ({}));
+  const text = aiJson.choices?.[0]?.message?.content || '';
+  return parseAiSummary(text, newsItems.length);
+}
+
+// 解析 AI 返回的摘要 JSON
+function parseAiSummary(text, expectedCount) {
+  try {
+    let cleaned = text.replace(/```json\s*/gi, '').replace(/```\s*$/gi, '').trim();
+    // 尝试找到JSON数组
+    const arrStart = cleaned.indexOf('[');
+    const arrEnd = cleaned.lastIndexOf(']');
+    if (arrStart >= 0 && arrEnd > arrStart) {
+      cleaned = cleaned.substring(arrStart, arrEnd + 1);
+    }
+    const arr = JSON.parse(cleaned);
+    if (Array.isArray(arr) && arr.length === expectedCount) {
+      return arr.map((item, i) => ({
+        brief: (item.brief || item.summary || '').slice(0, 100),
+        insight: (item.insight || item.advice || '').slice(0, 100),
+      }));
+    }
+  } catch (e) {
+    console.log('[news] ai summary parse error:', e.message.slice(0, 100));
+  }
+  // 解析失败时返回空摘要兜底
+  return Array(expectedCount).fill({ brief: '', insight: '' });
+}
+
+// 主函数：生成真实新闻简报
+async function generateRealNewsBriefing(focus) {
+  const isAll = focus === '全行业综合';
+
+  // 1) 并行抓取所有新闻源
+  const sourceEntries = Object.entries(NEWS_SOURCES);
+  const fetchResults = await Promise.all(
+    sourceEntries.map(([name, cfg]) => fetchNewsSource(cfg).then(items => ({ name, items })).catch(() => ({ name, items: [] })))
+  );
+
+  // 2) 合并所有新闻并去重（按标题相似度简单去重）
+  const allNews = [];
+  const seenTitles = new Set();
+  for (const { items } of fetchResults) {
+    for (const item of items) {
+      // 简单去重：标题前15个字符相同视为重复
+      const key = item.title.slice(0, 15);
+      if (!seenTitles.has(key)) {
+        seenTitles.add(key);
+        allNews.push(item);
+      }
+    }
+  }
+
+  if (allNews.length === 0) {
+    throw new Error('未能获取到任何新闻数据，请稍后重试');
+  }
+
+  console.log(`[news] fetched ${allNews.length} unique items from ${fetchResults.filter(r => r.items.length > 0).length} sources`);
+
+  // 3) 分类
+  const categorized = {};
+  for (const item of allNews) {
+    const cat = categorizeNews(item.title);
+    if (!categorized[cat]) categorized[cat] = [];
+    categorized[cat].push(item);
+  }
+
+  // 4) 按需选取内容
+  const targetCategories = isAll
+    ? ['💻科技与AI', '🛒大消费与零售', '🏥医疗健康', '💰金融与宏观', '🎬文娱与自媒体', '🏛️政策与监管']
+    : [`emoji+${focus}`];
+
+  const sections = [];
+
+  if (isAll) {
+    // 全行业模式：每个分类选 top 2
+    for (const cat of targetCategories) {
+      const items = (categorized[cat] || []).slice(0, 2);
+      if (items.length > 0) {
+        sections.push({ category: cat, rawItems: items });
+      }
+    }
+    // 如果某些分类没有新闻，从多的分类补充
+    if (sections.length < 4) {
+      const usedCats = new Set(sections.map(s => s.category));
+      for (const [cat, items] of Object.entries(categorized)) {
+        if (!usedCats.has(cat) && items.length > 0) {
+          sections.push({ category: cat, rawItems: items.slice(0, 2) });
+          if (sections.length >= 6) break;
+        }
+      }
+    }
+  } else {
+    // 单行业模式：选 top 3
+    const matchedCat = Object.keys(CATEGORY_KEYWORDS).find(k => k.includes(focus));
+    const catKey = matchedCat || `emoji+${focus}`;
+    const items = (categorized[catKey] || allNews).slice(0, 3);
+    if (items.length > 0) {
+      sections.push({ category: catKey.includes(focus) ? catKey : `📰${focus}`, rawItems: items });
+    }
+  }
+
+  if (sections.length === 0) {
+    // 最终兜底：直接用前6条不分类
+    sections.push({ category: '📰今日热点', rawItems: allNews.slice(0, 6) });
+  }
+
+  // 5) 收集所有需要摘要的新闻，批量调用 AI
+  const allRawItems = sections.flatMap(s => s.rawItems);
+  console.log(`[news] summarizing ${allRawItems.length} news items via AI...`);
+
+  const summaries = await aiSummarize(allRawItems);
+
+  // 6) 组装最终结果
+  let summaryIdx = 0;
+  const finalSections = sections.map(section => {
+    const items = section.rawItems.map((rawItem, i) => {
+      const summary = summaries[summaryIdx] || { brief: rawItem.title, insight: '' };
+      summaryIdx++;
+      return {
+        title: rawItem.title,
+        url: rawItem.url,
+        source: rawItem.source,
+        brief: summary.brief || rawItem.title.slice(0, 40),
+        insight: summary.insight,
+      };
+    });
+    return { category: section.category, items };
+  });
+
+  return {
+    subtitle: `今日 · ${formatNewsDateCN(new Date())}`,
+    readTime: '约5分钟',
+    sections: finalSections,
+    version: 6,
+    generatedAt: new Date().toISOString(),
+    sourceCount: fetchResults.filter(r => r.items.length > 0).length,
+    newsCount: allRawItems.length,
+  };
+}
+
+// 格式化日期（中文风格，服务端用）
+function formatNewsDateCN(d) {
+  const w = ['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];
+  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 · ${w}`;
+}
+
 // ---------- 路由 ----------
 const server = http.createServer(async (req, res) => {
   const parsed = new URL(req.url, `http://localhost:${PORT}`);
@@ -514,6 +842,30 @@ const server = http.createServer(async (req, res) => {
           }
         });
         return;
+      }
+    }
+
+    // 6) 每日资讯简报：抓取真实热点新闻 + AI生成摘要
+    //    GET /api/news?focus=全行业综合&fresh=1
+    //    流程：多源爬取真实新闻 → 按行业分类去重 → AI摘要 → 返回含真实URL的结构化简报
+    if (p === '/api/news') {
+      applyCors(res, req);
+      res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
+      if (req.method !== 'GET') return sendJson(res, 405, { error: 'method not allowed' });
+
+      const focus = parsed.searchParams.get('focus') || '全行业综合';
+      const fresh = parsed.searchParams.has('fresh');
+
+      try {
+        const result = await generateRealNewsBriefing(focus);
+        return sendJson(res, 200, result);
+      } catch (e) {
+        console.error('[/api/news] error:', e.message);
+        return sendJson(res, 502, { error: '简报生成失败: ' + e.message });
       }
     }
 
