@@ -322,6 +322,39 @@ const CATEGORY_FILTERS = {
   '📰今日热点': null, // 兜底
 };
 
+// ========== 权威媒体白名单 ==========
+// 只推送权威/主流机构发布的新闻；不知名媒体、噱头八卦类媒体一律过滤掉。
+// 匹配方式：新闻来源名(source)包含下列任一子串即视为权威。
+// （Hacker News 作为科技聚合平台保留；Google News 来源为真实出版方名称）
+const AUTHORITATIVE_SOURCES = [
+  // 中央/国家级主流媒体
+  '新华', '人民', '央视', 'CCTV', '中央广播', '央广', '中国网', '中国新闻', '中新',
+  '光明', '环球', '中国青年', '经济日报', '中国经济', '科技日报', '法治日报',
+  '工人日报', '中国日报', '北京日报', '参考消息', '解放军报',
+  // 重点新闻网站 / 党媒门户
+  '南方日报', '南方网', '潮新闻', '川观', '长江日报', '湖北日报', '四川在线',
+  '浙江日报', '上观', '解放日报', '澎湃', '联合早报', '中国政府网', '中国网信',
+  // 财经 / 证券 / 商业
+  '证券时报', '中国证券', '财联社', '第一财经', '每日经济', '每经', '21世纪',
+  '界面', '经济观察', '证券日报', '金融界', '北京商报', '新浪财经', '网易财经',
+  '腾讯财经', '凤凰财经', '华尔街见闻', '财新', '价值线',
+  // 科技 / 产业（ reputable 科技媒体）
+  '36氪', '钛媒体', '虎嗅', '雷锋网', '量子位', '机器之心', '极客公园', '爱范儿',
+  'InfoQ', 'CSDN', '开源中国', '电子发烧友', '智东西', '雷峰网',
+  // 医疗健康（行业权威 / 专业媒体）
+  '健康报', '中国药闻', '医药', '丁香园', '健康界', '米内网', '医脉通', '生物谷',
+  '医疗器械', '医药经济', '赛柏蓝',
+  // 国际科技聚合（纯技术，权威）
+  'Hacker News',
+];
+
+// 判断某条新闻来源是否权威
+function isAuthoritative(source) {
+  if (!source) return false;
+  const s = String(source);
+  return AUTHORITATIVE_SOURCES.some(kw => s.includes(kw));
+}
+
 // 解析 Google News RSS XML
 function parseGoogleNewsRSS(xmlText) {
   const out = [];
@@ -549,6 +582,15 @@ async function generateRealNewsBriefing(focus) {
     )
   );
 
+  // 1.5) 权威媒体过滤：只保留权威机构发布的新闻，剔除不知名/噱头媒体
+  let beforeFilter = 0, afterFilter = 0;
+  for (const r of fetchResults) {
+    beforeFilter += r.items.length;
+    r.items = r.items.filter(it => isAuthoritative(it.source));
+    afterFilter += r.items.length;
+  }
+  console.log(`[news] 权威过滤: ${beforeFilter} → ${afterFilter} 条（已剔除 ${beforeFilter - afterFilter} 条非权威来源）`);
+
   // 2) 按源归档；对「📰待分类」用关键词白名单二次分配
   const categorized = {}; // { '💻科技与AI': [item, ...], ... }
   for (const { items, targetCategory } of fetchResults) {
@@ -657,7 +699,7 @@ async function generateRealNewsBriefing(focus) {
     subtitle: `今日 · ${formatNewsDateCN(new Date())}`,
     readTime: '约5分钟',
     sections: finalSections,
-    version: 6,
+    version: 7,
     generatedAt: new Date().toISOString(),
     sourceCount: fetchResults.filter(r => r.items.length > 0).length,
     newsCount: allRawItems.length,
