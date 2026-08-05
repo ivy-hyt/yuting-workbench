@@ -270,63 +270,56 @@ function serveStatic(req, res, pathname) {
 // 设计原则：每个新闻源自带目标分类标签，抓取后直接归入对应板块。
 // 不再"全部混在一起用关键词猜分类"，避免社会新闻跑到科技板块。
 
-// 新闻源配置：每个源有明确的 targetCategory（归入哪个板块）
+// 新闻源配置：只用2个源
+// - HN: 100%科技内容，直接归入💻科技与AI
+// - GN综合: 所有领域混合，抓取后用强关键词白名单分配到各板块
+// - 匹配不上的统一放入📰今日热点（宁可漏收不可错收）
 const NEWS_SOURCES = {
-  // ── 科技与AI（2个源：Google News科技 + Hacker News）──
-  gnTech: {
-    url: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx1YlY4U0FucG9HZ0pEVGlnQVAB?hl=zh-CN&gl=CN&ceid=CN:zh-Hans',
-    parser: parseGoogleNewsRSS,
-    targetCategory: '💻科技与AI',
-  },
   hnTech: {
     special: 'hackernews',
     targetCategory: '💻科技与AI',
   },
-
-  // ── 大消费与零售（Google News商业 + 综合中筛消费）──
-  gnBiz: {
-    url: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGRqTVhZU0FucG9HZ0pEVGlnQVAB?hl=zh-CN&gl=CN&ceid=CN:zh-Hans',
-    parser: parseGoogleNewsRSS,
-    targetCategory: '🛒大消费与零售',
-  },
-
-  // ── 医疗健康（从综合源中筛选）──
-  gnHealth: {
-    url: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFpFU0FucG9HZ0pEVGlnQVAB?hl=zh-CN&gl=CN&ceid=CN:zh-Hans',
-    parser: parseGoogleNewsRSS,
-    targetCategory: '🏥医疗健康',
-  },
-
-  // ── 金融与宏观（从综合源中筛选）──
-  gnFinance: {
-    url: 'https://news.google.com/rss?q=%E8%82%A1%E7%A5%A8+%E5%A4%AE%E8%A1%8C+%E7%BB%8F%E6%B5%8E+%E6%88%BF%E4%BA%A7&hl=zh-CN&gl=CN&ceid=CN:zh-Hans',
-    parser: parseGoogleNewsRSS,
-    targetCategory: '💰金融与宏观',
-  },
-
-  // ── 文娱与自媒体（Google News娱乐）──
-  gnEnt: {
-    url: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGRqTVhZU0FtZ0FucG9HZ0pEVGlnQVAB?hl=zh-CN&gl=CN&ceid=CN:zh-Hans',
-    parser: parseGoogleNewsRSS,
-    targetCategory: '🎬文娱与自媒体',
-  },
-
-  // ── 今日热点（综合社会新闻，不归类到具体行业）──
   gnHot: {
     url: 'https://news.google.com/rss?hl=zh-CN&gl=CN&ceid=CN:zh-Hans',
     parser: parseGoogleNewsRSS,
-    targetCategory: '📰今日热点',
+    targetCategory: '📰待分类',
   },
 };
 
-// 各板块的强关键词（仅用于消费/医疗等需要二次过滤的板块，做"白名单"校验）
+// 各板块强关键词白名单——标题必须包含至少一个才算该板块
 const CATEGORY_FILTERS = {
-  '💻科技与AI': null, // 科技源天然就是科技，不过滤
-  '🎬文娱与自媒体': null, // 娱乐源天然就是娱乐，不过滤
-  '💰金融与宏观': null, // 搜索关键词已限定金融，不过滤
-  '🏥医疗健康': ['医疗','医药','医院','疫苗','病毒','健康','医保','药品','中药','创新药','生物','基因','体检','养老','生育','疾控','医美','康养','癌症','糖尿病','高血压','心脏','手术'],
-  '🛒大消费与零售': ['消费','零售','电商','购物','品牌','奶茶','餐饮','食品','饮料','白酒','啤酒','化妆品','奢侈品','旅游','酒店','航空','电影','票房','游戏','快递','物流','外卖','美团','出行','买房','房价','楼市','汽车','销量','促销','免税','带货','直播','拼多多','京东','淘宝','苹果','手机','华为','小米','销量','新品','发布','上市'],
-  '📰今日热点': null, // 热点板块收一切，不过滤
+  '💻科技与AI': [
+    'AI','人工智能','GPT','ChatGPT','DeepSeek','大模型','LLM','芯片','半导体','GPU','CPU','算力',
+    '华为','小米','苹果','谷歌','微软','OpenAI','Anthropic','英伟达','特斯拉','SpaceX',
+    '5G','6G','智能手机','iPhone','安卓','iOS','App','算法','开源','GitHub','编程','代码',
+    '云计算','服务器','数据库','区块链','元宇宙','VR','AR','机器人','自动驾驶','新能源车',
+    '电池','光伏','航天','卫星','量子计算','网络安全','黑客','漏洞','加密','API','SDK',
+    '融资','估值','IPO','上市','独角兽','初创','字节跳动','腾讯','阿里巴巴','百度','美团',
+    'FFmpeg','Linux','Python','JavaScript','React','Vue','框架','浏览器','Chrome','Edge',
+  ],
+  '🛒大消费与零售': [
+    '消费','零售','电商','购物','品牌','奶茶','餐饮','食品','饮料','白酒','啤酒','化妆品','奢侈品',
+    '旅游','酒店','航空','机票','电影','票房','游戏','快递','物流','外卖','美团','滴滴','出行',
+    '买房','房价','楼市','汽车','销量','促销','打折','免税','带货','直播','拼多多','京东','淘宝',
+    '新品','发布','预售','双11','618','购物节','免税店','跨境电商','潮牌','时尚','穿搭',
+  ],
+  '🏥医疗健康': [
+    '医疗','医药','医院','疫苗','病毒','健康','医保','药品','中药','创新药','生物制药',
+    '基因','体检','养老','生育','医美','康养','癌症','糖尿病','高血压','心脏','手术',
+    '疾控','FDA','NMPA','临床试验','CRO','医疗器械','辅助生殖','三胎','儿科','心理',
+  ],
+  '💰金融与宏观': [
+    'A股','港股','美股','股市','央行','利率','降息','加息','通胀','CPI','GDP','经济',
+    '财政','税收','人民币','汇率','外汇','债券','基金','银行','贷款','房贷','社保','养老金',
+    '失业','就业','薪资','收入','贸易','出口','进口','美联储','比特币','黄金','原油','期货',
+    '房价','楼市','房地产','首付','公积金','理财','保险','保费','亏损','盈利','营收',
+  ],
+  '🎬文娱与自媒体': [
+    '综艺','电视剧','偶像','明星','网红','抖音','快手','B站','视频','短视频','直播',
+    '热搜','微博','社交','网文','IP','影视','音乐','演唱会','动漫','电竞','游戏','Steam',
+    '票房','导演','演员','选秀','偶像团体','粉丝','追星','娱乐圈','八卦',
+  ],
+  '📰今日热点': null, // 兜底
 };
 
 // 解析 Google News RSS XML
@@ -391,23 +384,28 @@ async function fetchHackerNews() {
   return out;
 }
 
-// 用关键词白名单过滤某条新闻是否属于某个板块（仅消费/医疗等需要二次过滤的板块）
-function passesCategoryFilter(title, category) {
-  const keywords = CATEGORY_FILTERS[category];
-  if (!keywords) return true; // null = 不过滤，全收
-  const t = title.toLowerCase();
-  return keywords.some(kw => t.includes(kw.toLowerCase()));
+// 用强关键词白名单判断新闻属于哪个板块（仅用于GN综合源的二次分配）
+// 匹配逻辑：标题包含某板块任一关键词 → 归入该板块；都不匹配 → 📰今日热点
+function classifyByKeywords(title) {
+  const t = title;
+  // 按优先级依次检查（科技关键词最多最先查，避免被其他分类抢走）
+  const checkOrder = ['💻科技与AI', '💰金融与宏观', '🛒大消费与零售', '🎬文娱与自媒体', '🏥医疗健康'];
+  for (const cat of checkOrder) {
+    const keywords = CATEGORY_FILTERS[cat];
+    if (!keywords) continue;
+    for (const kw of keywords) {
+      if (t.includes(kw)) return cat;
+    }
+  }
+  return '📰今日热点'; // 兜底
 }
 
-// 用 fetch 抓取单个新闻源，带超时；每个源自带 targetCategory 标签
+// 用 fetch 抓取单个新闻源，带超时
 async function fetchNewsSource(srcConfig) {
   try {
-    // Hacker News 特殊处理
     if (srcConfig.special === 'hackernews') {
       return await fetchHackerNews();
     }
-
-    // Google News RSS：fetch XML 文本
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 10000);
     const resp = await fetch(srcConfig.url + '&_t=' + Date.now(), {
@@ -417,15 +415,9 @@ async function fetchNewsSource(srcConfig) {
     clearTimeout(timer);
     if (!resp.ok) return [];
     const xmlText = await resp.text();
-    const items = srcConfig.parser(xmlText);
-
-    // 如果该源有目标分类且该分类有白名单过滤器，做二次过滤
-    if (srcConfig.targetCategory && CATEGORY_FILTERS[srcConfig.targetCategory]) {
-      return items.filter(item => passesCategoryFilter(item.title, srcConfig.targetCategory));
-    }
-    return items;
+    return srcConfig.parser(xmlText);
   } catch (e) {
-    console.log('[news] source fetch failed:', (srcConfig.url || srcConfig.special || srcConfig.targetCategory).slice(0, 50), e.message);
+    console.log('[news] source failed:', (srcConfig.url || srcConfig.special || '').slice(0, 50), e.message);
     return [];
   }
 }
@@ -557,19 +549,39 @@ async function generateRealNewsBriefing(focus) {
     )
   );
 
-  // 2) 按 targetCategory 归档（不再混在一起猜分类！）
+  // 2) 按源归档；对「📰待分类」用关键词白名单二次分配
   const categorized = {}; // { '💻科技与AI': [item, ...], ... }
   for (const { items, targetCategory } of fetchResults) {
-    if (!categorized[targetCategory]) categorized[targetCategory] = [];
-    // 去重：标题前15字符相同视为重复
-    const seen = new Set(categorized[targetCategory].map(i => i.title.slice(0, 15)));
-    for (const item of items) {
-      const key = item.title.slice(0, 15);
-      if (!seen.has(key)) {
-        seen.add(key);
-        categorized[targetCategory].push(item);
+    if (targetCategory === '📰待分类') {
+      // GN综合源：逐条用关键词匹配，匹配不上的进热点
+      for (const item of items) {
+        const cat = classifyByKeywords(item.title);
+        if (!categorized[cat]) categorized[cat] = [];
+        categorized[cat].push(item);
+      }
+    } else {
+      // 已确定分类的源（如HN→科技）：直接归入
+      if (!categorized[targetCategory]) categorized[targetCategory] = [];
+      const seen = new Set(categorized[targetCategory].map(i => i.title.slice(0, 15)));
+      for (const item of items) {
+        const key = item.title.slice(0, 15);
+        if (!seen.has(key)) {
+          seen.add(key);
+          categorized[targetCategory].push(item);
+        }
       }
     }
+  }
+
+  // 全局去重（跨源去重）
+  for (const cat of Object.keys(categorized)) {
+    const seen = new Set();
+    categorized[cat] = categorized[cat].filter(item => {
+      const key = item.title.slice(0, 15);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }
 
   const totalItems = Object.values(categorized).reduce((sum, arr) => sum + arr.length, 0);
@@ -577,7 +589,7 @@ async function generateRealNewsBriefing(focus) {
     throw new Error('未能获取到任何新闻数据，请稍后重试');
   }
 
-  console.log(`[news] fetched ${totalItems} items into ${Object.keys(categorized).length} categories`);
+  console.log(`[news] fetched ${totalItems} items → ${Object.keys(categorized).map(k => `${k}(${categorized[k].length})`).join(', ')}`);
 
   // 3) 按需选取板块
   const sections = [];
