@@ -5175,7 +5175,7 @@ function loadTodayNews() { return loadJSON(getTodayNewsKey(), null); }
 function saveTodayNews(data) { saveJSON(getTodayNewsKey(), data); }
 function clearTodayNews() { localStorage.removeItem(getTodayNewsKey()); }
 // 简报结构版本：代码/ prompt 有重大调整时 +1，使当天旧缓存自动失效、强制重生成
-const NEWS_SCHEMA_VERSION = 7;
+const NEWS_SCHEMA_VERSION = 8;
 
 function getWeekdayCN(d) {
   return ['周日','周一','周二','周三','周四','周五','周六'][d.getDay()];

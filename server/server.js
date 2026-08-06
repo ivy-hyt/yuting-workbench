@@ -270,19 +270,21 @@ function serveStatic(req, res, pathname) {
 // 设计原则：每个新闻源自带目标分类标签，抓取后直接归入对应板块。
 // 不再"全部混在一起用关键词猜分类"，避免社会新闻跑到科技板块。
 
-// 新闻源配置：只用2个源
-// - HN: 100%科技内容，直接归入💻科技与AI
-// - GN综合: 所有领域混合，抓取后用强关键词白名单分配到各板块
-// - 匹配不上的统一放入📰今日热点（宁可漏收不可错收）
-const NEWS_SOURCES = {
-  hnTech: {
-    special: 'hackernews',
-    targetCategory: '💻科技与AI',
+// 新闻源配置：
+// 1) 热榜源（百度实时热搜 + 头条热榜）—— 决定"什么是当下真正的热点"
+// 2) Hacker News —— 科技板块的真实热门技术话题
+// 热榜话题本身来自社交平台，不直接作为"权威媒体"；最终展示的原文链接
+// 会再用 Google News 搜索该热点、按权威白名单取首个匹配（见 resolveAuthoritativeLinks）。
+const HOT_SOURCES = {
+  baidu: {
+    url: 'https://top.baidu.com/api/board?platform=wise&tab=realtime',
+    parser: parseBaiduHot,
+    platform: '百度热搜',
   },
-  gnHot: {
-    url: 'https://news.google.com/rss?hl=zh-CN&gl=CN&ceid=CN:zh-Hans',
-    parser: parseGoogleNewsRSS,
-    targetCategory: '📰待分类',
+  toutiao: {
+    url: 'https://www.toutiao.com/hot-event/hot-board/?origin=toutiao_pc',
+    parser: parseToutiaoHot,
+    platform: '头条热榜',
   },
 };
 
@@ -378,6 +380,48 @@ function parseGoogleNewsRSS(xmlText) {
   return out;
 }
 
+// 解析百度实时热搜 API
+function parseBaiduHot(json) {
+  const out = [];
+  try {
+    const cards = (json && json.data && json.data.cards) || [];
+    for (const card of cards) {
+      const groups = card.content || [];
+      for (const g of groups) {
+        const items = g.content || [];
+        for (const it of items) {
+          if (it.word) {
+            out.push({
+              title: String(it.word).replace(/<[^>]*>/g, '').trim(),
+              url: it.url || '',
+              source: '百度热搜',
+            });
+          }
+        }
+      }
+    }
+  } catch (e) { /* ignore */ }
+  return out;
+}
+
+// 解析头条热榜 API
+function parseToutiaoHot(json) {
+  const out = [];
+  try {
+    const items = (json && json.data) || [];
+    for (const it of items) {
+      if (it.Title) {
+        out.push({
+          title: String(it.Title).replace(/<[^>]*>/g, '').trim(),
+          url: it.Url || '',
+          source: '头条热榜',
+        });
+      }
+    }
+  } catch (e) { /* ignore */ }
+  return out;
+}
+
 // 获取 Hacker News 热门（前15条）
 async function fetchHackerNews() {
   const out = [];
@@ -415,6 +459,58 @@ async function fetchHackerNews() {
     }
   } catch (e) { /* ignore */ }
   return out;
+}
+
+// 用 Google News 搜索某热点话题，按权威白名单返回首个匹配的真实报道
+// 找不到权威报道则返回 null（调用方会回退到热榜自身链接）
+async function searchAuthoritativeArticle(query) {
+  const q = encodeURIComponent(String(query).slice(0, 30));
+  const url = `https://news.google.com/rss/search?q=${q}&hl=zh-CN&gl=CN&ceid=CN:zh-Hans`;
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    const resp = await fetch(url, {
+      signal: ctrl.signal,
+      headers: { 'Accept': 'application/rss+xml, application/xml, text/xml, */*', 'User-Agent': 'Mozilla/5.0 (compatible; NewsReader/1.0)' },
+    });
+    clearTimeout(timer);
+    if (!resp.ok) return null;
+    const xml = await resp.text();
+    const items = parseGoogleNewsRSS(xml);
+    const auth = items.find(it => isAuthoritative(it.source));
+    return auth ? { url: auth.url, source: auth.source } : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// 为一批热点话题批量解析权威原文链接（已权威来源如 HN 直接保留，其余分批并发搜索）
+async function resolveAuthoritativeLinks(items) {
+  const results = new Array(items.length).fill(null);
+  const tasks = [];
+  items.forEach((it, i) => {
+    if (isAuthoritative(it.source)) {
+      results[i] = { url: it.url, source: it.source };
+    } else {
+      tasks.push(i);
+    }
+  });
+  const BATCH = 4;
+  for (let b = 0; b < tasks.length; b += BATCH) {
+    const batch = tasks.slice(b, b + BATCH);
+    const sub = await Promise.all(
+      batch.map(i =>
+        searchAuthoritativeArticle(items[i].title)
+          .then(r => ({ i, r }))
+          .catch(() => ({ i, r: null }))
+      )
+    );
+    for (const { i, r } of sub) {
+      // 找到权威报道用权威链接；否则保留热榜自身链接（绝不丢热点）
+      results[i] = r || { url: items[i].url, source: items[i].source };
+    }
+  }
+  return results;
 }
 
 // 用强关键词白名单判断新闻属于哪个板块（仅用于GN综合源的二次分配）
@@ -567,75 +663,61 @@ function parseAiSummary(text, expectedCount) {
 }
 
 // 主函数：生成真实新闻简报
+// 流程：抓取热榜(百度+头条)作为"热点信号" → 关键词归类到各板块 →
+//       为每条热点用 Google News 搜索匹配权威媒体原文 → AI 摘要
 async function generateRealNewsBriefing(focus) {
   const isAll = focus === '全行业综合';
 
-  // 1) 并行抓取所有新闻源（每个源自带 targetCategory）
-  const sourceEntries = Object.entries(NEWS_SOURCES);
-  const fetchResults = await Promise.all(
-    sourceEntries.map(([name, cfg]) =>
-      fetchNewsSource(cfg).then(items => ({
-        name,
-        items,
-        targetCategory: cfg.targetCategory || '📰今日热点',
-      })).catch(() => ({ name, items: [], targetCategory: '📰今日热点' }))
-    )
-  );
+  // 1) 并行抓取热榜（百度+头条）+ Hacker News 科技热门
+  const [hotResults, hnItems] = await Promise.all([
+    Promise.all(
+      Object.entries(HOT_SOURCES).map(([name, cfg]) =>
+        fetchHotSource(cfg)
+          .then(items => ({ name, items }))
+          .catch(() => ({ name, items: [] }))
+      )
+    ),
+    fetchHackerNews().catch(() => []),
+  ]);
 
-  // 1.5) 权威媒体过滤：只保留权威机构发布的新闻，剔除不知名/噱头媒体
-  let beforeFilter = 0, afterFilter = 0;
-  for (const r of fetchResults) {
-    beforeFilter += r.items.length;
-    r.items = r.items.filter(it => isAuthoritative(it.source));
-    afterFilter += r.items.length;
-  }
-  console.log(`[news] 权威过滤: ${beforeFilter} → ${afterFilter} 条（已剔除 ${beforeFilter - afterFilter} 条非权威来源）`);
-
-  // 2) 按源归档；对「📰待分类」用关键词白名单二次分配
-  const categorized = {}; // { '💻科技与AI': [item, ...], ... }
-  for (const { items, targetCategory } of fetchResults) {
-    if (targetCategory === '📰待分类') {
-      // GN综合源：逐条用关键词匹配，匹配不上的进热点
-      for (const item of items) {
-        const cat = classifyByKeywords(item.title);
-        if (!categorized[cat]) categorized[cat] = [];
-        categorized[cat].push(item);
-      }
-    } else {
-      // 已确定分类的源（如HN→科技）：直接归入
-      if (!categorized[targetCategory]) categorized[targetCategory] = [];
-      const seen = new Set(categorized[targetCategory].map(i => i.title.slice(0, 15)));
-      for (const item of items) {
-        const key = item.title.slice(0, 15);
-        if (!seen.has(key)) {
-          seen.add(key);
-          categorized[targetCategory].push(item);
-        }
+  // 2) 合并热榜话题（去重）
+  const hotTopics = [];
+  const seenTitles = new Set();
+  for (const { items } of hotResults) {
+    for (const it of items) {
+      if (!it.title) continue;
+      const key = it.title.slice(0, 12);
+      if (!seenTitles.has(key)) {
+        seenTitles.add(key);
+        hotTopics.push(it);
       }
     }
   }
+  console.log(`[news] 热榜抓取: 百度/头条共 ${hotTopics.length} 条热点话题`);
 
-  // 全局去重（跨源去重）
-  for (const cat of Object.keys(categorized)) {
-    const seen = new Set();
-    categorized[cat] = categorized[cat].filter(item => {
-      const key = item.title.slice(0, 15);
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+  if (hotTopics.length === 0) {
+    throw new Error('未能获取到任何热点数据，请稍后重试');
   }
 
-  const totalItems = Object.values(categorized).reduce((sum, arr) => sum + arr.length, 0);
-  if (totalItems === 0) {
-    throw new Error('未能获取到任何新闻数据，请稍后重试');
+  // 3) 按关键词把热点归类到各板块
+  const categorized = {};
+  for (const topic of hotTopics) {
+    const cat = classifyByKeywords(topic.title);
+    if (!categorized[cat]) categorized[cat] = [];
+    categorized[cat].push({ title: topic.title, url: topic.url, source: topic.source });
+  }
+  // Hacker News 直接归入科技板块（已是权威技术热点）
+  if (hnItems.length > 0) {
+    if (!categorized['💻科技与AI']) categorized['💻科技与AI'] = [];
+    for (const it of hnItems) {
+      categorized['💻科技与AI'].push({ title: it.title, url: it.url, source: it.source });
+    }
   }
 
-  console.log(`[news] fetched ${totalItems} items → ${Object.keys(categorized).map(k => `${k}(${categorized[k].length})`).join(', ')}`);
+  console.log(`[news] 热点归类: ${Object.keys(categorized).map(k => `${k}(${categorized[k].length})`).join(', ')}`);
 
-  // 3) 按需选取板块
+  // 4) 按需选取板块
   const sections = [];
-
   if (isAll) {
     // 全行业模式：固定顺序展示6个板块，每个取 top 2
     const displayOrder = [
@@ -650,16 +732,13 @@ async function generateRealNewsBriefing(focus) {
     }
   } else {
     // 单行业模式：只显示该分类 + 热点补充
-    // 先找匹配的分类
     const matchedCat = Object.keys(CATEGORY_FILTERS).find(k => k.includes(focus));
     if (matchedCat && categorized[matchedCat] && categorized[matchedCat].length > 0) {
       sections.push({ category: matchedCat, rawItems: categorized[matchedCat].slice(0, 4) });
     }
-    // 始终补充今日热点（top 2）
     if (categorized['📰今日热点'] && categorized['📰今日热点'].length > 0) {
       sections.push({ category: '📰今日热点', rawItems: categorized['📰今日热点'].slice(0, 3) });
     }
-    // 如果什么都没匹配到，用热点兜底
     if (sections.length === 0) {
       const fallbackCat = Object.keys(categorized)[0];
       sections.push({ category: fallbackCat, rawItems: categorized[fallbackCat].slice(0, 5) });
@@ -667,27 +746,29 @@ async function generateRealNewsBriefing(focus) {
   }
 
   if (sections.length === 0) {
-    // 最终兜底
     const anyCat = Object.keys(categorized)[0] || '📰今日热点';
     sections.push({ category: anyCat, rawItems: categorized[anyCat]?.slice(0, 6) || [] });
   }
 
-  // 5) 收集所有需要摘要的新闻，批量调用 AI
+  // 5) 为每条热点解析权威媒体原文链接（热榜自身链接作为回退，绝不丢热点）
   const allRawItems = sections.flatMap(s => s.rawItems);
-  console.log(`[news] summarizing ${allRawItems.length} news items via AI...`);
+  console.log(`[news] 为 ${allRawItems.length} 条热点解析权威原文链接...`);
+  const resolvedLinks = await resolveAuthoritativeLinks(allRawItems);
 
+  // 6) 批量 AI 摘要
   const summaries = await aiSummarize(allRawItems);
 
-  // 6) 组装最终结果
-  let summaryIdx = 0;
+  // 7) 组装最终结果
+  let idx = 0;
   const finalSections = sections.map(section => {
-    const items = section.rawItems.map((rawItem, i) => {
-      const summary = summaries[summaryIdx] || { brief: rawItem.title, insight: '' };
-      summaryIdx++;
+    const items = section.rawItems.map((rawItem) => {
+      const summary = summaries[idx] || { brief: rawItem.title, insight: '' };
+      const link = resolvedLinks[idx] || { url: rawItem.url, source: rawItem.source };
+      idx++;
       return {
         title: rawItem.title,
-        url: rawItem.url,
-        source: rawItem.source,
+        url: link.url,
+        source: link.source,
         brief: summary.brief || rawItem.title.slice(0, 40),
         insight: summary.insight,
       };
@@ -695,16 +776,38 @@ async function generateRealNewsBriefing(focus) {
     return { category: section.category, items };
   });
 
+  const authCount = resolvedLinks.filter(l => l && isAuthoritative(l.source)).length;
   return {
     subtitle: `今日 · ${formatNewsDateCN(new Date())}`,
     readTime: '约5分钟',
     sections: finalSections,
-    version: 7,
+    version: 8,
     generatedAt: new Date().toISOString(),
-    sourceCount: fetchResults.filter(r => r.items.length > 0).length,
+    sourceCount: hotResults.filter(r => r.items.length > 0).length + (hnItems.length > 0 ? 1 : 0),
     newsCount: allRawItems.length,
+    authoritativeCount: authCount,
   };
 }
+
+// 抓取单个热榜源（百度/头条）
+async function fetchHotSource(cfg) {
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 10000);
+    const resp = await fetch(cfg.url, {
+      signal: ctrl.signal,
+      headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0 (compatible; NewsReader/1.0)' },
+    });
+    clearTimeout(timer);
+    if (!resp.ok) return [];
+    const json = await resp.json().catch(() => ({}));
+    return cfg.parser(json).map(it => ({ ...it, source: cfg.platform }));
+  } catch (e) {
+    console.log('[news] hot source failed:', (cfg.url || '').slice(0, 50), e.message);
+    return [];
+  }
+}
+
 
 // 格式化日期（中文风格，服务端用）
 function formatNewsDateCN(d) {
