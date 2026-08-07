@@ -3542,8 +3542,8 @@ body {
   <div class="page" id="page-module1">
     <div class="module-header">
       <div class="back-btn" onclick="showPage('home')">← 返回首页</div>
-      <div class="m-title">📚 人性 · 社交 · 沟通能力提升</div>
-      <div class="m-sub" id="m1-subtitle">前期知识输入为主，实战循序渐进</div>
+      <div class="m-title">📚 社会科学 · 每日概念精读</div>
+      <div class="m-sub" id="m1-subtitle">社会学 / 心理学 / 经济学经典概念，每天不重样</div>
     </div>
     <div class="section" id="m1-content"></div>
     <div class="spacer"></div>
@@ -3715,8 +3715,8 @@ const APP_DATA = {
 
   // ===== 模块1：学习路线 =====
   module1: {
-    title: "人性 · 社交 · 沟通能力提升",
-    subtitle: "前期知识输入为主，实战循序渐进",
+    title: "社会科学 · 每日概念精读",
+    subtitle: "社会学 / 心理学 / 经济学经典概念，每天不重样",
     phases: [
       {
         phase: "第一阶段 · 地基搭建",
@@ -4408,7 +4408,7 @@ function getDailyKnowledgeIdx() {
 }
 
 // ===== 每日知识点缓存（AI生成3条，按日期） =====
-const KNOWLEDGE_SCHEMA_VERSION = 2;
+const KNOWLEDGE_SCHEMA_VERSION = 3; // v3: 改为经典学科概念科普（社会学/心理学/经济学）
 function getTodayKnowledgeKey() { return 'yutingKnowledge_' + getTodayKey(); }
 function loadTodayKnowledge() {
   const cached = loadJSON(getTodayKnowledgeKey(), null);
@@ -4421,8 +4421,8 @@ function saveTodayKnowledge(list) {
 }
 
 async function generateTodayKnowledge() {
-  const sys = '你是中文社科知识编辑。请生成今日3条知识点，覆盖社会心理学、人性规律、沟通逻辑、社会学等方向。只输出合法JSON，不要markdown代码块，不要任何额外文字：';
-  const user = '{"knowledge":[{"topic":"主题名（带emoji）","source":"来源书名第X章","content":["【核心概念】...","【底层逻辑】...","【现实映射】...","【行动启示】..."],"questions":["...","...","..."]},{"topic":"...",...},{"topic":"...",...}]}\n\n要求：\n1. 面向25岁女性职场人，结合自媒体运营场景\n2. 每天3条不同主题，避免重复常见概念（如不从众效应、旁观者效应、互惠原理、非暴力沟通、差序格局、沉没成本中选取）\n3. 每条内容有深度且实用，250-350字\n4. 思考题要与自媒体/职场/社交相关\n5. 必须输出合法JSON，knowledge数组长度严格为3';
+  const sys = '你是一位博学的社会科学普及编辑，精通社会学、心理学、经济学、行为科学、认知科学。请生成今日3条知识点，每条是一个经典学术概念。只输出合法JSON，不要markdown代码块，不要任何额外文字：';
+  const user = '{"knowledge":[{"topic":"🧠 概念名（中英双语）","source":"学科名 · 经典著作/研究者","content":["【核心定义】用一句话说清这个概念是什么（含英文术语）","【经典实验/案例】提出者是谁、怎么发现的、经典实验或真实案例（具体有画面感）","【生活映射】这个概念如何解释我们日常看到的现象（举2个不同领域的例子）","【反直觉洞察】大多数人误解的地方 / 这个概念的颠覆性启示"],"questions":["结合你的生活经验，...？","如果把这个概念应用到...？","你认为...和...有什么联系？"]},{"topic":"...",...},{"topic":"...",...}]}\n\n要求：\n1. 每条来自不同学科领域，轮流覆盖：社会心理学、行为经济学、认知心理学、社会学、博弈论/决策论、发展心理学、组织行为学、传播学\n2. 选择真正经典的、有影响力的学术概念（如：锚定效应、禀赋效应、基本归因错误、邓巴数、幸存者偏差、破窗理论、马太效应、二八定律、峰终定律、延迟满足、习得性无助、旁观者干预、沉没成本谬误、框架效应、社会认同理论、认知失调等）\n3. 避免过度通俗化的"鸡汤"写法，要有学术严谨性但语言通俗易懂\n4. 每条内容300-400字，信息密度高\n5. 思考题要能引发深度思考，不要泛泛而谈\n6. 必须输出合法JSON，knowledge数组长度严格为3';
   try {
     const res = await callAI(sys, user, { timeoutMs: 50000, maxAttempts: 2 });
     if (res.error) throw new Error(res.error);
@@ -4548,7 +4548,7 @@ function renderQuickStats() {
 function renderModuleGrid() {
   const grid = document.getElementById('moduleGrid');
   const modules = [
-    { id: 'module1', icon: '📚', bg: '#F0EDFF', title: '人性社交沟通', sub: '系统学习路线+每日知识点', badge: '' },
+    { id: 'module1', icon: '📚', bg: '#F0EDFF', title: '社会科学概念', sub: '社会学/心理学/经济学每日精读', badge: '' },
     { id: 'module2', icon: '📰', bg: '#E0F7FA', title: '行业资讯简报', sub: '5分钟每日精简资讯', badge: 'NEW' },
     { id: 'module3', icon: '💪', bg: '#FFE0EC', title: '健身塑形打卡', sub: '动态自适应训练计划', badge: '' },
     { id: 'module4', icon: '👗', bg: '#F3E8FF', title: '穿搭风格打造', sub: '低饱和韩系博主推荐', badge: '' },
