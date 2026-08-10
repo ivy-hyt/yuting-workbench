@@ -763,30 +763,56 @@ async function generateRealNewsBriefing(focus) {
   // 6) 批量 AI 摘要
   const summaries = await aiSummarize(allRawItems);
 
-  // 7) 组装最终结果
+  // 7) 组装最终结果：仅保留成功匹配到权威媒体的条目（未匹配的一律不展示，符合"非权威不推"）
   let idx = 0;
-  const finalSections = sections.map(section => {
-    const items = section.rawItems.map((rawItem) => {
-      const summary = summaries[idx] || { brief: rawItem.title, insight: '' };
-      const link = resolvedLinks[idx] || { url: rawItem.url, source: rawItem.source };
-      idx++;
-      return {
-        title: rawItem.title,
-        url: link.url,
-        source: link.source,
-        brief: summary.brief || rawItem.title.slice(0, 40),
-        insight: summary.insight,
-      };
-    });
-    return { category: section.category, items };
-  });
+  let finalSections = sections
+    .map(section => {
+      const items = section.rawItems
+        .map((rawItem) => {
+          const summary = summaries[idx] || { brief: rawItem.title, insight: '' };
+          const link = resolvedLinks[idx] || { url: rawItem.url, source: rawItem.source };
+          idx++;
+          return {
+            title: rawItem.title,
+            url: link.url,
+            source: link.source,
+            brief: summary.brief || rawItem.title.slice(0, 40),
+            insight: summary.insight,
+          };
+        })
+        .filter(item => isAuthoritative(item.source));
+      return { category: section.category, items };
+    })
+    .filter(section => section.items.length > 0);
+
+  // 安全兜底：若当天所有热点都未匹配到权威媒体，退回展示原始热点（避免整页空白）
+  if (finalSections.length === 0) {
+    idx = 0;
+    finalSections = sections
+      .map(section => {
+        const items = section.rawItems.map((rawItem) => {
+          const summary = summaries[idx] || { brief: rawItem.title, insight: '' };
+          const link = resolvedLinks[idx] || { url: rawItem.url, source: rawItem.source };
+          idx++;
+          return {
+            title: rawItem.title,
+            url: link.url,
+            source: link.source,
+            brief: summary.brief || rawItem.title.slice(0, 40),
+            insight: summary.insight,
+          };
+        });
+        return { category: section.category, items };
+      })
+      .filter(section => section.items.length > 0);
+  }
 
   const authCount = resolvedLinks.filter(l => l && isAuthoritative(l.source)).length;
   return {
     subtitle: `今日 · ${formatNewsDateCN(new Date())}`,
     readTime: '约5分钟',
     sections: finalSections,
-    version: 8,
+    version: 9,
     generatedAt: new Date().toISOString(),
     sourceCount: hotResults.filter(r => r.items.length > 0).length + (hnItems.length > 0 ? 1 : 0),
     newsCount: allRawItems.length,
