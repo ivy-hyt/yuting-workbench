@@ -6814,6 +6814,8 @@ async function syncHealthFromCloud() {
     const newStr = JSON.stringify(merged);
     if (oldStr !== newStr) {
       localStorage.setItem('huaweiHealthData', JSON.stringify(merged));
+      // 把并集结果回写云端，保证云端始终是各设备数据的超集（闭环同步）
+      syncHealthToCloud(merged);
       return true;
     }
     return false;
