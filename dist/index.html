@@ -6755,9 +6755,21 @@ async function syncHealthFromCloud() {
     });
     if (!resp.ok) return null;
     const cloud = await resp.json();
-    if (!cloud || !cloud.weightHistory) return null;
 
     const local = getUserHealthData() || {};
+    const cloudHasData = cloud && (cloud.weightHistory && cloud.weightHistory.length || cloud.bodyFatHistory && cloud.bodyFatHistory.length);
+
+    // 云端为空但本地有历史数据：把本地备份到云端，让其他设备也能拉到
+    if (!cloudHasData) {
+      const localHasData = (local.weightHistory && local.weightHistory.length) || (local.bodyFatHistory && local.bodyFatHistory.length);
+      if (localHasData) {
+        console.log('[sync] 云端暂无数据，将本地历史备份到云端');
+        syncHealthToCloud(local);
+      }
+      return false;
+    }
+
+    if (!local) return false;
     // 合并体重记录：按日期去重，云端+本地合并取并集
     const localWH = local.weightHistory || [];
     const cloudWH = cloud.weightHistory || [];

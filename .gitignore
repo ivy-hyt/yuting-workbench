@@ -10,3 +10,4 @@ node_modules/
 # 注意：必须是 /app/（仓库根），否则会误伤 ios/App/ 原生工程
 /app/
 .workbuddy/
+server/userdata.json

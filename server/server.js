@@ -47,6 +47,11 @@ const CFG = {
   deepseekKey: process.env.DEEPSEEK_API_KEY || '',
   doubaoKey: process.env.DOUBAO_API_KEY || '',
   doubaoEndpoint: process.env.DOUBAO_ENDPOINT || '',
+  // 云端数据持久化：Render 免费版磁盘是临时性的（每次部署清空），
+  // 因此把用户健康数据持久化到 GitHub 仓库文件，跨部署/跨设备不丢。
+  githubToken: process.env.GITHUB_TOKEN || '',
+  githubRepo: process.env.GITHUB_REPO || 'ivy-hyt/yuting-workbench',
+  githubDataPath: process.env.GITHUB_DATA_PATH || 'server/userdata.json',
 };
 
 // 允许跨域的来源（Web 前端 + iOS Capacitor 壳）
@@ -1025,9 +1030,105 @@ const server = http.createServer(async (req, res) => {
       return sendJson(res, 200, { ok: true });
     }
 
-    // 5) 用户健康数据云端存取（跨设备同步，文件存储）
+    // ===== GitHub 持久化存储（Render 磁盘会随部署清空，故数据落到 GitHub 仓库文件） =====
+    // 内存缓存减少 API 调用；PUT 带 sha 做乐观并发，遇 409 自动重试。
+    let _ghCache = { data: null, sha: null, at: 0 };
+    const GH_CACHE_TTL = 15000;
+
+    async function ghGetData() {
+      if (_ghCache.at && Date.now() - _ghCache.at < GH_CACHE_TTL) return _ghCache;
+      const token = CFG.githubToken;
+      if (!token) return _ghCache.at ? _ghCache : null;
+      const url = `https://api.github.com/repos/${CFG.githubRepo}/contents/${encodeURIComponent(CFG.githubDataPath)}`;
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 8000);
+      try {
+        const resp = await fetch(url, {
+          headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'User-Agent': 'yuting-workbench' },
+          signal: ctrl.signal,
+        });
+        clearTimeout(t);
+        if (resp.status === 404) { _ghCache = { data: null, sha: null, at: Date.now() }; return _ghCache; }
+        if (!resp.ok) { console.warn('[gh] GET 失败', resp.status); return _ghCache.at ? _ghCache : null; }
+        const j = await resp.json();
+        const content = Buffer.from(j.content || '', 'base64').toString('utf-8');
+        const data = content ? JSON.parse(content) : null;
+        _ghCache = { data, sha: j.sha, at: Date.now() };
+        return _ghCache;
+      } catch (e) {
+        clearTimeout(t);
+        console.warn('[gh] GET 异常', e.message);
+        return _ghCache.at ? _ghCache : null;
+      }
+    }
+
+    async function ghPutData(dataObj, attempt = 0) {
+      const token = CFG.githubToken;
+      if (!token) return false;
+      const get = await ghGetData();
+      const sha = get && get.sha ? get.sha : undefined;
+      const url = `https://api.github.com/repos/${CFG.githubRepo}/contents/${encodeURIComponent(CFG.githubDataPath)}`;
+      const body = {
+        message: 'chore: update user health data (cross-device sync)',
+        content: Buffer.from(JSON.stringify(dataObj, null, 2), 'utf-8').toString('base64'),
+        sha,
+      };
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 10000);
+      try {
+        const resp = await fetch(url, {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json', 'User-Agent': 'yuting-workbench' },
+          body: JSON.stringify(body),
+          signal: ctrl.signal,
+        });
+        clearTimeout(t);
+        if (resp.status === 409 && attempt < 2) {
+          // 并发冲突：清空缓存后重试
+          _ghCache.at = 0;
+          return ghPutData(dataObj, attempt + 1);
+        }
+        if (resp.ok) {
+          const j = await resp.json().catch(() => ({}));
+          _ghCache = { data: dataObj, sha: j.content && j.content.sha, at: Date.now() };
+          return true;
+        }
+        console.warn('[gh] PUT 失败', resp.status);
+        return false;
+      } catch (e) {
+        clearTimeout(t);
+        console.warn('[gh] PUT 异常', e.message);
+        return false;
+      }
+    }
+
+    // 合并两条健康记录：历史按日期并集，标量取较新一方
+    function mergeHealthRecords(a, b) {
+      const unionByDate = (x, y) => {
+        const out = [...(x || [])];
+        (y || []).forEach(it => {
+          if (!out.find(o => o.date === it.date)) out.push(it);
+        });
+        return out.sort((p, q) => (p.date < q.date ? -1 : p.date > q.date ? 1 : 0));
+      };
+      const ta = a.cloudSyncedAt || '1970';
+      const tb = b.cloudSyncedAt || '1970';
+      const bNewer = tb >= ta;
+      return {
+        weightHistory: unionByDate(a.weightHistory, b.weightHistory),
+        bodyFatHistory: unionByDate(a.bodyFatHistory, b.bodyFatHistory),
+        totalSessions: Math.max(a.totalSessions || 0, b.totalSessions || 0),
+        totalDuration: Math.max(a.totalDuration || 0, b.totalDuration || 0),
+        streak: Math.max(a.streak || 0, b.streak || 0),
+        weightGoal: bNewer ? (b.weightGoal || a.weightGoal) : (a.weightGoal || b.weightGoal),
+        latest: bNewer ? (b.latest || a.latest) : (a.latest || b.latest),
+        cloudSyncedAt: b.cloudSyncedAt || a.cloudSyncedAt,
+      };
+    }
+
+    // 5) 用户健康数据云端存取（跨设备同步，持久化到 GitHub 仓库文件）
     //    GET  /api/userdata        → 返回云端数据
-    //    POST /api/userdata        → 保存云端数据（整体覆盖）
+    //    POST /api/userdata        → 保存云端数据（与现有数据按日期并集合并）
     if (p === '/api/userdata') {
       applyCors(res, req);
       res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
@@ -1035,10 +1136,15 @@ const server = http.createServer(async (req, res) => {
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
 
-      const dataFile = path.join(__dirname, 'userdata.json');
+      if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
 
       if (req.method === 'GET') {
         try {
+          // 主存储：GitHub 仓库文件（持久，跨部署/跨设备不丢）
+          const gh = await ghGetData();
+          if (gh && gh.data) return sendJson(res, 200, gh.data);
+          // 兜底：本地磁盘（部署瞬间可能有数据）
+          const dataFile = path.join(__dirname, 'userdata.json');
           if (fs.existsSync(dataFile)) {
             const raw = fs.readFileSync(dataFile, 'utf-8');
             return sendJson(res, 200, JSON.parse(raw));
@@ -1052,13 +1158,22 @@ const server = http.createServer(async (req, res) => {
       if (req.method === 'POST') {
         let buf = '';
         req.on('data', c => { buf += c; if (buf.length > 2e6) req.destroy(); });
-        req.on('end', () => {
+        req.on('end', async () => {
           try {
-            const parsed = JSON.parse(buf);
-            // 加上最后同步时间
-            parsed.cloudSyncedAt = new Date().toISOString();
-            fs.writeFileSync(dataFile, JSON.stringify(parsed, null, 2), 'utf-8');
-            return sendJson(res, 200, { ok: true, cloudSyncedAt: parsed.cloudSyncedAt });
+            const incoming = JSON.parse(buf);
+            incoming.cloudSyncedAt = new Date().toISOString();
+
+            // 关键：与云端已有数据做"按日期并集"合并，避免任一设备覆盖掉另一设备的记录
+            const existing = await ghGetData();
+            const merged = existing && existing.data
+              ? mergeHealthRecords(existing.data, incoming)
+              : incoming;
+
+            // 主存储：GitHub（持久）
+            const ok = await ghPutData(merged);
+            // 兜底：同时写本地磁盘（即使 GitHub 不可用也不丢失）
+            try { fs.writeFileSync(path.join(__dirname, 'userdata.json'), JSON.stringify(merged, null, 2), 'utf-8'); } catch (_) {}
+            return sendJson(res, 200, { ok: true, cloudSyncedAt: merged.cloudSyncedAt, githubSaved: ok });
           } catch (e) {
             return sendJson(res, 400, { error: '保存失败: ' + e.message });
           }
