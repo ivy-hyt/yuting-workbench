@@ -362,6 +362,40 @@ function isAuthoritative(source) {
   return AUTHORITATIVE_SOURCES.some(kw => s.includes(kw));
 }
 
+// ========== 垃圾内容过滤黑名单 ==========
+// 热榜（百度/头条）天然包含大量娱乐猎奇、社会琐事、营销软文。
+// 这些话题即使匹配到权威媒体原文，也没有阅读价值。
+// 标题包含以下任一关键词的，直接剔除，不进入简报。
+const JUNK_KEYWORDS = [
+  // 动物/宠物类（纯猎奇，无信息量）
+  '小狗', '小猫', '猫咪', '流浪狗', '流浪猫', '宠物', '萌宠', '汪星人', '喵星人',
+  '被误判死亡', '自己跑回家', '宣布死亡后',
+  // 明星/娱乐八卦（与"资讯简报"定位不符）
+  '明星', '偶像', '网红', '粉丝', '追星', '娱乐圈', '八卦', '出轨', '离婚', '恋情',
+  '官宣', '秀恩爱', '分手', '复合', '塌房', '人设', '翻车', '热搜第一',
+  // 社会猎奇/隐私/低俗
+  '晒.*隐私', '晒.*照', '隐私照', '不雅照', '偷拍', '监控', '裸聊',
+  '奇葩', '离谱', '震惊', '竟然', '居然', '不敢相信', '看完沉默',
+  '网友吵翻', '网友炸了', '网友怒了', '网友沸腾', '评论区沦陷',
+  // 营销/软文/标题党
+  '必看', '必转', '必须知道', '千万别', '后悔没看', '不看亏',
+  '终于', '刚刚', '突发', '紧急通知', '紧急提醒',
+  // 无信息量的社会琐事
+  '大瓶啤酒', '女子.*超市', '男子.*路边', '大妈.*广场舞', '大爷.*公园',
+  '小学生.*作业', '家长群', '班主任', '高考状元', '清华北大录取',
+];
+
+function isJunkContent(title) {
+  if (!title) return true;
+  const t = title.trim();
+  // 过短标题通常无信息量（少于8字且不含数字/英文的）
+  if (t.length < 8 && !/\d|[a-zA-Z]/.test(t)) return true;
+  return JUNK_KEYWORDS.some(pattern => {
+    try { return new RegExp(pattern).test(t); }
+    catch { return t.includes(pattern); }
+  });
+}
+
 // 解析 Google News RSS XML
 function parseGoogleNewsRSS(xmlText) {
   const out = [];
@@ -563,10 +597,18 @@ async function aiSummarize(newsItems) {
     `${i + 1}. 【${item.title}】(来源: ${item.source})`
   ).join('\n');
 
-  const sysPrompt = `你是专业的中文新闻编辑。用户会给你一组真实的当日热点新闻标题和来源。
-请为每条新闻生成：
-1. brief：一句话AI智能摘要（15-35字），精炼概括核心要点，要有信息密度
-2. insight：给普通人的启发或行动建议（20-40字）
+  const sysPrompt = `你是一位资深财经/科技记者，擅长把复杂时事转化为普通人能读懂、读完有收获的深度简报。
+用户给你一组真实的当日热点新闻（标题+来源）。请为每条新闻生成结构化深度解读。
+
+要求：
+1. brief（核心摘要，50-80字）：不是复述标题！要回答——到底发生了什么？关键数据/数字是什么？这件事的本质是什么？要有事实密度。
+2. insight（为什么值得关注，30-60字）：这件事对普通人意味着什么？对行业有什么影响？接下来可能怎么发展？给出有判断力的观点，不要鸡汤。
+
+质量标准：
+- 禁止空洞概括（如"新能源车尺寸扩大原因分析"这种废话）
+- 必须包含具体数字、数据或事实细节
+- 如果是政策类，说清影响范围；如果是市场类，说清涨跌幅度；如果是科技类，说清技术突破点
+- 语言简洁有力，像《财新》或《36氪》的Briefing风格
 
 只输出合法JSON数组，不要markdown代码块，格式：
 [{"brief":"...","insight":"..."}]
@@ -704,9 +746,11 @@ async function generateRealNewsBriefing(focus) {
     throw new Error('未能获取到任何热点数据，请稍后重试');
   }
 
-  // 3) 按关键词把热点归类到各板块
+  // 3) 按关键词把热点归类到各板块 + 垃圾内容过滤
   const categorized = {};
+  let junkCount = 0;
   for (const topic of hotTopics) {
+    if (isJunkContent(topic.title)) { junkCount++; continue; }
     const cat = classifyByKeywords(topic.title);
     if (!categorized[cat]) categorized[cat] = [];
     categorized[cat].push({ title: topic.title, url: topic.url, source: topic.source });
@@ -719,6 +763,7 @@ async function generateRealNewsBriefing(focus) {
     }
   }
 
+  console.log(`[news] 热榜抓取: 百度/头条共 ${hotTopics.length} 条 → 过滤垃圾 ${junkCount} 条 → 剩余 ${hotTopics.length - junkCount} 条`);
   console.log(`[news] 热点归类: ${Object.keys(categorized).map(k => `${k}(${categorized[k].length})`).join(', ')}`);
 
   // 4) 按需选取板块
@@ -785,34 +830,16 @@ async function generateRealNewsBriefing(focus) {
     })
     .filter(section => section.items.length > 0);
 
-  // 安全兜底：若当天所有热点都未匹配到权威媒体，退回展示原始热点（避免整页空白）
-  if (finalSections.length === 0) {
-    idx = 0;
-    finalSections = sections
-      .map(section => {
-        const items = section.rawItems.map((rawItem) => {
-          const summary = summaries[idx] || { brief: rawItem.title, insight: '' };
-          const link = resolvedLinks[idx] || { url: rawItem.url, source: rawItem.source };
-          idx++;
-          return {
-            title: rawItem.title,
-            url: link.url,
-            source: link.source,
-            brief: summary.brief || rawItem.title.slice(0, 40),
-            insight: summary.insight,
-          };
-        });
-        return { category: section.category, items };
-      })
-      .filter(section => section.items.length > 0);
-  }
+  // 注意：不再退回展示原始热榜垃圾内容。
+  // 如果当天所有热点都未匹配到权威媒体，返回空板块 + 提示信息。
+  // 这比展示"小狗跑回家"类猎奇新闻要好得多。
 
   const authCount = resolvedLinks.filter(l => l && isAuthoritative(l.source)).length;
   return {
     subtitle: `今日 · ${formatNewsDateCN(new Date())}`,
     readTime: '约5分钟',
     sections: finalSections,
-    version: 9,
+    version: 10,
     generatedAt: new Date().toISOString(),
     sourceCount: hotResults.filter(r => r.items.length > 0).length + (hnItems.length > 0 ? 1 : 0),
     newsCount: allRawItems.length,
