@@ -681,7 +681,17 @@ async function aiSummarize(newsItems) {
     throw new Error('AI摘要API返回 ' + r.status);
   }
   const aiJson = await r.json().catch(() => ({}));
+  // 检查 API 是否在 200 里返回了错误体（某些网关会这样）
+  if (aiJson.error) {
+    console.error('[news] AI API 返回错误体:', JSON.stringify(aiJson.error).slice(0, 200));
+    throw new Error('AI API error: ' + (aiJson.error.message || aiJson.error.code || JSON.stringify(aiJson.error).slice(0, 100)));
+  }
   const text = aiJson.choices?.[0]?.message?.content || '';
+  if (!text) {
+    console.error('[news] AI 返回空内容, 原始响应:', JSON.stringify(aiJson).slice(0, 300));
+    throw new Error('AI 返回空内容，可能 API Key 已过期');
+  }
+  console.log('[news] AI 摘要原始文本(前200):', text.slice(0, 200));
   return parseAiSummary(text, newsItems.length);
 }
 
