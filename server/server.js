@@ -815,35 +815,49 @@ async function generateRealNewsBriefing(focus) {
     sections.push({ category: anyCat, rawItems: categorized[anyCat]?.slice(0, 6) || [] });
   }
 
-  // 5) 为每条热点解析权威媒体原文链接（热榜自身链接作为回退，绝不丢热点）
+  // 5) 为每条热点解析权威媒体原文链接
   const allRawItems = sections.flatMap(s => s.rawItems);
   console.log(`[news] 为 ${allRawItems.length} 条热点解析权威原文链接...`);
   const resolvedLinks = await resolveAuthoritativeLinks(allRawItems);
 
-  // 6) 批量 AI 摘要
-  const summaries = await aiSummarize(allRawItems);
-
-  // 7) 组装最终结果：仅保留成功匹配到权威媒体的条目（未匹配的一律不展示，符合"非权威不推"）
+  // 5.5) 先过滤出权威媒体的条目，再对剩下的做 AI 摘要（避免"先摘要后过滤"导致索引错位）
   let idx = 0;
-  let finalSections = sections
-    .map(section => {
-      const items = section.rawItems
-        .map((rawItem) => {
-          const summary = summaries[idx] || { brief: rawItem.title, insight: '' };
-          const link = resolvedLinks[idx] || { url: rawItem.url, source: rawItem.source };
-          idx++;
-          return {
-            title: rawItem.title,
-            url: link.url,
-            source: link.source,
-            brief: summary.brief || rawItem.title.slice(0, 40),
-            insight: summary.insight,
-          };
-        })
-        .filter(item => isAuthoritative(item.source));
-      return { category: section.category, items };
-    })
-    .filter(section => section.items.length > 0);
+  const authoritativeItems = [];  // { title, url, source, linkIdx }
+  const preFilteredSections = sections.map(section => {
+    const authItems = section.rawItems
+      .map((rawItem) => {
+        const link = resolvedLinks[idx] || { url: rawItem.url, source: rawItem.source };
+        idx++;
+        return { title: rawItem.title, url: link.url, source: link.source };
+      })
+      .filter(item => isAuthoritative(item.source));
+    authItems.forEach(item => authoritativeItems.push(item));
+    return { category: section.category, items: authItems };
+  }).filter(section => section.items.length > 0);
+
+  console.log(`[news] 权威过滤: ${allRawItems.length} 条 → ${authoritativeItems.length} 条`);
+
+  // 6) 只对通过权威过滤的条目批量 AI 摘要
+  const summaries = authoritativeItems.length > 0
+    ? await aiSummarize(authoritativeItems)
+    : [];
+
+  // 7) 组装最终结果（索引保证一一对应，不会错位）
+  let sIdx = 0;
+  const finalSections = preFilteredSections.map(section => ({
+    category: section.category,
+    items: section.items.map(rawItem => {
+      const summary = summaries[sIdx] || { brief: rawItem.title, insight: '' };
+      sIdx++;
+      return {
+        title: rawItem.title,
+        url: rawItem.url,
+        source: rawItem.source,
+        brief: summary.brief || rawItem.title.slice(0, 40),
+        insight: summary.insight,
+      };
+    }),
+  }));
 
   // 注意：不再退回展示原始热榜垃圾内容。
   // 如果当天所有热点都未匹配到权威媒体，返回空板块 + 提示信息。
