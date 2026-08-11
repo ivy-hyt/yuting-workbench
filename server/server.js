@@ -641,7 +641,7 @@ async function aiSummarize(newsItems) {
   // Gemini 分支
   if (prov === 'gemini') {
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 35000);
+    const timer = setTimeout(() => ctrl.abort(), 50000);
     const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(CFG.geminiModel)}:generateContent?key=${encodeURIComponent(CFG.geminiKey)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -696,14 +696,19 @@ function parseAiSummary(text, expectedCount) {
       cleaned = cleaned.substring(arrStart, arrEnd + 1);
     }
     const arr = JSON.parse(cleaned);
-    if (Array.isArray(arr) && arr.length === expectedCount) {
+    if (Array.isArray(arr) && arr.length > 0) {
+      // 宽松匹配：数量不匹配时按实际数量使用（不再因数量不一致全丢）
+      if (arr.length !== expectedCount) {
+        console.log(`[news] AI返回${arr.length}条摘要，预期${expectedCount}条，按实际数量使用`);
+      }
       return arr.map((item, i) => ({
-        brief: (item.brief || item.summary || '').slice(0, 100),
-        insight: (item.insight || item.advice || '').slice(0, 100),
+        brief: (item.brief || item.summary || '').slice(0, 120),
+        insight: (item.insight || item.advice || '').slice(0, 120),
       }));
     }
   } catch (e) {
     console.log('[news] ai summary parse error:', e.message.slice(0, 100));
+    console.log('[news] ai raw text (first 300):', text.slice(0, 300));
   }
   // 解析失败时返回空摘要兜底
   return Array(expectedCount).fill({ brief: '', insight: '' });
