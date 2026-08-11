@@ -4375,7 +4375,9 @@ function toDisplayWeight(kg, unit) {
 }
 function toKg(value, unit) {
   if (!value) return value;
-  return unit === 'jin' ? Math.round(parseFloat(value) / 2 * 10) / 10 : parseFloat(value);
+  // 保留4位小数精度，避免"斤→kg→斤"来回转换时中间步骤的四舍五入导致数值偏移
+  // （旧版 Math.round(.../2*10)/10 会在 487.5→488 这种边界上把 97.5斤 变成 97.6斤）
+  return unit === 'jin' ? Math.round(parseFloat(value) / 2 * 10000) / 10000 : parseFloat(value);
 }
 function weightUnitLabel(u) { return u === 'jin' ? '斤' : 'kg'; }
 
