@@ -7156,6 +7156,8 @@ function submitHealthData() {
 
   // 保存
   saveUserHealthData(ud);
+  // 保存后立即推送到云端，保证跨设备实时同步（不再依赖刷新页面才触发）
+  syncHealthToCloud(ud);
 
   // 关闭弹窗并重新渲染
   closeHealthSyncModal();
