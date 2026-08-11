@@ -5,9 +5,5 @@
   "server": {
     "androidScheme": "https"
   },
-  "ios": {
-    "entitlements": {
-      "com.apple.developer.healthkit": true
-    }
-  }
+  "ios": {}
 }
