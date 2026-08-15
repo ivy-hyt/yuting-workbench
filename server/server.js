@@ -601,8 +601,9 @@ async function aiSummarize(newsItems) {
 用户给你一组真实的当日热点新闻（标题+来源）。请为每条新闻生成结构化深度解读。
 
 要求：
-1. brief（核心摘要，50-80字）：不是复述标题！要回答——到底发生了什么？关键数据/数字是什么？这件事的本质是什么？要有事实密度。
-2. insight（为什么值得关注，30-60字）：这件事对普通人意味着什么？对行业有什么影响？接下来可能怎么发展？给出有判断力的观点，不要鸡汤。
+1. id（整数序号）：原样返回该条新闻在输入中的序号（1、2、3…），用于精确关联，绝不能错乱。
+2. brief（核心摘要，50-80字）：不是复述标题！要回答——到底发生了什么？关键数据/数字是什么？这件事的本质是什么？要有事实密度。
+3. insight（为什么值得关注，30-60字）：这件事对普通人意味着什么？对行业有什么影响？接下来可能怎么发展？给出有判断力的观点，不要鸡汤。
 
 质量标准：
 - 禁止空洞概括（如"新能源车尺寸扩大原因分析"这种废话）
@@ -611,8 +612,8 @@ async function aiSummarize(newsItems) {
 - 语言简洁有力，像《财新》或《36氪》的Briefing风格
 
 只输出合法JSON数组，不要markdown代码块，格式：
-[{"brief":"...","insight":"..."}]
-数组长度必须和输入新闻条数一致，一一对应。`;
+[{"id":1,"brief":"...","insight":"..."},{"id":2,"brief":"...","insight":"..."}]
+数组长度必须和输入新闻条数一致；每条的 id 必须是 1 到 N 的连续整数，且与输入序号严格对应（即使某条没内容也要占位返回）。`;
 
   // 选择可用的 AI 提供商
   let prov = CFG.aiProvider;
@@ -707,11 +708,12 @@ function parseAiSummary(text, expectedCount) {
     }
     const arr = JSON.parse(cleaned);
     if (Array.isArray(arr) && arr.length > 0) {
-      // 宽松匹配：数量不匹配时按实际数量使用（不再因数量不一致全丢）
+      // 宽松匹配：数量不匹配时仍按 id 关联（缺失 id 的项回退到位置序号，不影响其他项对齐）
       if (arr.length !== expectedCount) {
-        console.log(`[news] AI返回${arr.length}条摘要，预期${expectedCount}条，按实际数量使用`);
+        console.log(`[news] AI返回${arr.length}条摘要，预期${expectedCount}条，将按 id 关联`);
       }
       return arr.map((item, i) => ({
+        id: Number(item.id || (i + 1)),
         brief: (item.brief || item.summary || '').slice(0, 120),
         insight: (item.insight || item.advice || '').slice(0, 120),
       }));
@@ -837,18 +839,22 @@ async function generateRealNewsBriefing(focus) {
 
   console.log(`[news] 权威过滤: ${allRawItems.length} 条 → ${authoritativeItems.length} 条`);
 
-  // 6) 只对通过权威过滤的条目批量 AI 摘要
-  const summaries = authoritativeItems.length > 0
+  // 6) 只对通过权威过滤的条目批量 AI 摘要（AI 为每条带回 id，后续按 id 关联，彻底避免位置错位）
+  const summariesRaw = authoritativeItems.length > 0
     ? await aiSummarize(authoritativeItems)
     : [];
+  const summaryMap = new Map();
+  summariesRaw.forEach(s => {
+    if (s && s.id) summaryMap.set(Number(s.id), s);
+  });
 
-  // 7) 组装最终结果（索引保证一一对应，不会错位）
+  // 7) 组装最终结果：用 1-based 序号(id) 关联摘要，AI 即便乱序/缺项也不会错位
   let sIdx = 0;
   const finalSections = preFilteredSections.map(section => ({
     category: section.category,
     items: section.items.map(rawItem => {
-      const summary = summaries[sIdx] || { brief: rawItem.title, insight: '' };
       sIdx++;
+      const summary = summaryMap.get(sIdx) || { brief: '', insight: '' };
       return {
         title: rawItem.title,
         url: rawItem.url,
@@ -868,7 +874,7 @@ async function generateRealNewsBriefing(focus) {
     subtitle: `今日 · ${formatNewsDateCN(new Date())}`,
     readTime: '约5分钟',
     sections: finalSections,
-    version: 10,
+    version: 11,
     generatedAt: new Date().toISOString(),
     sourceCount: hotResults.filter(r => r.items.length > 0).length + (hnItems.length > 0 ? 1 : 0),
     newsCount: allRawItems.length,
