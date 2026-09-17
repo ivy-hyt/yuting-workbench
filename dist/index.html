@@ -2751,6 +2751,97 @@ body {
   margin-top: 2px;
 }
 
+/* ===== 围度测量 ===== */
+.ms-site-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.ms-site-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.ms-site-tab {
+  flex: 0 0 auto;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.ms-site-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.ms-current {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 2px 0 6px;
+}
+
+.ms-current-val {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.ms-current-unit {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.ms-delta {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 10px;
+  margin-left: auto;
+}
+
+.ms-delta.down {
+  background: rgba(45, 212, 167, 0.15);
+  color: #12A67C;
+}
+
+.ms-delta.up {
+  background: rgba(255, 181, 71, 0.18);
+  color: #C77B00;
+}
+
+.ms-delta.flat {
+  background: var(--bg-soft);
+  color: var(--text-light);
+}
+
+.ms-empty {
+  color: var(--text-light);
+  font-size: 13px;
+  padding: 18px 0;
+  text-align: center;
+}
+
+.ms-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
 .ps-bodyfat-row {
   display: flex;
   gap: 8px;
@@ -3564,7 +3655,7 @@ body {
   <div class="page" id="page-module3">
     <div class="module-header">
       <div class="back-btn" onclick="showPage('home')">← 返回首页</div>
-      <div class="m-title">💪 健身打卡 · 动态自适应塑形计划</div>
+      <div class="m-title">📏 健身数据 · 围度与体重追踪</div>
       <div class="m-sub" id="m3-subtitle">目标：精瘦紧致线条 · 马甲线</div>
     </div>
     <div class="section" id="m3-content"></div>
@@ -3975,7 +4066,7 @@ const APP_DATA = {
 
   // ===== 模块3：健身计划 =====
   module3: {
-    title: "健身打卡 · 动态自适应塑形计划",
+    title: "健身数据 · 围度与体重追踪",
     subtitle: "目标：精瘦紧致线条 · 马甲线",
     currentWeek: {
       week: "Week 1",
@@ -4274,6 +4365,7 @@ let appState = {
   trainedMuscles: [],
   currentKnowledgeIdx: 0,
   weightChartRange: '1m',
+  measureSite: 'waist', // 围度测量当前展示部位
   todayKnowledgeList: null, // AI每日生成的3条知识点数组 [{topic,source,content,questions},...]
   selectedColors: [],
   weatherData: null,
@@ -5311,6 +5403,190 @@ function showNewsFocusDialog() {
   showToast('行业范围已更新为：' + focus);
 }
 
+// ===== 围度测量 =====
+// 测量部位定义（key 用于数据存储，name 用于展示）
+const MEASURE_SITES = [
+  { key: 'waist', name: '腰围' },
+  { key: 'hip', name: '臀围' },
+  { key: 'thigh', name: '大腿围' },
+  { key: 'calf', name: '小腿围' },
+  { key: 'arm', name: '手臂围' },
+  { key: 'chest', name: '胸围' },
+];
+
+// 今日 MM-DD（与体重/体脂记录保持一致）
+function todayMmDd() {
+  const t = new Date();
+  return (t.getMonth() + 1).toString().padStart(2, '0') + '-' + t.getDate().toString().padStart(2, '0');
+}
+
+// 读取围度历史（兼容旧数据：不存在则返回空数组）
+function getMeasureHistory() {
+  const ud = getUserHealthData();
+  return (ud && Array.isArray(ud.measureHistory)) ? ud.measureHistory : [];
+}
+
+// 切换围度展示部位
+function setMeasureSite(key) {
+  appState.measureSite = key;
+  renderModule3();
+}
+
+// 生成围度测量区块 HTML（各部位随时间变化趋势）
+function getMeasureSectionHTML() {
+  const history = getMeasureHistory();
+  const sites = MEASURE_SITES;
+  const activeKey = sites.some(s => s.key === appState.measureSite) ? appState.measureSite : sites[0].key;
+  const site = sites.find(s => s.key === activeKey);
+
+  // 该部位的时序数据（只取有值的记录，按日期升序）
+  const series = history
+    .map(r => ({ date: r.date, value: Number(r && r[activeKey]) }))
+    .filter(r => r.value > 0)
+    .sort((a, b) => parseWeightDate(a.date) - parseWeightDate(b.date));
+
+  const latest = series.length ? series[series.length - 1].value : null;
+  const prev = series.length > 1 ? series[series.length - 2].value : null;
+
+  // 与上次测量的变化
+  let deltaHtml = '';
+  if (latest !== null && prev !== null) {
+    const d = latest - prev;
+    if (Math.abs(d) < 0.05) {
+      deltaHtml = '<span class="ms-delta flat">持平</span>';
+    } else {
+      deltaHtml = `<span class="ms-delta ${d < 0 ? 'down' : 'up'}">${d < 0 ? '↓' : '↑'} ${Math.abs(d).toFixed(1)} cm</span>`;
+    }
+  }
+
+  // 部位切换标签
+  const tabs = sites.map(s => {
+    const has = history.some(r => Number(r && r[s.key]) > 0);
+    const isActive = s.key === activeKey;
+    return `<button class="ms-site-tab ${isActive ? 'active' : ''}" onclick="setMeasureSite('${s.key}')">${s.name}${has ? ' ●' : ''}</button>`;
+  }).join('');
+
+  // 趋势柱状图
+  let chartHtml = '<div class="ms-empty">暂无数据，点下方「记录围度」添加</div>';
+  if (series.length > 0) {
+    const vals = series.map(v => v.value);
+    const minV = Math.min(...vals);
+    const maxV = Math.max(...vals);
+    const span = maxV - minV;
+    chartHtml = `<div class="ps-weight-chart wg-chart" style="height:120px;overflow-x:auto;">` +
+      series.map((v, i) => {
+        const h = span === 0 ? 50 : 20 + ((v.value - minV) / span) * 60;
+        const isLast = i === series.length - 1;
+        return `<div class="ps-weight-point" style="min-width:38px;">
+          <div class="ps-weight-val" style="color:${isLast ? 'var(--accent)' : 'var(--text-light)'};font-weight:${isLast ? '700' : '400'};">${v.value.toFixed(1)}</div>
+          <div class="ps-weight-bar" style="height:${h}px;background:${isLast ? 'var(--accent)' : 'var(--accent-light)'};"></div>
+          <div class="ps-weight-date">${v.date}</div>
+        </div>`;
+      }).join('') + `</div>`;
+  }
+
+  return `<div class="ps-section-title">📏 围度测量</div>
+  <div class="personal-stats-card" style="margin-bottom:12px;">
+    <div class="ms-site-tabs">${tabs}</div>
+    <div class="ms-current">
+      <div class="ms-current-val">${latest !== null ? latest.toFixed(1) : '--'}</div>
+      <div class="ms-current-unit">cm · ${site.name}</div>
+      ${deltaHtml}
+    </div>
+    ${chartHtml}
+    <div class="wg-actions" style="margin-top:12px;">
+      <button class="wg-btn primary" onclick="openMeasureModal()">📏 记录围度</button>
+    </div>
+    <div style="font-size:11px;color:var(--text-light);text-align:center;margin-top:8px;">共 ${history.length} 次围度记录 · 点上方部位切换趋势</div>
+  </div>`;
+}
+
+// 围度记录弹窗
+function getMeasureModalHTML() {
+  const fields = MEASURE_SITES.map(s => `
+    <div class="hs-field">
+      <label>${s.name} (cm)</label>
+      <input type="number" id="ms_${s.key}" placeholder="--" min="10" max="200" step="0.1" inputmode="decimal">
+    </div>`).join('');
+  return `
+  <div class="health-sync-modal" id="measureModal" style="display:none;">
+    <div class="health-sync-overlay" onclick="closeMeasureModal()"></div>
+    <div class="health-sync-content">
+      <div class="health-sync-header">
+        <h3>📏 记录围度</h3>
+        <span class="health-sync-close" onclick="closeMeasureModal()">✕</span>
+      </div>
+      <div class="health-sync-body">
+        <div class="health-sync-form">
+          <div class="hs-form-section">
+            <div class="hs-form-title">今日围度（cm，可只填部分）</div>
+            <div class="ms-form-grid">${fields}</div>
+          </div>
+        </div>
+        <div class="health-sync-actions">
+          <button class="hs-cancel-btn" onclick="closeMeasureModal()">取消</button>
+          <button class="hs-submit-btn" onclick="submitMeasureData()">💾 保存围度</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function openMeasureModal() {
+  const modal = document.getElementById('measureModal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  // 预填今日已填数据
+  const history = getMeasureHistory();
+  const today = history.find(r => r.date === todayMmDd());
+  MEASURE_SITES.forEach(s => {
+    const el = document.getElementById('ms_' + s.key);
+    if (el) el.value = (today && today[s.key]) ? today[s.key] : '';
+  });
+}
+
+function closeMeasureModal() {
+  const modal = document.getElementById('measureModal');
+  if (modal) modal.style.display = 'none';
+}
+
+// 保存围度记录（同日覆盖，按日期去重）
+function submitMeasureData() {
+  const dateStr = todayMmDd();
+  let ud = getUserHealthData() || {
+    weightHistory: [], bodyFatHistory: [], measureHistory: [],
+    totalSessions: 0, totalDuration: 0, streak: 0, weightGoal: 47, latest: {}
+  };
+  if (!Array.isArray(ud.measureHistory)) ud.measureHistory = [];
+
+  const record = { date: dateStr };
+  let filled = 0;
+  MEASURE_SITES.forEach(s => {
+    const el = document.getElementById('ms_' + s.key);
+    if (!el) return;
+    const v = parseFloat(el.value);
+    if (v > 0) { record[s.key] = Math.round(v * 10) / 10; filled++; }
+  });
+
+  if (filled === 0) { showToast('请至少填写一项围度'); return; }
+
+  const idx = ud.measureHistory.findIndex(r => r.date === dateStr);
+  if (idx >= 0) {
+    ud.measureHistory[idx] = { ...ud.measureHistory[idx], ...record };
+  } else {
+    ud.measureHistory.push(record);
+    if (ud.measureHistory.length > 200) ud.measureHistory.shift();
+  }
+  ud.measureHistory.sort((a, b) => parseWeightDate(a.date) - parseWeightDate(b.date));
+
+  saveUserHealthData(ud);
+  syncHealthToCloud(ud); // 立即同步云端，保证跨设备可见
+  closeMeasureModal();
+  renderModule3();
+  renderQuickStats();
+  showToast('✅ 围度已保存');
+}
+
 // ===== 模块3：健身 =====
 function renderModule3() {
   const data = APP_DATA.module3;
@@ -5426,60 +5702,12 @@ function renderModule3() {
     html += '<div style="color:var(--text-light);font-size:13px;">暂无体脂数据</div>';
   }
   html += `</div>`;
-  // 健康数据同步弹窗
+  // 围度测量（各部位随时间变化趋势）
+  html += getMeasureSectionHTML();
+
+  // 弹窗：记录身体数据 + 记录围度
   html += getHealthSyncModalHTML();
-
-  // 本周计划表（可点击）
-  html += '<div class="section-title">📅 本周训练计划 <span class="more" style="font-size:11px;color:var(--text-light);font-weight:400;">点击选择当天训练</span></div>';
-  html += '<div class="week-plan">';
-  data.weeklyPlan.forEach((day, idx) => {
-    const isRestDay = day.status === '休息日' || day.status === '弹性日';
-    const statusClass = day.status === '休息日' || day.status === '弹性日' ? 'wd-rest' : (day.status === '已完成' ? 'wd-done' : 'wd-pending');
-    const clickable = !isRestDay ? `onclick="clickWeekDay('${day.day}', '${day.planned}')"` : '';
-    const cursor = isRestDay ? '' : 'cursor:pointer;';
-    html += `<div class="week-day ${isRestDay ? '' : 'week-day-clickable'}" style="${cursor}" ${clickable}>
-      <div class="wd-name">${day.day}</div>
-      <div class="wd-plan">${day.planned}</div>
-      <span class="wd-status ${statusClass}">${day.status}</span>
-      ${!isRestDay ? '<div class="wd-action">👆 点击选择</div>' : ''}
-    </div>`;
-  });
-  html += '</div>';
-
-  // 身体感受询问
-  html += `
-    <div class="card" style="margin-top:16px;">
-      <div class="card-title">🤔 训练前身体感受</div>
-      <div class="card-desc">告诉我你今天的身体状态，我来为你调整训练计划</div>
-      <div class="feeling-selector" id="feelingSelector">
-        <div class="feeling-btn" data-feeling="good" onclick="selectFeeling('good')">💪 状态很好<br>可以高强度</div>
-        <div class="feeling-btn" data-feeling="normal" onclick="selectFeeling('normal')">😌 一般<br>正常训练</div>
-        <div class="feeling-btn" data-feeling="sore" onclick="selectFeeling('sore')">😣 肌肉酸痛<br>需调整</div>
-        <div class="feeling-btn" data-feeling="tired" onclick="selectFeeling('tired')">😴 疲惫<br>轻度恢复</div>
-      </div>
-    </div>
-  `;
-
-  // 肌群多选训练
-  html += '<div class="section-title">🏋️ 选择今日训练肌群 <span class="more" style="font-size:11px;color:var(--text-light);font-weight:400;">可多选</span></div>';
-  html += '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">选择你想训练的肌群，系统自动匹配B站跟练视频 👇</div>';
-  html += '<div class="muscle-group-grid">';
-  data.muscleGroups.forEach(mg => {
-    html += `<div class="muscle-group-card" id="${mg.id}" onclick="toggleMuscleGroup('${mg.id}')">
-      <div class="mg-icon" style="background:${mg.color}20;color:${mg.color};">${mg.icon}</div>
-      <div class="mg-name">${mg.name}</div>
-      <div class="mg-muscles">${mg.muscles.join(' · ')}</div>
-    </div>`;
-  });
-  html += '</div>';
-
-  // 已选肌群的跟练视频
-  html += '<div id="muscleVideoResult"></div>';
-
-  // 打卡按钮
-  html += `<div style="text-align:center;margin-top:16px;">
-    <button class="checkin-btn ${isCheckedInToday() ? 'done' : ''}" id="checkinBtn3" onclick="checkinMuscleTraining()">${isCheckedInToday() ? '✅ 今日已打卡' : '✅ 完成训练打卡'}</button>
-  </div>`;
+  html += getMeasureModalHTML();
 
   // 今日喝水记录（挪到健身页底部）
   const water = getTodayWater();
@@ -6473,21 +6701,9 @@ function processAssistantMessage(msg) {
     // 指定训练部位
     const targetMuscle = identifyMuscleGroup(msg);
     if (targetMuscle) {
-      const mgId = getMuscleGroupIdByName(targetMuscle);
-      const mgName = mgId ? APP_DATA.module3.muscleGroups.find(m => m.id === mgId)?.name : targetMuscle;
       return {
-        text: `好的！你想练${targetMuscle}，我为你匹配了合适的训练计划。\n\n📋 推荐计划：${mgName || targetMuscle}\n\n已为你切换到健身模块，请前往选择肌群并查看B站跟练视频。`,
-        action: () => {
-          showPage('module3');
-          if (mgId) {
-            setTimeout(() => {
-              if (!appState.selectedMuscleGroups.includes(mgId)) {
-                toggleMuscleGroup(mgId);
-              }
-              document.querySelector('.muscle-group-grid')?.scrollIntoView({ behavior: 'smooth' });
-            }, 300);
-          }
-        }
+        text: `好的！你想练${targetMuscle} 💪\n\n记得练完到「健身」模块记录围度，方便对比变化趋势。`,
+        action: () => { showPage('module3'); }
       };
     }
 
@@ -6759,11 +6975,11 @@ async function syncHealthFromCloud() {
     const cloud = await resp.json();
 
     const local = getUserHealthData() || {};
-    const cloudHasData = cloud && (cloud.weightHistory && cloud.weightHistory.length || cloud.bodyFatHistory && cloud.bodyFatHistory.length);
+    const cloudHasData = cloud && (cloud.weightHistory && cloud.weightHistory.length || cloud.bodyFatHistory && cloud.bodyFatHistory.length || cloud.measureHistory && cloud.measureHistory.length);
 
     // 云端为空但本地有历史数据：把本地备份到云端，让其他设备也能拉到
     if (!cloudHasData) {
-      const localHasData = (local.weightHistory && local.weightHistory.length) || (local.bodyFatHistory && local.bodyFatHistory.length);
+      const localHasData = (local.weightHistory && local.weightHistory.length) || (local.bodyFatHistory && local.bodyFatHistory.length) || (local.measureHistory && local.measureHistory.length);
       if (localHasData) {
         console.log('[sync] 云端暂无数据，将本地历史备份到云端');
         syncHealthToCloud(local);
@@ -6794,6 +7010,22 @@ async function syncHealthFromCloud() {
     });
     mergedBF.sort((a, b) => parseWeightDate(a.date) - parseWeightDate(b.date));
 
+    // 合并围度记录：同日按部位取并集（避免一台设备只填腰围就覆盖另一台的臀围）
+    const localMS = local.measureHistory || [];
+    const cloudMS = cloud.measureHistory || [];
+    const msByDate = {};
+    [...cloudMS, ...localMS].forEach(r => {
+      if (!r || !r.date) return;
+      if (!msByDate[r.date]) msByDate[r.date] = { date: r.date };
+      MEASURE_SITES.forEach(s => {
+        const v = Number(r[s.key]);
+        if (v > 0) msByDate[r.date][s.key] = v;
+      });
+    });
+    const mergedMS = Object.keys(msByDate)
+      .map(k => msByDate[k])
+      .sort((a, b) => parseWeightDate(a.date) - parseWeightDate(b.date));
+
     // 合并其他字段：优先取较新数据
     const localSyncedAt = local.cloudSyncedAt || '1970';
     const cloudSyncedAt = cloud.cloudSyncedAt || '1970';
@@ -6802,6 +7034,7 @@ async function syncHealthFromCloud() {
     const merged = {
       weightHistory: mergedWH,
       bodyFatHistory: mergedBF,
+      measureHistory: mergedMS,
       totalSessions: Math.max(local.totalSessions || 0, cloud.totalSessions || 0),
       totalDuration: Math.max(local.totalDuration || 0, cloud.totalDuration || 0),
       streak: Math.max(local.streak || 0, cloud.streak || 0),
@@ -6811,6 +7044,7 @@ async function syncHealthFromCloud() {
     };
     if (merged.weightHistory.length > 100) merged.weightHistory = merged.weightHistory.slice(-100);
     if (merged.bodyFatHistory.length > 100) merged.bodyFatHistory = merged.bodyFatHistory.slice(-100);
+    if (merged.measureHistory.length > 200) merged.measureHistory = merged.measureHistory.slice(-200);
 
     const oldStr = JSON.stringify(local);
     const newStr = JSON.stringify(merged);
@@ -6833,6 +7067,7 @@ function mergeHealthData(defaultData, userData) {
   return {
     weightHistory: userData.weightHistory || defaultData.weightHistory,
     bodyFatHistory: userData.bodyFatHistory || defaultData.bodyFatHistory,
+    measureHistory: userData.measureHistory || defaultData.measureHistory || [],
     muscleGroupFrequency: userData.muscleGroupFrequency || defaultData.muscleGroupFrequency,
     totalSessions: userData.totalSessions !== undefined ? userData.totalSessions : defaultData.totalSessions,
     totalDuration: userData.totalDuration !== undefined ? userData.totalDuration : defaultData.totalDuration,
@@ -7035,19 +7270,6 @@ function getHealthSyncModalHTML() {
                 <input type="number" id="hsWorkoutDuration" placeholder="如 45" min="0">
               </div>
             </div>
-            <div class="hs-form-row">
-              <div class="hs-field hs-field-full">
-                <label>训练肌群</label>
-                <select id="hsMuscleGroup">
-                  <option value="">-- 选择 --</option>
-                  <option value="胸肩">胸肩</option>
-                  <option value="背臀">背臀</option>
-                  <option value="腿臀">腿臀</option>
-                  <option value="核心">核心</option>
-                  <option value="全身">全身</option>
-                </select>
-              </div>
-            </div>
           </div>
         </div>
         <div class="health-sync-actions">
@@ -7086,7 +7308,8 @@ function openHealthSyncModal() {
   if (ud) {
     const wCount = (ud.weightHistory || []).length;
     const bfCount = (ud.bodyFatHistory || []).length;
-    existing.innerHTML = `<div style="text-align:center;font-size:12px;color:var(--text-light);padding:8px;">已有 ${wCount} 条体重记录、${bfCount} 条体脂记录、${ud.totalSessions || 0} 次训练记录</div>`;
+    const msCount = (ud.measureHistory || []).length;
+    existing.innerHTML = `<div style="text-align:center;font-size:12px;color:var(--text-light);padding:8px;">已有 ${wCount} 条体重记录、${bfCount} 条体脂记录、${msCount} 条围度记录、${ud.totalSessions || 0} 次训练记录</div>`;
   }
 }
 
@@ -7107,7 +7330,6 @@ function submitHealthData() {
   const bodyFat = document.getElementById('hsBodyFat').value;
   const workoutType = document.getElementById('hsWorkoutType').value;
   const workoutDuration = document.getElementById('hsWorkoutDuration').value;
-  const muscleGroup = document.getElementById('hsMuscleGroup').value;
 
   // 获取或初始化用户数据
   let ud = getUserHealthData() || {
