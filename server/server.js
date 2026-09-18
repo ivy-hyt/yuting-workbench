@@ -56,7 +56,15 @@ const CFG = {
 
 // 允许跨域的来源（Web 前端 + iOS Capacitor 壳）
 // 未显式配置前端域名时，动态放行任意网页来源（适配 CloudStudio 等动态域名部署）
-const EXPLICIT_ORIGINS = [CFG.frontendOrigin, CFG.corsOrigin, 'capacitor://localhost', 'ionic://localhost'].filter(Boolean);
+const EXPLICIT_ORIGINS = [
+  CFG.frontendOrigin,
+  CFG.corsOrigin,
+  'capacitor://localhost',
+  'ionic://localhost',
+  // 实际在用的前端入口（Render 环境变量可能配了旧值导致白名单拦截，这里显式加白）
+  'https://a500f31e68094779a2cd16e0624a4555.app.codebuddy.work',
+  'https://yuting-workbench-new.app.workbuddy.host',
+].filter(Boolean);
 const ALLOWED_ORIGINS = new Set(EXPLICIT_ORIGINS);
 const CORS_OPEN_MODE = EXPLICIT_ORIGINS.length === 0;
 
