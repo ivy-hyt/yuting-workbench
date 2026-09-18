@@ -5405,14 +5405,38 @@ function showNewsFocusDialog() {
 
 // ===== 围度测量 =====
 // 测量部位定义（key 用于数据存储，name 用于展示）
+// 大腿/小腿/手臂分左右记录：存储 key 为 thigh_L / thigh_R 等
 const MEASURE_SITES = [
   { key: 'waist', name: '腰围' },
   { key: 'hip', name: '臀围' },
-  { key: 'thigh', name: '大腿围' },
-  { key: 'calf', name: '小腿围' },
-  { key: 'arm', name: '手臂围' },
   { key: 'chest', name: '胸围' },
+  { key: 'thigh', name: '大腿围', sides: ['thigh_L', 'thigh_R'], sideNames: ['大腿左', '大腿右'] },
+  { key: 'calf', name: '小腿围', sides: ['calf_L', 'calf_R'], sideNames: ['小腿左', '小腿右'] },
+  { key: 'arm', name: '手臂围', sides: ['arm_L', 'arm_R'], sideNames: ['手臂左', '手臂右'] },
 ];
+
+// 展平后的所有可记录字段（含左右），供弹窗/保存/合并遍历用
+const MEASURE_FIELDS = [];
+MEASURE_SITES.forEach(s => {
+  if (s.sides) s.sides.forEach((k, i) => MEASURE_FIELDS.push({ key: k, name: s.sideNames[i] }));
+  else MEASURE_FIELDS.push({ key: s.key, name: s.name });
+});
+
+// 兼容旧数据：以前不分左右的 thigh/calf/arm 值，视为左右相同
+function normalizeMeasureHistory(list) {
+  (list || []).forEach(r => {
+    if (!r) return;
+    MEASURE_SITES.forEach(s => {
+      if (!s.sides) return;
+      const legacy = Number(r[s.key]);
+      if (legacy > 0 && !(Number(r[s.sides[0]]) > 0) && !(Number(r[s.sides[1]]) > 0)) {
+        r[s.sides[0]] = legacy;
+        r[s.sides[1]] = legacy;
+      }
+    });
+  });
+  return list || [];
+}
 
 // 今日 MM-DD（与体重/体脂记录保持一致）
 function todayMmDd() {
@@ -5420,10 +5444,10 @@ function todayMmDd() {
   return (t.getMonth() + 1).toString().padStart(2, '0') + '-' + t.getDate().toString().padStart(2, '0');
 }
 
-// 读取围度历史（兼容旧数据：不存在则返回空数组）
+// 读取围度历史（兼容旧数据：不存在则返回空数组；旧的单值左右腿/手臂自动视为左右相同）
 function getMeasureHistory() {
   const ud = getUserHealthData();
-  return (ud && Array.isArray(ud.measureHistory)) ? ud.measureHistory : [];
+  return normalizeMeasureHistory((ud && Array.isArray(ud.measureHistory)) ? ud.measureHistory : []);
 }
 
 // 切换围度展示部位
@@ -5432,12 +5456,12 @@ function setMeasureSite(key) {
   renderModule3();
 }
 
-// 生成围度测量区块 HTML（各部位随时间变化趋势）
+// 生成围度测量区块 HTML（各部位随时间变化趋势，大腿/小腿/手臂分左右）
 function getMeasureSectionHTML() {
   const history = getMeasureHistory();
-  const sites = MEASURE_SITES;
-  const activeKey = sites.some(s => s.key === appState.measureSite) ? appState.measureSite : sites[0].key;
-  const site = sites.find(s => s.key === activeKey);
+  const fields = MEASURE_FIELDS;
+  const activeKey = fields.some(s => s.key === appState.measureSite) ? appState.measureSite : fields[0].key;
+  const site = fields.find(s => s.key === activeKey);
 
   // 该部位的时序数据（只取有值的记录，按日期升序）
   const series = history
@@ -5459,8 +5483,8 @@ function getMeasureSectionHTML() {
     }
   }
 
-  // 部位切换标签
-  const tabs = sites.map(s => {
+  // 部位切换标签（含左右）
+  const tabs = fields.map(s => {
     const has = history.some(r => Number(r && r[s.key]) > 0);
     const isActive = s.key === activeKey;
     return `<button class="ms-site-tab ${isActive ? 'active' : ''}" onclick="setMeasureSite('${s.key}')">${s.name}${has ? ' ●' : ''}</button>`;
@@ -5503,7 +5527,7 @@ function getMeasureSectionHTML() {
 
 // 围度记录弹窗
 function getMeasureModalHTML() {
-  const fields = MEASURE_SITES.map(s => `
+  const fields = MEASURE_FIELDS.map(s => `
     <div class="hs-field">
       <label>${s.name} (cm)</label>
       <input type="number" id="ms_${s.key}" placeholder="--" min="10" max="200" step="0.1" inputmode="decimal">
@@ -5539,7 +5563,7 @@ function openMeasureModal() {
   // 预填今日已填数据
   const history = getMeasureHistory();
   const today = history.find(r => r.date === todayMmDd());
-  MEASURE_SITES.forEach(s => {
+  MEASURE_FIELDS.forEach(s => {
     const el = document.getElementById('ms_' + s.key);
     if (el) el.value = (today && today[s.key]) ? today[s.key] : '';
   });
@@ -5561,7 +5585,7 @@ function submitMeasureData() {
 
   const record = { date: dateStr };
   let filled = 0;
-  MEASURE_SITES.forEach(s => {
+  MEASURE_FIELDS.forEach(s => {
     const el = document.getElementById('ms_' + s.key);
     if (!el) return;
     const v = parseFloat(el.value);
@@ -7012,16 +7036,17 @@ async function syncHealthFromCloud() {
     });
     mergedBF.sort((a, b) => parseWeightDate(a.date) - parseWeightDate(b.date));
 
-    // 合并围度记录：同日按部位取并集（避免一台设备只填腰围就覆盖另一台的臀围）
+    // 合并围度记录：同日按部位取并集（含左右腿/手臂及旧版单值字段，避免一台设备只填腰围就覆盖另一台的臀围）
     const localMS = local.measureHistory || [];
     const cloudMS = cloud.measureHistory || [];
     const msByDate = {};
     [...cloudMS, ...localMS].forEach(r => {
       if (!r || !r.date) return;
       if (!msByDate[r.date]) msByDate[r.date] = { date: r.date };
-      MEASURE_SITES.forEach(s => {
-        const v = Number(r[s.key]);
-        if (v > 0) msByDate[r.date][s.key] = v;
+      Object.keys(r).forEach(k => {
+        if (k === 'date') return;
+        const v = Number(r[k]);
+        if (v > 0) msByDate[r.date][k] = v;
       });
     });
     const mergedMS = Object.keys(msByDate)
