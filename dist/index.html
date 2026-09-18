@@ -6952,7 +6952,8 @@ async function syncHealthToCloud(data) {
   try {
     const resp = await fetch(getApiBase() + '/api/userdata', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      // 注意：用 text/plain 保持"简单请求"，避免触发 CORS 预检（旧版后端预检响应缺 CORS 头会被浏览器拦截）
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(data),
     });
     if (resp.ok) {
@@ -6969,7 +6970,8 @@ async function syncHealthFromCloud() {
   try {
     const resp = await fetch(getApiBase() + '/api/userdata', {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
+      // 注意：GET 不带任何自定义头，保持"简单请求"避免 CORS 预检（旧版后端预检响应缺 CORS 头会被浏览器拦截）
     });
     if (!resp.ok) return null;
     const cloud = await resp.json();
