@@ -11,11 +11,35 @@
     {
       "date": "08-20",
       "weight": 48.2
+    },
+    {
+      "date": "08-27",
+      "weight": 48.95
+    },
+    {
+      "date": "08-31",
+      "weight": 48.3
+    },
+    {
+      "date": "09-03",
+      "weight": 49.2
+    },
+    {
+      "date": "09-07",
+      "weight": 49.2
+    },
+    {
+      "date": "09-17",
+      "weight": 48.85
     }
   ],
   "bodyFatHistory": [],
   "totalSessions": 0,
   "totalDuration": 0,
   "streak": 0,
-  "cloudSyncedAt": "2026-09-18T09:46:21.206Z"
+  "weightGoal": 47,
+  "latest": {
+    "weight": 48.85
+  },
+  "cloudSyncedAt": "2026-09-18T09:48:25.455Z"
 }
