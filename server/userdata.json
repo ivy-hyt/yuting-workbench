@@ -1,1 +1,17 @@
-{}
+{
+  "weightHistory": [
+    {
+      "date": "08-04",
+      "weight": 48.75
+    },
+    {
+      "date": "08-15",
+      "weight": 48.4
+    }
+  ],
+  "bodyFatHistory": [],
+  "totalSessions": 0,
+  "totalDuration": 0,
+  "streak": 0,
+  "cloudSyncedAt": "2026-09-18T06:49:21.820Z"
+}
