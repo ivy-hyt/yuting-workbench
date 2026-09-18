@@ -1199,12 +1199,23 @@ const server = http.createServer(async (req, res) => {
         });
         return out.sort((p, q) => (p.date < q.date ? -1 : p.date > q.date ? 1 : 0));
       };
+      // 围度记录：按日期合并，同日各部位字段做字段级合并（避免整条覆盖丢失部位）
+      const unionMeasure = (x, y) => {
+        const out = [...(x || [])];
+        (y || []).forEach(it => {
+          const i = out.findIndex(o => o.date === it.date);
+          if (i < 0) out.push(it);
+          else out[i] = { ...out[i], ...it };
+        });
+        return out.sort((p, q) => (p.date < q.date ? -1 : p.date > q.date ? 1 : 0));
+      };
       const ta = a.cloudSyncedAt || '1970';
       const tb = b.cloudSyncedAt || '1970';
       const bNewer = tb >= ta;
       return {
         weightHistory: unionByDate(a.weightHistory, b.weightHistory),
         bodyFatHistory: unionByDate(a.bodyFatHistory, b.bodyFatHistory),
+        measureHistory: unionMeasure(a.measureHistory, b.measureHistory),
         totalSessions: Math.max(a.totalSessions || 0, b.totalSessions || 0),
         totalDuration: Math.max(a.totalDuration || 0, b.totalDuration || 0),
         streak: Math.max(a.streak || 0, b.streak || 0),
