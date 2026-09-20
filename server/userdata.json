@@ -59,6 +59,10 @@
     {
       "date": "09-17",
       "weight": 48.85
+    },
+    {
+      "date": "09-20",
+      "weight": 48.65
     }
   ],
   "bodyFatHistory": [],
@@ -70,5 +74,5 @@
   "latest": {
     "weight": 48.85
   },
-  "cloudSyncedAt": "2026-09-20T07:01:38.954Z"
+  "cloudSyncedAt": "2026-09-20T07:15:50.654Z"
 }
